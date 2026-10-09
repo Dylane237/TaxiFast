@@ -207,6 +207,15 @@ export class MockApi implements Api {
     this.activeUserId = null;
   }
 
+  async restoreSession(token: string, user: UserProfile): Promise<void> {
+    await this.wait();
+    if (token !== `mock-token-${user.id}`) throw new ApiError("UNAUTHENTICATED");
+    const existingIndex = this.data.users.findIndex((candidate) => candidate.id === user.id);
+    if (existingIndex === -1) this.data.users.push(clone(user));
+    else this.data.users[existingIndex] = clone(user);
+    this.activeUserId = user.id;
+  }
+
   async getCurrentUser(): Promise<UserProfile | null> {
     await this.wait();
     const user = this.data.users.find((candidate) => candidate.id === this.activeUserId) ?? null;

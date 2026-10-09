@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useAuthStore } from "@/stores/auth-store";
 import { couleurs } from "@/theme";
 
 export default function RootLayout() {
+  const hydrate = useAuthStore((state) => state.hydrate);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -17,6 +19,8 @@ export default function RootLayout() {
         },
       }),
   );
+
+  useEffect(() => { void hydrate(); }, [hydrate]);
 
   return (
     <SafeAreaProvider>

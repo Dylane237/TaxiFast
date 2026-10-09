@@ -1,58 +1,62 @@
-import { IconArrowLeft, IconLock } from "@tabler/icons-react-native";
+import { IconPhone } from "@tabler/icons-react-native";
+import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Bouton, Carte, Champ } from "@/components";
-import { couleurs, espacements, taillesTexte } from "@/theme";
+import { useState } from "react";
+import { StyleSheet } from "react-native";
+import { api } from "@/api";
+import { AuthPage, Bouton, Carte, Champ, MessageEtat } from "@/components";
+import { normaliserTelephone } from "@/features/auth/auth-validation";
+import { messageErreur } from "@/features/auth/message-erreur";
+import { useAuthFlowStore } from "@/stores/auth-flow-store";
+import { couleurs, espacements } from "@/theme";
 
-export default function ConnexionTemporaire() {
+export default function Connexion() {
+  const [telephone, setTelephone] = useState("");
+  const [erreurSaisie, setErreurSaisie] = useState<string | null>(null);
+  const setPhone = useAuthFlowStore((state) => state.setPhone);
+  const mutation = useMutation({
+    mutationFn: (phone: string) => api.requestOtp(phone),
+    onSuccess: (_, phone) => {
+      setPhone(phone);
+      router.push("/code");
+    },
+  });
+
+  const envoyer = () => {
+    const phone = normaliserTelephone(telephone);
+    if (!phone) {
+      setErreurSaisie("Saisissez un numéro camerounais valide commençant par 6.");
+      return;
+    }
+    setErreurSaisie(null);
+    mutation.mutate(phone);
+  };
+
   return (
-    <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
-      <View style={styles.contenu}>
-        <IconLock color={couleurs.primaire} size={36} strokeWidth={1.8} />
-        <View style={styles.entete}>
-          <Text style={styles.titre}>Connexion à venir</Text>
-          <Text style={styles.description}>
-            Le parcours téléphone et code OTP sera réalisé à la tâche 9.
-          </Text>
-        </View>
-        <Carte>
-          <Champ etiquette="Téléphone" placeholder="+237 6XX XXX XXX" editable={false} />
-        </Carte>
-        <Bouton
-          variante="secondaire"
-          icone={<IconArrowLeft color={couleurs.primaire} size={20} />}
-          onPress={() => router.back()}
-        >
-          Retour à l’accueil
-        </Bouton>
-      </View>
-    </SafeAreaView>
+    <AuthPage
+      icon={<IconPhone color={couleurs.primaire} size={40} strokeWidth={1.8} />}
+      title="Connexion"
+      description="Recevez un code de vérification sur votre numéro camerounais."
+    >
+      <Carte style={styles.formulaire}>
+        <Champ
+          etiquette="Numéro de téléphone"
+          value={telephone}
+          onChangeText={setTelephone}
+          placeholder="6XX XXX XXX"
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          erreur={erreurSaisie ?? undefined}
+          onSubmitEditing={envoyer}
+          returnKeyType="send"
+        />
+        {!telephone ? <MessageEtat>Le champ est vide. Entrez votre numéro pour continuer.</MessageEtat> : null}
+        {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
+        {mutation.isSuccess ? <MessageEtat type="succes">Code envoyé.</MessageEtat> : null}
+        <Bouton chargement={mutation.isPending} onPress={envoyer}>Recevoir le code</Bouton>
+      </Carte>
+    </AuthPage>
   );
 }
 
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: couleurs.fond,
-  },
-  contenu: {
-    flex: 1,
-    justifyContent: "center",
-    padding: espacements.lg,
-    gap: espacements.lg,
-  },
-  entete: {
-    gap: espacements.sm,
-  },
-  titre: {
-    color: couleurs.texte,
-    fontSize: taillesTexte.titre,
-    fontWeight: "800",
-  },
-  description: {
-    color: couleurs.texteSecondaire,
-    fontSize: taillesTexte.normal,
-    lineHeight: 24,
-  },
-});
+const styles = StyleSheet.create({ formulaire: { gap: espacements.md } });

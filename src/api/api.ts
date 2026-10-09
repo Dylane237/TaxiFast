@@ -21,6 +21,7 @@ import type {
 export interface Api {
   requestOtp(phone: string): Promise<OtpRequestResult>;
   verifyOtp(phone: string, code: string, role?: Extract<Role, "CLIENT" | "DRIVER">): Promise<AuthResult>;
+  restoreSession(token: string, user: UserProfile): Promise<void>;
   signOut(): Promise<void>;
   getCurrentUser(): Promise<UserProfile | null>;
   updateProfile(input: UpdateProfileInput): Promise<UserProfile>;

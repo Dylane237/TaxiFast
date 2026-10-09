@@ -10,6 +10,7 @@ function notConnected<T>(): Promise<T> {
 export const httpApi: Api = {
   requestOtp: () => notConnected(),
   verifyOtp: () => notConnected(),
+  restoreSession: () => notConnected(),
   signOut: () => notConnected(),
   getCurrentUser: () => notConnected(),
   updateProfile: () => notConnected(),

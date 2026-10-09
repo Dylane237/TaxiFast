@@ -8,6 +8,7 @@ export const couleurs = {
   primaireClaire: "#E4F2EA",
   bordure: "#DDE4DF",
   erreur: "#B42318",
+  erreurClaire: "#FEECEB",
   desactive: "#AAB3AD",
 } as const;
 

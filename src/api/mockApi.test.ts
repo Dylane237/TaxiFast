@@ -17,6 +17,18 @@ describe("MockApi", () => {
     expect(result.user.phone).toBe("+237699000001");
   });
 
+  it("restaure une session fictive à partir du jeton et du profil sécurisés", async () => {
+    const firstApi = instantApi(null);
+    await firstApi.requestOtp("+237699000001");
+    const session = await firstApi.verifyOtp("+237699000001", "1234", "DRIVER");
+    const profile = await firstApi.updateProfile({ name: "Marcel", plate: "LT 999 ZZ", seats: 4 });
+    const restartedApi = instantApi(null);
+
+    await restartedApi.restoreSession(session.token, profile);
+
+    await expect(restartedApi.getCurrentUser()).resolves.toEqual(profile);
+  });
+
   it("ne confirme qu’une réservation sur la dernière place disponible", async () => {
     const api = instantApi(mockIds.driver);
 
