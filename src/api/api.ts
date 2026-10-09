@@ -1,0 +1,50 @@
+import type {
+  AuthResult,
+  Booking,
+  Corridor,
+  CreateRatingInput,
+  CreateTripInput,
+  CreateTripRequestInput,
+  MatchedTrip,
+  MatchedTripRequest,
+  OtpRequestResult,
+  ProposeBookingInput,
+  Rating,
+  Role,
+  Trip,
+  TripRequest,
+  UpdateProfileInput,
+  UserProfile,
+  Wallet,
+} from "./types";
+
+export interface Api {
+  requestOtp(phone: string): Promise<OtpRequestResult>;
+  verifyOtp(phone: string, code: string, role?: Extract<Role, "CLIENT" | "DRIVER">): Promise<AuthResult>;
+  signOut(): Promise<void>;
+  getCurrentUser(): Promise<UserProfile | null>;
+  updateProfile(input: UpdateProfileInput): Promise<UserProfile>;
+
+  listCorridors(): Promise<Corridor[]>;
+  createTrip(input: CreateTripInput): Promise<Trip>;
+  listDriverTrips(): Promise<Trip[]>;
+  closeTrip(tripId: string): Promise<Trip>;
+
+  createTripRequest(input: CreateTripRequestInput): Promise<TripRequest>;
+  listClientTripRequests(): Promise<TripRequest[]>;
+  cancelTripRequest(requestId: string): Promise<TripRequest>;
+  listTripsForRequest(requestId: string): Promise<MatchedTrip[]>;
+  listRequestsForTrip(tripId: string): Promise<MatchedTripRequest[]>;
+
+  proposeBooking(input: ProposeBookingInput): Promise<Booking>;
+  acceptBooking(bookingId: string): Promise<Booking>;
+  refuseBooking(bookingId: string): Promise<Booking>;
+  counterOfferBooking(bookingId: string, counterPrice: number): Promise<Booking>;
+  cancelBooking(bookingId: string): Promise<Booking>;
+  listClientBookings(): Promise<Booking[]>;
+  listDriverBookings(): Promise<Booking[]>;
+  listBookingHistory(): Promise<Booking[]>;
+
+  createRating(input: CreateRatingInput): Promise<Rating>;
+  getWallet(): Promise<Wallet>;
+}
