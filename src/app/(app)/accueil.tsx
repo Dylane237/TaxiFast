@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { IconArrowRight, IconList, IconLogout, IconRoute } from "@tabler/icons-react-native";
+import { IconArrowRight, IconInbox, IconList, IconLogout, IconRoute } from "@tabler/icons-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useMemo } from "react";
@@ -62,6 +62,14 @@ export default function Accueil() {
               </View>
               <Text style={styles.texteFeuille}>Choisissez un axe, ordonnez vos arrêts et indiquez vos places disponibles.</Text>
               <Bouton icone={<IconArrowRight color={couleurs.texte} size={20} />} onPress={() => router.push("/je-pars")}>Je pars maintenant</Bouton>
+              <Pressable accessibilityRole="button" onPress={() => router.push("./demandes")} style={styles.lienTrajets}>
+                <View style={[styles.lienIcone, styles.lienIconePrimaire]}><IconInbox color={couleurs.texte} size={21} /></View>
+                <View style={styles.lienTexte}>
+                  <Text style={styles.lienTitre}>Demandes sur mon axe</Text>
+                  <Text style={styles.lienDescription}>Répondez aux propositions compatibles</Text>
+                </View>
+                <IconArrowRight color={couleurs.texteSecondaire} size={20} />
+              </Pressable>
               <Pressable accessibilityRole="button" onPress={() => router.push("/mes-trajets")} style={styles.lienTrajets}>
                 <View style={styles.lienIcone}><IconList color={couleurs.texte} size={21} /></View>
                 <View style={styles.lienTexte}>
@@ -107,6 +115,7 @@ const styles = StyleSheet.create({
   texteFeuille: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 23 },
   lienTrajets: { minHeight: 70, paddingVertical: espacements.sm, flexDirection: "row", alignItems: "center", gap: espacements.md },
   lienIcone: { width: 46, height: 46, borderRadius: rayons.md, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" },
+  lienIconePrimaire: { backgroundColor: couleurs.primaireClaire },
   lienTexte: { flex: 1, gap: 3 },
   lienTitre: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
   lienDescription: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
