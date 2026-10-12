@@ -9,6 +9,8 @@ export const couleurs = {
   bordure: "#DDE4DF",
   erreur: "#B42318",
   erreurClaire: "#FEECEB",
+  attention: "#9A6700",
+  attentionClaire: "#FFF3C4",
   desactive: "#AAB3AD",
 } as const;
 

@@ -29,6 +29,27 @@ describe("MockApi", () => {
     await expect(restartedApi.getCurrentUser()).resolves.toEqual(profile);
   });
 
+  it("permet au chauffeur de publier puis retrouver un trajet ordonné", async () => {
+    const api = instantApi(mockIds.driver);
+    const departureAt = new Date(Date.now() + 30 * 60_000).toISOString();
+
+    const trip = await api.createTrip({
+      corridorId: "corridor-1",
+      capacity: 2,
+      departureAt,
+      stopIds: ["c1-stop-1", "c1-stop-3", "c1-stop-5"],
+    });
+
+    expect(trip.tripStops.map((stop) => stop.stopId)).toEqual([
+      "c1-stop-1",
+      "c1-stop-3",
+      "c1-stop-5",
+    ]);
+    await expect(api.listDriverTrips()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: trip.id, status: "OPEN" })]),
+    );
+  });
+
   it("ne confirme qu’une réservation sur la dernière place disponible", async () => {
     const api = instantApi(mockIds.driver);
 
