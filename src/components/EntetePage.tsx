@@ -18,9 +18,9 @@ export function EntetePage({ title, description }: { title: string; description:
 }
 
 const styles = StyleSheet.create({
-  conteneur: { gap: espacements.md },
-  retour: { width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure },
+  conteneur: { gap: espacements.lg },
+  retour: { width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire },
   textes: { gap: espacements.xs },
-  titre: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "800" },
+  titre: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "900" },
   description: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 23 },
 });

@@ -8,7 +8,7 @@ export default function Index() {
   const hydrated = useAuthStore((state) => state.hydrated);
 
   if (!hydrated) {
-    return <View style={styles.chargement}><ActivityIndicator color={couleurs.primaire} size="large" /></View>;
+    return <View style={styles.chargement}><ActivityIndicator color={couleurs.texte} size="large" /></View>;
   }
 
   return <Redirect href={token ? "/accueil" : "/connexion"} />;

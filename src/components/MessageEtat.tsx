@@ -12,7 +12,7 @@ export function MessageEtat({ children, type = "vide" }: MessageEtatProps) {
 }
 
 const styles = StyleSheet.create({
-  base: { color: couleurs.texteSecondaire, backgroundColor: couleurs.surface, borderRadius: rayons.sm, padding: espacements.md, fontSize: taillesTexte.petit },
+  base: { color: couleurs.texteSecondaire, backgroundColor: couleurs.surfaceSecondaire, borderRadius: rayons.sm, padding: espacements.md, fontSize: taillesTexte.petit, lineHeight: 19 },
   erreur: { color: couleurs.erreur, backgroundColor: couleurs.erreurClaire },
-  succes: { color: couleurs.primaire, backgroundColor: couleurs.primaireClaire },
+  succes: { color: couleurs.succes, backgroundColor: couleurs.succesClaire },
 });

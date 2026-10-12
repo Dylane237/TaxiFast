@@ -27,7 +27,7 @@ function EtatChargement() {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.etatCentre}>
-        <ActivityIndicator color={couleurs.primaire} size="large" />
+        <ActivityIndicator color={couleurs.texte} size="large" />
         <Text style={styles.texteSecondaire}>Chargement des axes…</Text>
       </View>
     </SafeAreaView>
@@ -128,7 +128,7 @@ export default function JePars() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <IconCheck color={couleurs.primaire} size={48} strokeWidth={1.8} />
+          <View style={styles.succesIcone}><IconCheck color={couleurs.succes} size={36} strokeWidth={2.2} /></View>
           <Text style={styles.titreSucces}>Trajet publié</Text>
           <MessageEtat type="succes">Votre trajet est maintenant visible pour les clients compatibles.</MessageEtat>
           <Bouton onPress={() => router.replace("/mes-trajets")}>Voir mes trajets</Bouton>
@@ -144,13 +144,13 @@ export default function JePars() {
         <EntetePage title="Je pars" description="Choisissez l’axe, les arrêts desservis et votre heure de départ." />
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitre}>1. Axe</Text>
+          <Text style={styles.sectionTitre}>AXE</Text>
           <View style={styles.chips}>
             {corridors.map((item) => {
               const active = item.id === corridor.id;
               return (
                 <Pressable key={item.id} accessibilityRole="button" onPress={() => choisirCorridor(item)} style={[styles.chip, active && styles.chipActif]}>
-                  <IconRoute color={active ? couleurs.surface : couleurs.primaire} size={18} />
+                  <IconRoute color={couleurs.texte} size={18} />
                   <Text style={[styles.chipTexte, active && styles.chipTexteActif]}>{item.name}</Text>
                 </Pressable>
               );
@@ -159,7 +159,7 @@ export default function JePars() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitre}>2. Sens</Text>
+          <Text style={styles.sectionTitre}>SENS DU TRAJET</Text>
           <View style={styles.ligneDeuxColonnes}>
             {(["ALLER", "RETOUR"] as const).map((value) => {
               const active = sens === value;
@@ -173,7 +173,7 @@ export default function JePars() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitre}>3. Arrêts desservis</Text>
+          <Text style={styles.sectionTitre}>ARRÊTS DESSERVIS</Text>
           <Text style={styles.aide}>Sélectionnez au moins deux arrêts. Leur numéro indique l’ordre du trajet.</Text>
           <Carte style={styles.listeArrets}>
             {[...corridor.stops]
@@ -187,7 +187,7 @@ export default function JePars() {
                       {selected ? <Text style={styles.numeroTexteActif}>{sequence + 1}</Text> : <IconMapPin color={couleurs.texteSecondaire} size={18} />}
                     </View>
                     <Text style={[styles.arretNom, selected && styles.arretNomActif]}>{stop.name}</Text>
-                    {selected ? <IconCheck color={couleurs.primaire} size={20} /> : null}
+                    {selected ? <IconCheck color={couleurs.succes} size={20} /> : null}
                   </Pressable>
                 );
               })}
@@ -195,13 +195,13 @@ export default function JePars() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitre}>4. Heure de départ</Text>
+          <Text style={styles.sectionTitre}>HEURE DE DÉPART</Text>
           <View style={styles.chips}>
             {creneaux.map((slot) => {
               const active = slot.minutes === selectedMinutes;
               return (
                 <Pressable key={slot.minutes} onPress={() => setSelectedMinutes(slot.minutes)} style={[styles.chip, active && styles.chipActif]}>
-                  <IconClock color={active ? couleurs.surface : couleurs.primaire} size={18} />
+                  <IconClock color={couleurs.texte} size={18} />
                   <Text style={[styles.chipTexte, active && styles.chipTexteActif]}>{slot.label}</Text>
                 </Pressable>
               );
@@ -210,7 +210,7 @@ export default function JePars() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitre}>5. Places proposées</Text>
+          <Text style={styles.sectionTitre}>PLACES PROPOSÉES</Text>
           <Carte style={styles.compteur}>
             <Pressable accessibilityLabel="Retirer une place" disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.boutonCompteur, capacity <= 1 && styles.desactive]}>
               <IconMinus color={couleurs.texte} size={24} />
@@ -239,24 +239,24 @@ const styles = StyleSheet.create({
   contenuEtat: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
   etatCentre: { flex: 1, alignItems: "center", justifyContent: "center", gap: espacements.md },
   texteSecondaire: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal },
-  section: { gap: espacements.md },
-  sectionTitre: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
+  section: { gap: espacements.md, paddingTop: espacements.sm },
+  sectionTitre: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.25 },
   aide: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
-  chip: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: espacements.sm, paddingHorizontal: espacements.md, borderRadius: rayons.rond, borderWidth: 1, borderColor: couleurs.bordure, backgroundColor: couleurs.surface },
+  chip: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: espacements.sm, paddingHorizontal: espacements.md, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire },
   chipActif: { backgroundColor: couleurs.primaire, borderColor: couleurs.primaire },
   chipTexte: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "700" },
-  chipTexteActif: { color: couleurs.surface },
+  chipTexteActif: { color: couleurs.texte },
   ligneDeuxColonnes: { flexDirection: "row", gap: espacements.sm },
-  optionLarge: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: rayons.md, borderWidth: 1, borderColor: couleurs.bordure, backgroundColor: couleurs.surface },
-  optionActive: { borderColor: couleurs.primaire, backgroundColor: couleurs.primaireClaire },
+  optionLarge: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: rayons.md, backgroundColor: couleurs.surfaceSecondaire },
+  optionActive: { backgroundColor: couleurs.primaire },
   optionTexte: { color: couleurs.texteSecondaire, fontWeight: "700" },
-  optionTexteActif: { color: couleurs.primaire },
+  optionTexteActif: { color: couleurs.texte },
   listeArrets: { paddingVertical: espacements.sm, paddingHorizontal: espacements.md },
   arret: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: espacements.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: couleurs.bordure },
   numero: { width: 32, height: 32, borderRadius: rayons.rond, alignItems: "center", justifyContent: "center", backgroundColor: couleurs.fond },
   numeroActif: { backgroundColor: couleurs.primaire },
-  numeroTexteActif: { color: couleurs.surface, fontWeight: "800" },
+  numeroTexteActif: { color: couleurs.texte, fontWeight: "900" },
   arretNom: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal },
   arretNomActif: { color: couleurs.texte, fontWeight: "700" },
   compteur: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
@@ -264,5 +264,6 @@ const styles = StyleSheet.create({
   desactive: { opacity: 0.35 },
   valeurCompteur: { alignItems: "center", gap: espacements.xs },
   nombre: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "800" },
-  titreSucces: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "800" },
+  titreSucces: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "900" },
+  succesIcone: { width: 72, height: 72, borderRadius: rayons.rond, backgroundColor: couleurs.succesClaire, alignItems: "center", justifyContent: "center" },
 });

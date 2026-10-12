@@ -32,7 +32,7 @@ function CarteTrajet({ trip, corridorName }: { trip: Trip; corridorName: string 
     <Carte style={styles.carte}>
       <View style={styles.carteEntete}>
         <View style={styles.axe}>
-          <IconRoute color={couleurs.primaire} size={20} />
+          <View style={styles.axeIcone}><IconRoute color={couleurs.texte} size={19} /></View>
           <Text style={styles.axeNom} numberOfLines={2}>{corridorName}</Text>
         </View>
         <View style={[styles.statut, trip.status === "FULL" && styles.statutAttention, ["CLOSED", "COMPLETED", "CANCELLED"].includes(trip.status) && styles.statutNeutre]}>
@@ -109,14 +109,15 @@ const styles = StyleSheet.create({
   enteteListe: { marginBottom: espacements.xl },
   separateur: { height: espacements.md },
   vide: { flex: 1, alignItems: "center", justifyContent: "center", gap: espacements.md },
-  carte: { gap: espacements.md },
+  carte: { gap: espacements.md, padding: espacements.lg },
   carteEntete: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: espacements.md },
   axe: { flex: 1, flexDirection: "row", alignItems: "center", gap: espacements.sm },
+  axeIcone: { width: 36, height: 36, borderRadius: rayons.sm, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   axeNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
   statut: { paddingHorizontal: espacements.sm, paddingVertical: espacements.xs, borderRadius: rayons.rond, backgroundColor: couleurs.primaireClaire },
   statutAttention: { backgroundColor: couleurs.attentionClaire },
   statutNeutre: { backgroundColor: couleurs.fond },
-  statutTexte: { color: couleurs.primaire, fontSize: taillesTexte.petit, fontWeight: "800" },
+  statutTexte: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
   statutTexteAttention: { color: couleurs.attention },
   statutTexteNeutre: { color: couleurs.texteSecondaire },
   depart: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "700", textTransform: "capitalize" },

@@ -1,18 +1,21 @@
-import { IconCar, IconList, IconLogout, IconRoute } from "@tabler/icons-react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { IconArrowRight, IconList, IconLogout, IconRoute } from "@tabler/icons-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useMemo } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import { Bouton, Carte, MessageEtat } from "@/components";
+import { Apparition, Bouton, MessageEtat, RouteBackdrop } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, ombres, rayons, taillesTexte } from "@/theme";
 
 export default function Accueil() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const points = useMemo(() => ["48%", "79%"], []);
   const deconnexion = useMutation({
     mutationFn: () => api.signOut(),
     onSuccess: async () => {
@@ -23,52 +26,88 @@ export default function Accueil() {
   });
 
   return (
-    <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
-      <ScrollView contentContainerStyle={styles.contenu}>
-        <View style={styles.icone}>
-          <IconCar color={couleurs.primaire} size={40} strokeWidth={1.8} />
+    <View style={styles.page}>
+      <RouteBackdrop />
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <View style={styles.barre}>
+          <View style={styles.marque}><Text style={styles.marqueTexte}>CT</Text></View>
+          <Pressable accessibilityLabel="Se déconnecter" accessibilityRole="button" onPress={() => deconnexion.mutate()} style={styles.iconeBouton}>
+            {deconnexion.isPending ? <ActivityIndicator color={couleurs.surface} /> : <IconLogout color={couleurs.surface} size={21} />}
+          </Pressable>
         </View>
-        <View style={styles.entete}>
-          <Text style={styles.surtitre}>COVOITURAGE TAXI</Text>
-          <Text style={styles.titre}>Bienvenue{user?.name ? `, ${user.name}` : ""}.</Text>
-          <Text style={styles.description}>
-            Votre espace {user?.role === "DRIVER" ? "chauffeur" : "client"} est prêt.
-          </Text>
-        </View>
-        {user?.role === "DRIVER" ? (
-          <View style={styles.actions}>
-            <Carte style={styles.carte}>
-              <Text style={styles.carteTitre}>Prêt à partir ?</Text>
-              <Text style={styles.carteTexte}>Publiez votre axe, vos arrêts et le nombre de places proposées.</Text>
-              <Bouton icone={<IconRoute color={couleurs.surface} size={20} />} onPress={() => router.push("/je-pars")}>Je pars</Bouton>
-            </Carte>
-            <Bouton variante="secondaire" icone={<IconList color={couleurs.primaire} size={20} />} onPress={() => router.push("/mes-trajets")}>Mes trajets</Bouton>
-          </View>
-        ) : (
-          <MessageEtat>Les écrans client seront ajoutés dans les prochaines étapes.</MessageEtat>
-        )}
-        {deconnexion.isError ? <MessageEtat type="erreur">{messageErreur(deconnexion.error)}</MessageEtat> : null}
-        <Bouton
-          variante="secondaire"
-          chargement={deconnexion.isPending}
-          icone={<IconLogout color={couleurs.primaire} size={20} />}
-          onPress={() => deconnexion.mutate()}
-        >Se déconnecter</Bouton>
-      </ScrollView>
-    </SafeAreaView>
+        <Apparition style={styles.hero}>
+          <Text style={styles.surtitre}>{user?.role === "DRIVER" ? "ESPACE CHAUFFEUR" : "ESPACE CLIENT"}</Text>
+          <Text style={styles.titre}>Bonsoir{user?.name ? `, ${user.name}` : ""}</Text>
+          <Text style={styles.description}>Où souhaitez-vous aller aujourd’hui ?</Text>
+        </Apparition>
+      </SafeAreaView>
+
+      <BottomSheet
+        index={0}
+        snapPoints={points}
+        enablePanDownToClose={false}
+        backgroundStyle={styles.fondFeuille}
+        handleIndicatorStyle={styles.poignee}
+        style={styles.feuille}
+      >
+        <BottomSheetView style={styles.contenuFeuille}>
+          {user?.role === "DRIVER" ? (
+            <>
+              <View style={styles.enteteFeuille}>
+                <View>
+                  <Text style={styles.label}>PRÊT À ROULER</Text>
+                  <Text style={styles.titreFeuille}>Publier un départ</Text>
+                </View>
+                <View style={styles.pastille}><IconRoute color={couleurs.texte} size={24} /></View>
+              </View>
+              <Text style={styles.texteFeuille}>Choisissez un axe, ordonnez vos arrêts et indiquez vos places disponibles.</Text>
+              <Bouton icone={<IconArrowRight color={couleurs.texte} size={20} />} onPress={() => router.push("/je-pars")}>Je pars maintenant</Bouton>
+              <Pressable accessibilityRole="button" onPress={() => router.push("/mes-trajets")} style={styles.lienTrajets}>
+                <View style={styles.lienIcone}><IconList color={couleurs.texte} size={21} /></View>
+                <View style={styles.lienTexte}>
+                  <Text style={styles.lienTitre}>Mes trajets</Text>
+                  <Text style={styles.lienDescription}>Retrouvez vos départs publiés</Text>
+                </View>
+                <IconArrowRight color={couleurs.texteSecondaire} size={20} />
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>BIENTÔT DISPONIBLE</Text>
+              <Text style={styles.titreFeuille}>Trouver un trajet</Text>
+              <MessageEtat>La recherche côté client arrive à la prochaine étape.</MessageEtat>
+            </>
+          )}
+          {deconnexion.isError ? <MessageEtat type="erreur">{messageErreur(deconnexion.error)}</MessageEtat> : null}
+        </BottomSheetView>
+      </BottomSheet>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: couleurs.fond },
-  contenu: { flexGrow: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.xl },
-  icone: { width: 72, height: 72, borderRadius: rayons.lg, alignItems: "center", justifyContent: "center", backgroundColor: couleurs.primaireClaire },
-  entete: { gap: espacements.md },
-  surtitre: { color: couleurs.primaire, fontSize: taillesTexte.petit, fontWeight: "800", letterSpacing: 1.2 },
-  titre: { color: couleurs.texte, fontSize: taillesTexte.hero, fontWeight: "800", lineHeight: 39 },
-  description: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 24 },
-  actions: { gap: espacements.md },
-  carte: { gap: espacements.md },
-  carteTitre: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
-  carteTexte: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 23 },
+  page: { flex: 1, backgroundColor: couleurs.encre },
+  safe: { flex: 1 },
+  barre: { paddingHorizontal: espacements.lg, paddingTop: espacements.sm, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  marque: { width: 42, height: 42, borderRadius: rayons.sm, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
+  marqueTexte: { color: couleurs.encre, fontWeight: "900", fontSize: taillesTexte.normal },
+  iconeBouton: { width: 44, height: 44, borderRadius: rayons.rond, backgroundColor: "#2B2E29", alignItems: "center", justifyContent: "center" },
+  hero: { paddingHorizontal: espacements.lg, paddingTop: 72, gap: espacements.sm },
+  surtitre: { color: couleurs.primaire, fontSize: taillesTexte.petit, fontWeight: "900", letterSpacing: 1.2 },
+  titre: { color: couleurs.surface, fontSize: taillesTexte.hero, fontWeight: "900", lineHeight: 45 },
+  description: { color: "#B9BDB6", fontSize: taillesTexte.normal },
+  feuille: { ...ombres.feuille },
+  fondFeuille: { backgroundColor: couleurs.surface, borderTopLeftRadius: rayons.xl, borderTopRightRadius: rayons.xl },
+  poignee: { width: 42, backgroundColor: couleurs.bordure },
+  contenuFeuille: { paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.xxl, gap: espacements.lg },
+  enteteFeuille: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  label: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.3, marginBottom: espacements.xs },
+  titreFeuille: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "900" },
+  pastille: { width: 52, height: 52, borderRadius: rayons.rond, backgroundColor: couleurs.primaireClaire, alignItems: "center", justifyContent: "center" },
+  texteFeuille: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 23 },
+  lienTrajets: { minHeight: 70, paddingVertical: espacements.sm, flexDirection: "row", alignItems: "center", gap: espacements.md },
+  lienIcone: { width: 46, height: 46, borderRadius: rayons.md, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" },
+  lienTexte: { flex: 1, gap: 3 },
+  lienTitre: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
+  lienDescription: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
 });

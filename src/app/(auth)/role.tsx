@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { api, type Role } from "@/api";
-import { AuthPage, Bouton, Carte, MessageEtat } from "@/components";
+import { AuthPage, Bouton, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -48,16 +48,16 @@ export default function ChoixDuRole() {
       title="Choisissez votre profil"
       description="Ce choix est demandé uniquement lors de votre première connexion."
     >
-      <Carte style={styles.formulaire}>
+      <View style={styles.formulaire}>
         <View style={styles.choix}>
           <Bouton
             variante={role === "CLIENT" ? "primaire" : "secondaire"}
-            icone={<IconUser color={role === "CLIENT" ? couleurs.surface : couleurs.primaire} size={20} />}
+            icone={<IconUser color={couleurs.texte} size={20} />}
             onPress={() => setRole("CLIENT")}
           >Je suis client</Bouton>
           <Bouton
             variante={role === "DRIVER" ? "primaire" : "secondaire"}
-            icone={<IconCar color={role === "DRIVER" ? couleurs.surface : couleurs.primaire} size={20} />}
+            icone={<IconCar color={couleurs.texte} size={20} />}
             onPress={() => setRole("DRIVER")}
           >Je suis chauffeur</Bouton>
         </View>
@@ -65,7 +65,7 @@ export default function ChoixDuRole() {
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
         {mutation.isSuccess ? <MessageEtat type="succes">Profil créé.</MessageEtat> : null}
         <Bouton disabled={!role} chargement={mutation.isPending} onPress={() => role && mutation.mutate(role)}>Continuer</Bouton>
-      </Carte>
+      </View>
     </AuthPage>
   );
 }

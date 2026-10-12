@@ -2,9 +2,9 @@ import { IconId } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { api, type UpdateProfileInput, type UserProfile } from "@/api";
-import { AuthPage, Bouton, Carte, Champ, MessageEtat } from "@/components";
+import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { placesValides } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthStore } from "@/stores/auth-store";
@@ -54,7 +54,7 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
       title="Complétez votre profil"
       description={chauffeur ? "Ajoutez vos informations et celles de votre véhicule." : "Indiquez le nom affiché aux chauffeurs."}
     >
-      <Carte style={styles.formulaire}>
+      <View style={styles.formulaire}>
         <Champ etiquette="Nom" value={nom} onChangeText={setNom} placeholder="Votre nom" autoCapitalize="words" />
         {chauffeur ? (
           <>
@@ -67,7 +67,7 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
         {mutation.isSuccess ? <MessageEtat type="succes">Profil enregistré.</MessageEtat> : null}
         <Bouton chargement={mutation.isPending} onPress={enregistrer}>Enregistrer le profil</Bouton>
-      </Carte>
+      </View>
     </AuthPage>
   );
 }
@@ -78,7 +78,7 @@ export default function Profil() {
   if (profileQuery.isPending) {
     return (
       <AuthPage icon={<IconId color={couleurs.primaire} size={40} />} title="Votre profil" description="Chargement de vos informations…">
-        <ActivityIndicator color={couleurs.primaire} size="large" />
+        <ActivityIndicator color={couleurs.texte} size="large" />
       </AuthPage>
     );
   }

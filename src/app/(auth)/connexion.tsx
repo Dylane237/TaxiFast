@@ -2,9 +2,9 @@ import { IconPhone } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { api } from "@/api";
-import { AuthPage, Bouton, Carte, Champ, MessageEtat } from "@/components";
+import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { normaliserTelephone } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
@@ -38,7 +38,7 @@ export default function Connexion() {
       title="Connexion"
       description="Recevez un code de vérification sur votre numéro camerounais."
     >
-      <Carte style={styles.formulaire}>
+      <View style={styles.formulaire}>
         <Champ
           etiquette="Numéro de téléphone"
           value={telephone}
@@ -54,7 +54,7 @@ export default function Connexion() {
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
         {mutation.isSuccess ? <MessageEtat type="succes">Code envoyé.</MessageEtat> : null}
         <Bouton chargement={mutation.isPending} onPress={envoyer}>Recevoir le code</Bouton>
-      </Carte>
+      </View>
     </AuthPage>
   );
 }

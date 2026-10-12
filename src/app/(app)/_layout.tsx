@@ -6,7 +6,7 @@ import { couleurs } from "@/theme";
 export default function AppLayout() {
   const token = useAuthStore((state) => state.token);
   const hydrated = useAuthStore((state) => state.hydrated);
-  if (!hydrated) return <View style={styles.chargement}><ActivityIndicator color={couleurs.primaire} /></View>;
+  if (!hydrated) return <View style={styles.chargement}><ActivityIndicator color={couleurs.texte} /></View>;
   if (!token) return <Redirect href="/connexion" />;
   return <Stack screenOptions={{ headerShown: false }} />;
 }

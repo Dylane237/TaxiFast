@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -14,16 +14,20 @@ type ChampProps = TextInputProps & {
 };
 
 export const Champ = forwardRef<TextInput, ChampProps>(function Champ(
-  { etiquette, erreur, style, ...props },
+  { etiquette, erreur, style, onFocus, onBlur, ...props },
   ref,
 ) {
+  const [actif, setActif] = useState(false);
+
   return (
     <View style={styles.conteneur}>
       <Text style={styles.etiquette}>{etiquette}</Text>
       <TextInput
         ref={ref}
         placeholderTextColor={couleurs.texteSecondaire}
-        style={[styles.champ, erreur && styles.champErreur, style]}
+        style={[styles.champ, actif && styles.champActif, erreur && styles.champErreur, style]}
+        onFocus={(event) => { setActif(true); onFocus?.(event); }}
+        onBlur={(event) => { setActif(false); onBlur?.(event); }}
         {...props}
       />
       {erreur ? <Text style={styles.erreur}>{erreur}</Text> : null}
@@ -45,10 +49,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: couleurs.bordure,
     borderRadius: rayons.md,
-    backgroundColor: couleurs.surface,
+    backgroundColor: couleurs.surfaceSecondaire,
     color: couleurs.texte,
     paddingHorizontal: espacements.md,
     fontSize: taillesTexte.normal,
+  },
+  champActif: {
+    borderColor: couleurs.texte,
+    backgroundColor: couleurs.surface,
   },
   champErreur: {
     borderColor: couleurs.erreur,

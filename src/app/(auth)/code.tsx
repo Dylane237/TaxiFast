@@ -2,9 +2,9 @@ import { IconKey } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { api, ApiError } from "@/api";
-import { AuthPage, Bouton, Carte, Champ, MessageEtat } from "@/components";
+import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { codeOtpValide } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
@@ -60,7 +60,7 @@ export default function CodeOtp() {
       title="Code de vérification"
       description={`Saisissez le code envoyé au ${phone || "numéro indiqué"}. En mode fictif, utilisez 1234.`}
     >
-      <Carte style={styles.formulaire}>
+      <View style={styles.formulaire}>
         <Champ
           etiquette="Code OTP"
           value={code}
@@ -76,7 +76,7 @@ export default function CodeOtp() {
         {mutation.isSuccess ? <MessageEtat type="succes">Numéro vérifié.</MessageEtat> : null}
         <Bouton chargement={mutation.isPending} onPress={verifier}>Vérifier le code</Bouton>
         <Bouton variante="secondaire" onPress={() => router.replace("/connexion")}>Changer de numéro</Bouton>
-      </Carte>
+      </View>
     </AuthPage>
   );
 }
