@@ -17,6 +17,7 @@ export const httpApi: Api = {
   listCorridors: () => notConnected(),
   createTrip: () => notConnected(),
   listDriverTrips: () => notConnected(),
+  getTripManifest: () => notConnected(),
   closeTrip: () => notConnected(),
   createTripRequest: () => notConnected(),
   listClientTripRequests: () => notConnected(),

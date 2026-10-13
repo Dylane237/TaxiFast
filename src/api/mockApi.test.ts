@@ -90,4 +90,19 @@ describe("MockApi", () => {
 
     expect(matches).toHaveLength(0);
   });
+
+  it("fournit le manifeste puis clôt le trajet et ses réservations confirmées", async () => {
+    const api = instantApi(mockIds.driver);
+
+    const manifest = await api.getTripManifest(mockIds.tripWithOneSeatLeft);
+    expect(manifest.passengers).toEqual([
+      expect.objectContaining({ clientName: "Patrick", pickupStopId: "c1-stop-1", dropoffStopId: "c1-stop-3" }),
+    ]);
+
+    const trip = await api.closeTrip(mockIds.tripWithOneSeatLeft);
+    expect(trip.status).toBe("COMPLETED");
+    await expect(api.listBookingHistory()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "booking-confirmed", status: "COMPLETED" })]),
+    );
+  });
 });

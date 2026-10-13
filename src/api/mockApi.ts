@@ -18,6 +18,7 @@ import type {
   Role,
   Trip,
   TripRequest,
+  TripManifest,
   UpdateProfileInput,
   UserProfile,
   Wallet,
@@ -295,12 +296,43 @@ export class MockApi implements Api {
     return clone(this.data.trips.filter((trip) => trip.driverId === driver.id));
   }
 
+  async getTripManifest(tripId: string): Promise<TripManifest> {
+    await this.wait();
+    const driver = this.currentUser(["DRIVER"]);
+    const trip = this.tripById(parse(idSchema, tripId));
+    if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
+
+    const passengers = this.data.bookings
+      .filter((booking) => booking.tripId === trip.id && ["CONFIRMED", "COMPLETED"].includes(booking.status))
+      .map((booking) => {
+        const client = this.data.users.find((user) => user.id === booking.clientId);
+        return {
+          bookingId: booking.id,
+          clientId: booking.clientId,
+          clientName: client?.name ?? null,
+          pickupStopId: booking.pickupStopId,
+          dropoffStopId: booking.dropoffStopId,
+        };
+      });
+
+    return clone({ trip, passengers });
+  }
+
   async closeTrip(tripId: string): Promise<Trip> {
     await this.wait();
     const driver = this.currentUser(["DRIVER"]);
     const trip = this.tripById(parse(idSchema, tripId));
     if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
-    trip.status = "CLOSED";
+    if (!["OPEN", "FULL"].includes(trip.status)) throw new ApiError("TRIP_NOT_OPEN");
+    trip.status = "COMPLETED";
+    const now = new Date().toISOString();
+    this.data.bookings
+      .filter((booking) => booking.tripId === trip.id && ["CONFIRMED", "PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status))
+      .forEach((booking) => {
+        if (booking.status === "CONFIRMED") booking.status = "COMPLETED";
+        if (["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status)) booking.status = "EXPIRED";
+        booking.updatedAt = now;
+      });
     return clone(trip);
   }
 

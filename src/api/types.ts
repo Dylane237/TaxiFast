@@ -130,6 +130,21 @@ export type Booking = {
   updatedAt: IsoDateString;
 };
 
+// Contrat proposé pour l'écran chauffeur « Trajet en cours ».
+// Le serveur ne possède pas encore la route correspondante.
+export type TripManifestPassenger = {
+  bookingId: string;
+  clientId: string;
+  clientName: string | null;
+  pickupStopId: string;
+  dropoffStopId: string;
+};
+
+export type TripManifest = {
+  trip: Trip;
+  passengers: TripManifestPassenger[];
+};
+
 export type AuthResult = { token: string; user: User };
 export type OtpRequestResult = { status: "OTP_SENT" };
 

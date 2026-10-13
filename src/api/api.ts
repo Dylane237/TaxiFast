@@ -12,6 +12,7 @@ import type {
   Rating,
   Role,
   Trip,
+  TripManifest,
   TripRequest,
   UpdateProfileInput,
   UserProfile,
@@ -29,6 +30,7 @@ export interface Api {
   listCorridors(): Promise<Corridor[]>;
   createTrip(input: CreateTripInput): Promise<Trip>;
   listDriverTrips(): Promise<Trip[]>;
+  getTripManifest(tripId: string): Promise<TripManifest>;
   closeTrip(tripId: string): Promise<Trip>;
 
   createTripRequest(input: CreateTripRequestInput): Promise<TripRequest>;

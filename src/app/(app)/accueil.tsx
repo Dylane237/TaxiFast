@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { IconArrowRight, IconInbox, IconList, IconLogout, IconRoute } from "@tabler/icons-react-native";
+import { IconArrowRight, IconInbox, IconList, IconLogout, IconMapPin, IconRoute } from "@tabler/icons-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useMemo } from "react";
@@ -15,7 +15,7 @@ export default function Accueil() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clearSession);
-  const points = useMemo(() => ["48%", "79%"], []);
+  const points = useMemo(() => ["56%", "82%"], []);
   const deconnexion = useMutation({
     mutationFn: () => api.signOut(),
     onSuccess: async () => {
@@ -62,6 +62,14 @@ export default function Accueil() {
               </View>
               <Text style={styles.texteFeuille}>Choisissez un axe, ordonnez vos arrêts et indiquez vos places disponibles.</Text>
               <Bouton icone={<IconArrowRight color={couleurs.texte} size={20} />} onPress={() => router.push("/je-pars")}>Je pars maintenant</Bouton>
+              <Pressable accessibilityRole="button" onPress={() => router.push("./trajet-en-cours")} style={styles.lienTrajets}>
+                <View style={[styles.lienIcone, styles.lienIconePrimaire]}><IconMapPin color={couleurs.texte} size={21} /></View>
+                <View style={styles.lienTexte}>
+                  <Text style={styles.lienTitre}>Trajet en cours</Text>
+                  <Text style={styles.lienDescription}>Montées, descentes et places restantes</Text>
+                </View>
+                <IconArrowRight color={couleurs.texteSecondaire} size={20} />
+              </Pressable>
               <Pressable accessibilityRole="button" onPress={() => router.push("./demandes")} style={styles.lienTrajets}>
                 <View style={[styles.lienIcone, styles.lienIconePrimaire]}><IconInbox color={couleurs.texte} size={21} /></View>
                 <View style={styles.lienTexte}>
