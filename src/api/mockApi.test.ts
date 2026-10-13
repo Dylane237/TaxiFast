@@ -21,7 +21,11 @@ describe("MockApi", () => {
     const firstApi = instantApi(null);
     await firstApi.requestOtp("+237699000001");
     const session = await firstApi.verifyOtp("+237699000001", "1234", "DRIVER");
-    const profile = await firstApi.updateProfile({ name: "Marcel", plate: "LT 999 ZZ", seats: 4 });
+    const profile = await firstApi.updateProfile({
+      name: "Marcel",
+      plate: "LT 999 ZZ",
+      seats: 4,
+    });
     const restartedApi = instantApi(null);
 
     await restartedApi.restoreSession(session.token, profile);
@@ -46,7 +50,9 @@ describe("MockApi", () => {
       "c1-stop-5",
     ]);
     await expect(api.listDriverTrips()).resolves.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: trip.id, status: "OPEN" })]),
+      expect.arrayContaining([
+        expect.objectContaining({ id: trip.id, status: "OPEN" }),
+      ]),
     );
   });
 
@@ -58,7 +64,9 @@ describe("MockApi", () => {
       api.acceptBooking("booking-pending-b"),
     ]);
 
-    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(
+      results.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
     const rejected = results.find((result) => result.status === "rejected");
     expect(rejected?.status).toBe("rejected");
     if (rejected?.status === "rejected") {
@@ -70,8 +78,30 @@ describe("MockApi", () => {
   it("empêche une deuxième contre-proposition", async () => {
     const api = instantApi(mockIds.client);
 
-    await expect(api.counterOfferBooking("booking-countered", 1800)).rejects.toMatchObject({
+    await expect(
+      api.counterOfferBooking("booking-countered", 1800),
+    ).rejects.toMatchObject({
       code: "COUNTER_OFFER_ALREADY_USED",
+    });
+  });
+
+  it("permet au client d’accepter une offre chauffeur détaillée", async () => {
+    const api = instantApi(mockIds.client);
+
+    const details = await api.getBookingDetails("booking-driver-offer");
+    expect(details).toMatchObject({
+      driver: {
+        name: "Brigitte",
+        rating: 5,
+        vehicle: { model: "Toyota Yaris" },
+      },
+    });
+
+    await expect(
+      api.acceptBooking("booking-driver-offer"),
+    ).resolves.toMatchObject({
+      status: "CONFIRMED",
+      agreedPrice: 1700,
     });
   });
 
@@ -80,7 +110,11 @@ describe("MockApi", () => {
 
     const history = await api.listBookingHistory();
 
-    expect(history).toEqual(expect.arrayContaining([expect.objectContaining({ id: "booking-refused", status: "REFUSED" })]));
+    expect(history).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "booking-refused", status: "REFUSED" }),
+      ]),
+    );
   });
 
   it("ne propose pas un trajet plein à une demande compatible", async () => {
@@ -96,13 +130,66 @@ describe("MockApi", () => {
 
     const manifest = await api.getTripManifest(mockIds.tripWithOneSeatLeft);
     expect(manifest.passengers).toEqual([
-      expect.objectContaining({ clientName: "Patrick", pickupStopId: "c1-stop-1", dropoffStopId: "c1-stop-3" }),
+      expect.objectContaining({
+        clientName: "Patrick",
+        pickupStopId: "c1-stop-1",
+        dropoffStopId: "c1-stop-3",
+      }),
     ]);
 
     const trip = await api.closeTrip(mockIds.tripWithOneSeatLeft);
     expect(trip.status).toBe("COMPLETED");
     await expect(api.listBookingHistory()).resolves.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: "booking-confirmed", status: "COMPLETED" })]),
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "booking-confirmed",
+          status: "COMPLETED",
+        }),
+      ]),
     );
+  });
+
+  it("expose les détails d’une course et empêche une double notation", async () => {
+    const api = instantApi(mockIds.client);
+
+    const details = await api.getBookingDetails("booking-history");
+    expect(details).toMatchObject({
+      pickupStop: { name: "Carrefour Central" },
+      dropoffStop: { name: "Gare Routière" },
+      driver: { name: "Alain" },
+      ratedByCurrentUser: false,
+    });
+
+    await expect(
+      api.createRating({
+        bookingId: "booking-history",
+        targetId: mockIds.secondClient,
+        score: 5,
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    await api.createRating({
+      bookingId: "booking-history",
+      targetId: details.driver.id,
+      score: 5,
+      comment: "Très bien",
+    });
+    await expect(
+      api.createRating({
+        bookingId: "booking-history",
+        targetId: details.driver.id,
+        score: 4,
+      }),
+    ).rejects.toMatchObject({ code: "RATING_NOT_ALLOWED" });
+  });
+
+  it("calcule le portefeuille du chauffeur à partir de ses transactions", async () => {
+    const api = instantApi(mockIds.driver);
+
+    await expect(api.getWallet()).resolves.toMatchObject({
+      balance: 2480,
+      earnings: 2790,
+      commissions: 310,
+    });
   });
 });

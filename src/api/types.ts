@@ -75,7 +75,10 @@ export type MatchedTrip = {
   capacity: number;
   departureAt: IsoDateString;
   status: TripStatus;
-  driver: Pick<User, "id" | "name">;
+  driver: Pick<User, "id" | "name"> & {
+    rating: number | null;
+    vehicle: Pick<Vehicle, "plate" | "model" | "seats"> | null;
+  };
   tripStops: {
     sequence: number;
     stopId: string;
@@ -145,6 +148,20 @@ export type TripManifest = {
   passengers: TripManifestPassenger[];
 };
 
+// Contrat mobile proposé : le serveur ne possède pas encore cette vue agrégée.
+export type BookingDetails = {
+  booking: Booking;
+  trip: Trip;
+  driver: Pick<User, "id" | "name"> & {
+    rating: number | null;
+    vehicle: Pick<Vehicle, "plate" | "model" | "seats"> | null;
+  };
+  client: Pick<User, "id" | "name">;
+  pickupStop: Pick<Stop, "id" | "name">;
+  dropoffStop: Pick<Stop, "id" | "name">;
+  ratedByCurrentUser: boolean;
+};
+
 export type AuthResult = { token: string; user: User };
 export type OtpRequestResult = { status: "OTP_SENT" };
 
@@ -189,7 +206,10 @@ export type Rating = {
   createdAt: IsoDateString;
 };
 
-export type CreateRatingInput = Pick<Rating, "bookingId" | "targetId" | "score"> & {
+export type CreateRatingInput = Pick<
+  Rating,
+  "bookingId" | "targetId" | "score"
+> & {
   comment?: string;
 };
 

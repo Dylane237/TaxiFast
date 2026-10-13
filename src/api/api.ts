@@ -1,6 +1,7 @@
 import type {
   AuthResult,
   Booking,
+  BookingDetails,
   Corridor,
   CreateRatingInput,
   CreateTripInput,
@@ -21,7 +22,11 @@ import type {
 
 export interface Api {
   requestOtp(phone: string): Promise<OtpRequestResult>;
-  verifyOtp(phone: string, code: string, role?: Extract<Role, "CLIENT" | "DRIVER">): Promise<AuthResult>;
+  verifyOtp(
+    phone: string,
+    code: string,
+    role?: Extract<Role, "CLIENT" | "DRIVER">,
+  ): Promise<AuthResult>;
   restoreSession(token: string, user: UserProfile): Promise<void>;
   signOut(): Promise<void>;
   getCurrentUser(): Promise<UserProfile | null>;
@@ -42,11 +47,15 @@ export interface Api {
   proposeBooking(input: ProposeBookingInput): Promise<Booking>;
   acceptBooking(bookingId: string): Promise<Booking>;
   refuseBooking(bookingId: string): Promise<Booking>;
-  counterOfferBooking(bookingId: string, counterPrice: number): Promise<Booking>;
+  counterOfferBooking(
+    bookingId: string,
+    counterPrice: number,
+  ): Promise<Booking>;
   cancelBooking(bookingId: string): Promise<Booking>;
   listClientBookings(): Promise<Booking[]>;
   listDriverBookings(): Promise<Booking[]>;
   listBookingHistory(): Promise<Booking[]>;
+  getBookingDetails(bookingId: string): Promise<BookingDetails>;
 
   createRating(input: CreateRatingInput): Promise<Rating>;
   getWallet(): Promise<Wallet>;

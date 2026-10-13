@@ -32,6 +32,7 @@ export const httpApi: Api = {
   listClientBookings: () => notConnected(),
   listDriverBookings: () => notConnected(),
   listBookingHistory: () => notConnected(),
+  getBookingDetails: () => notConnected(),
   createRating: () => notConnected(),
   getWallet: () => notConnected(),
 };

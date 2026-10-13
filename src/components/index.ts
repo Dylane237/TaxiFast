@@ -6,3 +6,6 @@ export { EntetePage } from "./EntetePage";
 export { MessageEtat } from "./MessageEtat";
 export { Apparition } from "./Apparition";
 export { RouteBackdrop } from "./RouteBackdrop";
+export { EtatContenu } from "./EtatContenu";
+export { LigneAction } from "./LigneAction";
+export { PuceChoix } from "./PuceChoix";

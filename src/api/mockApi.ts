@@ -6,6 +6,7 @@ import { createMockData, mockIds, type MockData } from "./mockData";
 import type {
   AuthResult,
   Booking,
+  BookingDetails,
   BookingStatus,
   Corridor,
   CreateRatingInput,
@@ -24,7 +25,10 @@ import type {
   Wallet,
 } from "./types";
 
-const phoneSchema = z.string().trim().regex(/^\+2376\d{8}$/);
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\+2376\d{8}$/);
 const idSchema = z.string().trim().min(1);
 const positivePriceSchema = z.number().int().positive();
 const isoDateSchema = z.iso.datetime({ offset: true });
@@ -34,7 +38,10 @@ const createTripSchema = z.object({
   corridorId: idSchema,
   capacity: z.number().int().positive(),
   departureAt: isoDateSchema,
-  stopIds: z.array(idSchema).min(2).refine((ids) => new Set(ids).size === ids.length),
+  stopIds: z
+    .array(idSchema)
+    .min(2)
+    .refine((ids) => new Set(ids).size === ids.length),
 });
 
 const createRequestSchema = z
@@ -83,7 +90,8 @@ function clone<T>(value: T): T {
 
 function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   const parsed = schema.safeParse(value);
-  if (!parsed.success) throw new ApiError("INVALID_INPUT", "Les données saisies sont invalides.");
+  if (!parsed.success)
+    throw new ApiError("INVALID_INPUT", "Les données saisies sont invalides.");
   return parsed.data;
 }
 
@@ -98,13 +106,17 @@ export class MockApi implements Api {
   constructor(options: MockApiOptions = {}) {
     this.minDelayMs = Math.max(0, options.minDelayMs ?? 300);
     this.maxDelayMs = Math.max(this.minDelayMs, options.maxDelayMs ?? 800);
-    this.activeUserId = options.initialUserId === undefined ? mockIds.client : options.initialUserId;
+    this.activeUserId =
+      options.initialUserId === undefined
+        ? mockIds.client
+        : options.initialUserId;
   }
 
   private async wait(): Promise<void> {
     if (this.maxDelayMs === 0) return;
     const duration =
-      this.minDelayMs + Math.floor(Math.random() * (this.maxDelayMs - this.minDelayMs + 1));
+      this.minDelayMs +
+      Math.floor(Math.random() * (this.maxDelayMs - this.minDelayMs + 1));
     await new Promise((resolve) => setTimeout(resolve, duration));
   }
 
@@ -114,10 +126,16 @@ export class MockApi implements Api {
   }
 
   private currentUser(roles?: Role[]): UserProfile {
-    const user = this.data.users.find((candidate) => candidate.id === this.activeUserId);
-    if (!user) throw new ApiError("UNAUTHENTICATED", "Vous devez vous connecter.");
+    const user = this.data.users.find(
+      (candidate) => candidate.id === this.activeUserId,
+    );
+    if (!user)
+      throw new ApiError("UNAUTHENTICATED", "Vous devez vous connecter.");
     if (roles && !roles.includes(user.role)) {
-      throw new ApiError("FORBIDDEN", "Cette action n’est pas autorisée pour ce profil.");
+      throw new ApiError(
+        "FORBIDDEN",
+        "Cette action n’est pas autorisée pour ce profil.",
+      );
     }
     return user;
   }
@@ -129,12 +147,30 @@ export class MockApi implements Api {
   }
 
   private bookingById(bookingId: string): Booking {
-    const booking = this.data.bookings.find((candidate) => candidate.id === bookingId);
+    const booking = this.data.bookings.find(
+      (candidate) => candidate.id === bookingId,
+    );
     if (!booking) throw new ApiError("NOT_FOUND", "Réservation introuvable.");
     return booking;
   }
 
-  private segmentFor(trip: Trip, pickupStopId: string, dropoffStopId: string): Segment | null {
+  private driverRating(driverId: string): number | null {
+    const scores = this.data.ratings
+      .filter((rating) => rating.targetId === driverId)
+      .map((rating) => rating.score);
+    if (!scores.length) return 4.8;
+    return (
+      Math.round(
+        (scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10,
+      ) / 10
+    );
+  }
+
+  private segmentFor(
+    trip: Trip,
+    pickupStopId: string,
+    dropoffStopId: string,
+  ): Segment | null {
     const sequenceByStopId = new Map(
       trip.tripStops.map((tripStop) => [tripStop.stopId, tripStop.sequence]),
     );
@@ -153,16 +189,21 @@ export class MockApi implements Api {
           booking.status === "CONFIRMED" &&
           booking.id !== ignoredBookingId,
       )
-      .map((booking) => this.segmentFor(trip, booking.pickupStopId, booking.dropoffStopId))
+      .map((booking) =>
+        this.segmentFor(trip, booking.pickupStopId, booking.dropoffStopId),
+      )
       .filter((segment): segment is Segment => segment !== null);
   }
 
   private recalculateTripStatus(trip: Trip): void {
     if (["CLOSED", "COMPLETED", "CANCELLED"].includes(trip.status)) return;
     const existing = this.confirmedSegments(trip);
-    const everyLegIsFull = trip.tripStops.slice(0, -1).every((_, leg) =>
-      !canBook(trip.capacity, existing, { pickup: leg, dropoff: leg + 1 }),
-    );
+    const everyLegIsFull = trip.tripStops
+      .slice(0, -1)
+      .every(
+        (_, leg) =>
+          !canBook(trip.capacity, existing, { pickup: leg, dropoff: leg + 1 }),
+      );
     trip.status = everyLegIsFull ? "FULL" : "OPEN";
   }
 
@@ -180,10 +221,14 @@ export class MockApi implements Api {
   ): Promise<AuthResult> {
     await this.wait();
     const validPhone = parse(phoneSchema, phone);
-    if (!this.requestedPhones.has(validPhone)) throw new ApiError("OTP_NOT_REQUESTED");
-    if (code !== "1234") throw new ApiError("OTP_INVALID", "Le code fictif attendu est 1234.");
+    if (!this.requestedPhones.has(validPhone))
+      throw new ApiError("OTP_NOT_REQUESTED");
+    if (code !== "1234")
+      throw new ApiError("OTP_INVALID", "Le code fictif attendu est 1234.");
 
-    let user = this.data.users.find((candidate) => candidate.phone === validPhone);
+    let user = this.data.users.find(
+      (candidate) => candidate.phone === validPhone,
+    );
     if (!user) {
       if (!role) throw new ApiError("ROLE_REQUIRED");
       const validRole = parse(roleSchema, role);
@@ -210,8 +255,11 @@ export class MockApi implements Api {
 
   async restoreSession(token: string, user: UserProfile): Promise<void> {
     await this.wait();
-    if (token !== `mock-token-${user.id}`) throw new ApiError("UNAUTHENTICATED");
-    const existingIndex = this.data.users.findIndex((candidate) => candidate.id === user.id);
+    if (token !== `mock-token-${user.id}`)
+      throw new ApiError("UNAUTHENTICATED");
+    const existingIndex = this.data.users.findIndex(
+      (candidate) => candidate.id === user.id,
+    );
     if (existingIndex === -1) this.data.users.push(clone(user));
     else this.data.users[existingIndex] = clone(user);
     this.activeUserId = user.id;
@@ -219,7 +267,9 @@ export class MockApi implements Api {
 
   async getCurrentUser(): Promise<UserProfile | null> {
     await this.wait();
-    const user = this.data.users.find((candidate) => candidate.id === this.activeUserId) ?? null;
+    const user =
+      this.data.users.find((candidate) => candidate.id === this.activeUserId) ??
+      null;
     return clone(user);
   }
 
@@ -250,10 +300,15 @@ export class MockApi implements Api {
     await this.wait();
     const values = parse(createTripSchema, input);
     const driver = this.currentUser(["DRIVER"]);
-    const corridor = this.data.corridors.find((candidate) => candidate.id === values.corridorId);
+    const corridor = this.data.corridors.find(
+      (candidate) => candidate.id === values.corridorId,
+    );
     if (!corridor) throw new ApiError("NOT_FOUND", "Axe introuvable.");
     if (driver.vehicle && values.capacity > driver.vehicle.seats) {
-      throw new ApiError("INVALID_INPUT", "La capacité dépasse le nombre de places du véhicule.");
+      throw new ApiError(
+        "INVALID_INPUT",
+        "La capacité dépasse le nombre de places du véhicule.",
+      );
     }
 
     const positions = values.stopIds.map(
@@ -262,11 +317,17 @@ export class MockApi implements Api {
     if (positions.some((position) => position === undefined)) {
       throw new ApiError("INVALID_TRIP_STOPS");
     }
-    const ordered = positions.every(
-      (position, index) => index === 0 || Math.abs(position! - positions[index - 1]!) > 0,
-    ) &&
-      (positions.every((position, index) => index === 0 || position! > positions[index - 1]!) ||
-        positions.every((position, index) => index === 0 || position! < positions[index - 1]!));
+    const ordered =
+      positions.every(
+        (position, index) =>
+          index === 0 || Math.abs(position! - positions[index - 1]!) > 0,
+      ) &&
+      (positions.every(
+        (position, index) => index === 0 || position! > positions[index - 1]!,
+      ) ||
+        positions.every(
+          (position, index) => index === 0 || position! < positions[index - 1]!,
+        ));
     if (!ordered) throw new ApiError("INVALID_TRIP_STOPS");
 
     const id = this.nextId("trip");
@@ -303,9 +364,15 @@ export class MockApi implements Api {
     if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
 
     const passengers = this.data.bookings
-      .filter((booking) => booking.tripId === trip.id && ["CONFIRMED", "COMPLETED"].includes(booking.status))
+      .filter(
+        (booking) =>
+          booking.tripId === trip.id &&
+          ["CONFIRMED", "COMPLETED"].includes(booking.status),
+      )
       .map((booking) => {
-        const client = this.data.users.find((user) => user.id === booking.clientId);
+        const client = this.data.users.find(
+          (user) => user.id === booking.clientId,
+        );
         return {
           bookingId: booking.id,
           clientId: booking.clientId,
@@ -323,14 +390,24 @@ export class MockApi implements Api {
     const driver = this.currentUser(["DRIVER"]);
     const trip = this.tripById(parse(idSchema, tripId));
     if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
-    if (!["OPEN", "FULL"].includes(trip.status)) throw new ApiError("TRIP_NOT_OPEN");
+    if (!["OPEN", "FULL"].includes(trip.status))
+      throw new ApiError("TRIP_NOT_OPEN");
     trip.status = "COMPLETED";
     const now = new Date().toISOString();
     this.data.bookings
-      .filter((booking) => booking.tripId === trip.id && ["CONFIRMED", "PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status))
+      .filter(
+        (booking) =>
+          booking.tripId === trip.id &&
+          ["CONFIRMED", "PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(
+            booking.status,
+          ),
+      )
       .forEach((booking) => {
         if (booking.status === "CONFIRMED") booking.status = "COMPLETED";
-        if (["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status)) booking.status = "EXPIRED";
+        if (
+          ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status)
+        )
+          booking.status = "EXPIRED";
         booking.updatedAt = now;
       });
     return clone(trip);
@@ -340,11 +417,16 @@ export class MockApi implements Api {
     await this.wait();
     const values = parse(createRequestSchema, input);
     const client = this.currentUser(["CLIENT"]);
-    const corridor = this.data.corridors.find((candidate) => candidate.id === values.corridorId);
+    const corridor = this.data.corridors.find(
+      (candidate) => candidate.id === values.corridorId,
+    );
     const from = corridor?.stops.find((stop) => stop.id === values.fromStopId);
     const to = corridor?.stops.find((stop) => stop.id === values.toStopId);
     if (!corridor || !from || !to || from.position >= to.position) {
-      throw new ApiError("INVALID_INPUT", "L’arrêt d’arrivée doit suivre l’arrêt de départ.");
+      throw new ApiError(
+        "INVALID_INPUT",
+        "L’arrêt d’arrivée doit suivre l’arrêt de départ.",
+      );
     }
     const request: TripRequest = {
       id: this.nextId("request"),
@@ -360,13 +442,17 @@ export class MockApi implements Api {
   async listClientTripRequests(): Promise<TripRequest[]> {
     await this.wait();
     const client = this.currentUser(["CLIENT"]);
-    return clone(this.data.requests.filter((request) => request.clientId === client.id));
+    return clone(
+      this.data.requests.filter((request) => request.clientId === client.id),
+    );
   }
 
   async cancelTripRequest(requestId: string): Promise<TripRequest> {
     await this.wait();
     const client = this.currentUser(["CLIENT"]);
-    const request = this.data.requests.find((candidate) => candidate.id === parse(idSchema, requestId));
+    const request = this.data.requests.find(
+      (candidate) => candidate.id === parse(idSchema, requestId),
+    );
     if (!request) throw new ApiError("NOT_FOUND");
     if (request.clientId !== client.id) throw new ApiError("FORBIDDEN");
     request.status = "CANCELLED";
@@ -376,7 +462,9 @@ export class MockApi implements Api {
   async listTripsForRequest(requestId: string): Promise<MatchedTrip[]> {
     await this.wait();
     const client = this.currentUser(["CLIENT"]);
-    const request = this.data.requests.find((candidate) => candidate.id === parse(idSchema, requestId));
+    const request = this.data.requests.find(
+      (candidate) => candidate.id === parse(idSchema, requestId),
+    );
     if (!request) throw new ApiError("NOT_FOUND");
     if (request.clientId !== client.id) throw new ApiError("FORBIDDEN");
     if (request.status !== "OPEN") return [];
@@ -384,12 +472,20 @@ export class MockApi implements Api {
     return clone(
       this.data.trips
         .filter((trip) => {
-          const segment = this.segmentFor(trip, request.fromStopId, request.toStopId);
+          const segment = this.segmentFor(
+            trip,
+            request.fromStopId,
+            request.toStopId,
+          );
           const alreadyProposed = this.data.bookings.some(
             (booking) =>
               booking.tripId === trip.id &&
               booking.requestId === request.id &&
-              ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER", "CONFIRMED"].includes(booking.status),
+              [
+                "PROPOSED_BY_CLIENT",
+                "PROPOSED_BY_DRIVER",
+                "CONFIRMED",
+              ].includes(booking.status),
           );
           return (
             trip.corridorId === request.corridorId &&
@@ -402,14 +498,27 @@ export class MockApi implements Api {
           );
         })
         .map((trip) => {
-          const driver = this.data.users.find((user) => user.id === trip.driverId)!;
+          const driver = this.data.users.find(
+            (user) => user.id === trip.driverId,
+          )!;
           return {
             id: trip.id,
             corridorId: trip.corridorId,
             capacity: trip.capacity,
             departureAt: trip.departureAt,
             status: trip.status,
-            driver: { id: driver.id, name: driver.name },
+            driver: {
+              id: driver.id,
+              name: driver.name,
+              rating: this.driverRating(driver.id),
+              vehicle: driver.vehicle
+                ? {
+                    plate: driver.vehicle.plate,
+                    model: driver.vehicle.model,
+                    seats: driver.vehicle.seats,
+                  }
+                : null,
+            },
             tripStops: trip.tripStops.map(({ sequence, stopId, stop }) => ({
               sequence,
               stopId,
@@ -430,12 +539,20 @@ export class MockApi implements Api {
     return clone(
       this.data.requests
         .filter((request) => {
-          const segment = this.segmentFor(trip, request.fromStopId, request.toStopId);
+          const segment = this.segmentFor(
+            trip,
+            request.fromStopId,
+            request.toStopId,
+          );
           const alreadyProposed = this.data.bookings.some(
             (booking) =>
               booking.tripId === trip.id &&
               booking.requestId === request.id &&
-              ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER", "CONFIRMED"].includes(booking.status),
+              [
+                "PROPOSED_BY_CLIENT",
+                "PROPOSED_BY_DRIVER",
+                "CONFIRMED",
+              ].includes(booking.status),
           );
           return (
             request.corridorId === trip.corridorId &&
@@ -449,10 +566,18 @@ export class MockApi implements Api {
         })
         .sort((a, b) => b.proposedPrice - a.proposedPrice)
         .map((request) => {
-          const client = this.data.users.find((user) => user.id === request.clientId)!;
-          const corridor = this.data.corridors.find((item) => item.id === trip.corridorId)!;
-          const fromStop = corridor.stops.find((stop) => stop.id === request.fromStopId)!;
-          const toStop = corridor.stops.find((stop) => stop.id === request.toStopId)!;
+          const client = this.data.users.find(
+            (user) => user.id === request.clientId,
+          )!;
+          const corridor = this.data.corridors.find(
+            (item) => item.id === trip.corridorId,
+          )!;
+          const fromStop = corridor.stops.find(
+            (stop) => stop.id === request.fromStopId,
+          )!;
+          const toStop = corridor.stops.find(
+            (stop) => stop.id === request.toStopId,
+          )!;
           return {
             id: request.id,
             clientId: request.clientId,
@@ -482,8 +607,11 @@ export class MockApi implements Api {
     let clientId = user.id;
     let status: BookingStatus = "PROPOSED_BY_CLIENT";
     if (user.role === "DRIVER") {
-      if (trip.driverId !== user.id || !values.requestId) throw new ApiError("FORBIDDEN");
-      const request = this.data.requests.find((candidate) => candidate.id === values.requestId);
+      if (trip.driverId !== user.id || !values.requestId)
+        throw new ApiError("FORBIDDEN");
+      const request = this.data.requests.find(
+        (candidate) => candidate.id === values.requestId,
+      );
       if (!request) throw new ApiError("NOT_FOUND");
       clientId = request.clientId;
       status = "PROPOSED_BY_DRIVER";
@@ -517,18 +645,34 @@ export class MockApi implements Api {
     const booking = this.bookingById(parse(idSchema, bookingId));
     const trip = this.tripById(booking.tripId);
     const responderId =
-      booking.status === "PROPOSED_BY_CLIENT" ? trip.driverId :
-        booking.status === "PROPOSED_BY_DRIVER" ? booking.clientId : null;
+      booking.status === "PROPOSED_BY_CLIENT"
+        ? trip.driverId
+        : booking.status === "PROPOSED_BY_DRIVER"
+          ? booking.clientId
+          : null;
     if (!responderId) throw new ApiError("BOOKING_NOT_CONFIRMABLE");
     if (responderId !== user.id) throw new ApiError("FORBIDDEN");
     if (booking.expiresAt && booking.expiresAt <= new Date().toISOString()) {
       booking.status = "EXPIRED";
       throw new ApiError("BOOKING_EXPIRED");
     }
-    const candidate = this.segmentFor(trip, booking.pickupStopId, booking.dropoffStopId);
+    const candidate = this.segmentFor(
+      trip,
+      booking.pickupStopId,
+      booking.dropoffStopId,
+    );
     if (!candidate) throw new ApiError("INVALID_BOOKING_STOPS");
-    if (!canBook(trip.capacity, this.confirmedSegments(trip, booking.id), candidate)) {
-      throw new ApiError("CAPACITY_EXCEEDED", "Le trajet est devenu complet sur ce tronçon.");
+    if (
+      !canBook(
+        trip.capacity,
+        this.confirmedSegments(trip, booking.id),
+        candidate,
+      )
+    ) {
+      throw new ApiError(
+        "CAPACITY_EXCEEDED",
+        "Le trajet est devenu complet sur ce tronçon.",
+      );
     }
 
     booking.status = "CONFIRMED";
@@ -544,8 +688,11 @@ export class MockApi implements Api {
     const booking = this.bookingById(parse(idSchema, bookingId));
     const trip = this.tripById(booking.tripId);
     const responderId =
-      booking.status === "PROPOSED_BY_CLIENT" ? trip.driverId :
-        booking.status === "PROPOSED_BY_DRIVER" ? booking.clientId : null;
+      booking.status === "PROPOSED_BY_CLIENT"
+        ? trip.driverId
+        : booking.status === "PROPOSED_BY_DRIVER"
+          ? booking.clientId
+          : null;
     if (!responderId) throw new ApiError("BOOKING_NOT_CONFIRMABLE");
     if (responderId !== user.id) throw new ApiError("FORBIDDEN");
     booking.status = "REFUSED";
@@ -553,20 +700,28 @@ export class MockApi implements Api {
     return clone(booking);
   }
 
-  async counterOfferBooking(bookingId: string, counterPrice: number): Promise<Booking> {
+  async counterOfferBooking(
+    bookingId: string,
+    counterPrice: number,
+  ): Promise<Booking> {
     await this.wait();
     const user = this.currentUser(["CLIENT", "DRIVER"]);
     const booking = this.bookingById(parse(idSchema, bookingId));
     const price = parse(positivePriceSchema, counterPrice);
-    if (booking.counterPrice !== null) throw new ApiError("COUNTER_OFFER_ALREADY_USED");
+    if (booking.counterPrice !== null)
+      throw new ApiError("COUNTER_OFFER_ALREADY_USED");
     const trip = this.tripById(booking.tripId);
     const responderId =
-      booking.status === "PROPOSED_BY_CLIENT" ? trip.driverId :
-        booking.status === "PROPOSED_BY_DRIVER" ? booking.clientId : null;
+      booking.status === "PROPOSED_BY_CLIENT"
+        ? trip.driverId
+        : booking.status === "PROPOSED_BY_DRIVER"
+          ? booking.clientId
+          : null;
     if (!responderId) throw new ApiError("BOOKING_NOT_CONFIRMABLE");
     if (responderId !== user.id) throw new ApiError("FORBIDDEN");
     booking.counterPrice = price;
-    booking.status = user.role === "DRIVER" ? "PROPOSED_BY_DRIVER" : "PROPOSED_BY_CLIENT";
+    booking.status =
+      user.role === "DRIVER" ? "PROPOSED_BY_DRIVER" : "PROPOSED_BY_CLIENT";
     booking.updatedAt = new Date().toISOString();
     return clone(booking);
   }
@@ -576,7 +731,8 @@ export class MockApi implements Api {
     const user = this.currentUser(["CLIENT", "DRIVER"]);
     const booking = this.bookingById(parse(idSchema, bookingId));
     const trip = this.tripById(booking.tripId);
-    if (booking.clientId !== user.id && trip.driverId !== user.id) throw new ApiError("FORBIDDEN");
+    if (booking.clientId !== user.id && trip.driverId !== user.id)
+      throw new ApiError("FORBIDDEN");
     if (["COMPLETED", "REFUSED", "EXPIRED"].includes(booking.status)) {
       throw new ApiError("BOOKING_NOT_CONFIRMABLE");
     }
@@ -589,27 +745,87 @@ export class MockApi implements Api {
   async listClientBookings(): Promise<Booking[]> {
     await this.wait();
     const client = this.currentUser(["CLIENT"]);
-    return clone(this.data.bookings.filter((booking) => booking.clientId === client.id));
+    return clone(
+      this.data.bookings.filter((booking) => booking.clientId === client.id),
+    );
   }
 
   async listDriverBookings(): Promise<Booking[]> {
     await this.wait();
     const driver = this.currentUser(["DRIVER"]);
-    const tripIds = new Set(this.data.trips.filter((trip) => trip.driverId === driver.id).map((trip) => trip.id));
-    return clone(this.data.bookings.filter((booking) => tripIds.has(booking.tripId)));
+    const tripIds = new Set(
+      this.data.trips
+        .filter((trip) => trip.driverId === driver.id)
+        .map((trip) => trip.id),
+    );
+    return clone(
+      this.data.bookings.filter((booking) => tripIds.has(booking.tripId)),
+    );
   }
 
   async listBookingHistory(): Promise<Booking[]> {
     await this.wait();
     const user = this.currentUser(["CLIENT", "DRIVER"]);
-    const driverTripIds = new Set(this.data.trips.filter((trip) => trip.driverId === user.id).map((trip) => trip.id));
+    const driverTripIds = new Set(
+      this.data.trips
+        .filter((trip) => trip.driverId === user.id)
+        .map((trip) => trip.id),
+    );
     return clone(
       this.data.bookings.filter(
         (booking) =>
-          ["COMPLETED", "CANCELLED", "REFUSED", "EXPIRED"].includes(booking.status) &&
+          ["COMPLETED", "CANCELLED", "REFUSED", "EXPIRED"].includes(
+            booking.status,
+          ) &&
           (booking.clientId === user.id || driverTripIds.has(booking.tripId)),
       ),
     );
+  }
+
+  async getBookingDetails(bookingId: string): Promise<BookingDetails> {
+    await this.wait();
+    const user = this.currentUser(["CLIENT", "DRIVER"]);
+    const booking = this.bookingById(parse(idSchema, bookingId));
+    const trip = this.tripById(booking.tripId);
+    if (booking.clientId !== user.id && trip.driverId !== user.id)
+      throw new ApiError("FORBIDDEN");
+    const driver = this.data.users.find(
+      (candidate) => candidate.id === trip.driverId,
+    )!;
+    const client = this.data.users.find(
+      (candidate) => candidate.id === booking.clientId,
+    )!;
+    const pickupStop = trip.tripStops.find(
+      (item) => item.stopId === booking.pickupStopId,
+    )?.stop;
+    const dropoffStop = trip.tripStops.find(
+      (item) => item.stopId === booking.dropoffStopId,
+    )?.stop;
+    if (!pickupStop || !dropoffStop)
+      throw new ApiError("INVALID_BOOKING_STOPS");
+    return clone({
+      booking,
+      trip,
+      driver: {
+        id: driver.id,
+        name: driver.name,
+        rating: this.driverRating(driver.id),
+        vehicle: driver.vehicle
+          ? {
+              plate: driver.vehicle.plate,
+              model: driver.vehicle.model,
+              seats: driver.vehicle.seats,
+            }
+          : null,
+      },
+      client: { id: client.id, name: client.name },
+      pickupStop: { id: pickupStop.id, name: pickupStop.name },
+      dropoffStop: { id: dropoffStop.id, name: dropoffStop.name },
+      ratedByCurrentUser: this.data.ratings.some(
+        (rating) =>
+          rating.bookingId === booking.id && rating.authorId === user.id,
+      ),
+    });
   }
 
   async createRating(input: CreateRatingInput): Promise<Rating> {
@@ -617,8 +833,23 @@ export class MockApi implements Api {
     const values = parse(ratingSchema, input);
     const user = this.currentUser(["CLIENT", "DRIVER"]);
     const booking = this.bookingById(values.bookingId);
-    if (booking.status !== "COMPLETED") throw new ApiError("RATING_NOT_ALLOWED");
-    if (this.data.ratings.some((rating) => rating.bookingId === booking.id && rating.authorId === user.id)) {
+    if (booking.status !== "COMPLETED")
+      throw new ApiError("RATING_NOT_ALLOWED");
+    const trip = this.tripById(booking.tripId);
+    const expectedTargetId =
+      user.id === booking.clientId
+        ? trip.driverId
+        : user.id === trip.driverId
+          ? booking.clientId
+          : null;
+    if (!expectedTargetId || values.targetId !== expectedTargetId)
+      throw new ApiError("FORBIDDEN");
+    if (
+      this.data.ratings.some(
+        (rating) =>
+          rating.bookingId === booking.id && rating.authorId === user.id,
+      )
+    ) {
       throw new ApiError("RATING_NOT_ALLOWED");
     }
     const rating: Rating = {
@@ -637,11 +868,22 @@ export class MockApi implements Api {
   async getWallet(): Promise<Wallet> {
     await this.wait();
     const driver = this.currentUser(["DRIVER"]);
-    const transactions = this.data.transactions.filter((transaction) => transaction.userId === driver.id);
+    const transactions = this.data.transactions.filter(
+      (transaction) => transaction.userId === driver.id,
+    );
     return clone({
-      balance: transactions.reduce((sum, transaction) => sum + transaction.amount, 0),
-      earnings: transactions.filter((transaction) => transaction.type === "PAYOUT").reduce((sum, transaction) => sum + transaction.amount, 0),
-      commissions: Math.abs(transactions.filter((transaction) => transaction.type === "COMMISSION").reduce((sum, transaction) => sum + transaction.amount, 0)),
+      balance: transactions.reduce(
+        (sum, transaction) => sum + transaction.amount,
+        0,
+      ),
+      earnings: transactions
+        .filter((transaction) => transaction.type === "PAYOUT")
+        .reduce((sum, transaction) => sum + transaction.amount, 0),
+      commissions: Math.abs(
+        transactions
+          .filter((transaction) => transaction.type === "COMMISSION")
+          .reduce((sum, transaction) => sum + transaction.amount, 0),
+      ),
       transactions,
     });
   }

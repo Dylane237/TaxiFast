@@ -13,7 +13,13 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { couleurs, espacements, mouvements, rayons, taillesTexte } from "@/theme";
+import {
+  couleurs,
+  espacements,
+  mouvements,
+  rayons,
+  taillesTexte,
+} from "@/theme";
 
 type BoutonProps = PressableProps & {
   children: string;
@@ -37,8 +43,11 @@ export function Bouton({
   const estDesactive = disabled || chargement;
   const echelle = useSharedValue(1);
   const mouvementReduit = useReducedMotion();
-  const styleAnime = useAnimatedStyle(() => ({ transform: [{ scale: echelle.value }] }));
-  const couleurIndicateur = variante === "sombre" ? couleurs.surface : couleurs.texte;
+  const styleAnime = useAnimatedStyle(() => ({
+    transform: [{ scale: echelle.value }],
+  }));
+  const couleurIndicateur =
+    variante === "sombre" ? couleurs.surface : couleurs.texte;
 
   return (
     <Animated.View style={styleAnime}>
@@ -53,7 +62,11 @@ export function Bouton({
           typeof style === "function" ? style(state) : style,
         ]}
         onPressIn={(event) => {
-          echelle.set(withTiming(mouvementReduit ? 1 : 0.975, { duration: mouvements.rapide }));
+          echelle.set(
+            withTiming(mouvementReduit ? 1 : 0.975, {
+              duration: mouvements.rapide,
+            }),
+          );
           onPressIn?.(event);
         }}
         onPressOut={(event) => {
@@ -71,7 +84,9 @@ export function Bouton({
         ) : (
           <>
             {icone}
-            <Text style={[styles.texte, variante === "sombre" && styles.texteClair]}>
+            <Text
+              style={[styles.texte, variante === "sombre" && styles.texteClair]}
+            >
               {children}
             </Text>
           </>
@@ -83,9 +98,9 @@ export function Bouton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 54,
+    minHeight: 52,
     borderRadius: rayons.md,
-    paddingHorizontal: espacements.lg,
+    paddingHorizontal: espacements.md,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -95,7 +110,9 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.primaire,
   },
   secondaire: {
-    backgroundColor: couleurs.surfaceSecondaire,
+    backgroundColor: couleurs.surface,
+    borderWidth: 1,
+    borderColor: couleurs.bordure,
   },
   sombre: {
     backgroundColor: couleurs.encre,

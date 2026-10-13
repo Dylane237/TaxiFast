@@ -25,9 +25,20 @@ export const Champ = forwardRef<TextInput, ChampProps>(function Champ(
       <TextInput
         ref={ref}
         placeholderTextColor={couleurs.texteSecondaire}
-        style={[styles.champ, actif && styles.champActif, erreur && styles.champErreur, style]}
-        onFocus={(event) => { setActif(true); onFocus?.(event); }}
-        onBlur={(event) => { setActif(false); onBlur?.(event); }}
+        style={[
+          styles.champ,
+          actif && styles.champActif,
+          erreur && styles.champErreur,
+          style,
+        ]}
+        onFocus={(event) => {
+          setActif(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setActif(false);
+          onBlur?.(event);
+        }}
         {...props}
       />
       {erreur ? <Text style={styles.erreur}>{erreur}</Text> : null}
@@ -37,7 +48,7 @@ export const Champ = forwardRef<TextInput, ChampProps>(function Champ(
 
 const styles = StyleSheet.create({
   conteneur: {
-    gap: espacements.sm,
+    gap: 6,
   },
   etiquette: {
     color: couleurs.texte,
@@ -45,11 +56,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   champ: {
-    minHeight: 52,
+    minHeight: 50,
     borderWidth: 1,
     borderColor: couleurs.bordure,
     borderRadius: rayons.md,
-    backgroundColor: couleurs.surfaceSecondaire,
+    backgroundColor: couleurs.surface,
     color: couleurs.texte,
     paddingHorizontal: espacements.md,
     fontSize: taillesTexte.normal,
