@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements } from "@/theme";
 
 export default function CodeOtp() {
+  const otpLength = process.env.EXPO_PUBLIC_USE_MOCK === "false" ? 6 : 4;
   const phone = useAuthFlowStore((state) => state.phone);
   const setFlowCode = useAuthFlowStore((state) => state.setCode);
   const resetFlow = useAuthFlowStore((state) => state.reset);
@@ -28,7 +29,9 @@ export default function CodeOtp() {
     onSuccess: async ({ session, profile }) => {
       await saveSession(session);
       if (profile) await updateUser(profile);
-      const complet = Boolean(profile?.name && (profile.role !== "DRIVER" || profile.vehicle));
+      const complet = Boolean(
+        profile?.name && (profile.role !== "DRIVER" || profile.vehicle),
+      );
       resetFlow();
       router.replace(complet ? "/accueil" : "/profil");
     },
@@ -45,37 +48,58 @@ export default function CodeOtp() {
       router.replace("/connexion");
       return;
     }
-    if (!codeOtpValide(code)) {
-      setErreurSaisie("Le code doit contenir 4 chiffres.");
+    if (!codeOtpValide(code, otpLength)) {
+      setErreurSaisie(`Le code doit contenir ${otpLength} chiffres.`);
       return;
     }
     setErreurSaisie(null);
     mutation.mutate();
   };
 
-  const roleRequis = mutation.error instanceof ApiError && mutation.error.code === "ROLE_REQUIRED";
+  const roleRequis =
+    mutation.error instanceof ApiError &&
+    mutation.error.code === "ROLE_REQUIRED";
   return (
     <AuthPage
       icon={<IconKey color={couleurs.primaire} size={40} strokeWidth={1.8} />}
       title="Code de vérification"
-      description={`Saisissez le code envoyé au ${phone || "numéro indiqué"}. En mode fictif, utilisez 1234.`}
+      description={`Saisissez le code envoyé au ${phone || "numéro indiqué"}.${otpLength === 4 ? " En mode fictif, utilisez 1234." : ""}`}
     >
       <View style={styles.formulaire}>
         <Champ
           etiquette="Code OTP"
           value={code}
-          onChangeText={(value) => setCode(value.replace(/\D/g, "").slice(0, 4))}
-          placeholder="1234"
+          onChangeText={(value) =>
+            setCode(value.replace(/\D/g, "").slice(0, otpLength))
+          }
+          placeholder={otpLength === 4 ? "1234" : "123456"}
           keyboardType="number-pad"
           autoComplete="one-time-code"
           erreur={erreurSaisie ?? undefined}
           onSubmitEditing={verifier}
         />
-        {!code ? <MessageEtat>Le code est requis pour vérifier votre numéro.</MessageEtat> : null}
-        {mutation.isError && !roleRequis ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
-        {mutation.isSuccess ? <MessageEtat type="succes">Numéro vérifié.</MessageEtat> : null}
-        <Bouton chargement={mutation.isPending} onPress={verifier}>Vérifier le code</Bouton>
-        <Bouton variante="secondaire" onPress={() => router.replace("/connexion")}>Changer de numéro</Bouton>
+        {!code ? (
+          <MessageEtat>
+            Le code est requis pour vérifier votre numéro.
+          </MessageEtat>
+        ) : null}
+        {mutation.isError && !roleRequis ? (
+          <MessageEtat type="erreur">
+            {messageErreur(mutation.error)}
+          </MessageEtat>
+        ) : null}
+        {mutation.isSuccess ? (
+          <MessageEtat type="succes">Numéro vérifié.</MessageEtat>
+        ) : null}
+        <Bouton chargement={mutation.isPending} onPress={verifier}>
+          Vérifier le code
+        </Bouton>
+        <Bouton
+          variante="secondaire"
+          onPress={() => router.replace("/connexion")}
+        >
+          Changer de numéro
+        </Bouton>
       </View>
     </AuthPage>
   );

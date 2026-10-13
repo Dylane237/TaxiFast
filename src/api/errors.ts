@@ -14,6 +14,9 @@ export type ApiErrorCode =
   | "CAPACITY_EXCEEDED"
   | "COUNTER_OFFER_ALREADY_USED"
   | "RATING_NOT_ALLOWED"
+  | "NETWORK_ERROR"
+  | "SESSION_EXPIRED"
+  | "INVALID_RESPONSE"
   | "NOT_IMPLEMENTED";
 
 export class ApiError extends Error {

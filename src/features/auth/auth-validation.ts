@@ -6,8 +6,8 @@ export function normaliserTelephone(value: string): string | null {
   return `+237${local}`;
 }
 
-export function codeOtpValide(value: string): boolean {
-  return /^\d{4}$/.test(value);
+export function codeOtpValide(value: string, length: 4 | 6 = 4): boolean {
+  return new RegExp(`^\\d{${length}}$`).test(value);
 }
 
 export function placesValides(value: string): boolean {

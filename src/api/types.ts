@@ -29,7 +29,7 @@ export type Vehicle = {
   seats: number;
 };
 
-// Contrat proposé : aucune route de profil n'existe encore côté serveur.
+// Forme renvoyée par GET/PATCH /me.
 export type UserProfile = User & {
   vehicle: Vehicle | null;
 };
@@ -41,7 +41,7 @@ export type Stop = {
   position: number;
 };
 
-// Contrat proposé : aucune route ne liste encore les axes.
+// Forme d'un élément de GET /corridors.
 export type Corridor = {
   id: string;
   name: string;
@@ -133,8 +133,7 @@ export type Booking = {
   updatedAt: IsoDateString;
 };
 
-// Contrat proposé pour l'écran chauffeur « Trajet en cours ».
-// Le serveur ne possède pas encore la route correspondante.
+// Forme renvoyée par GET /trips/:tripId/manifest.
 export type TripManifestPassenger = {
   bookingId: string;
   clientId: string;
@@ -148,7 +147,7 @@ export type TripManifest = {
   passengers: TripManifestPassenger[];
 };
 
-// Contrat mobile proposé : le serveur ne possède pas encore cette vue agrégée.
+// Forme renvoyée par GET /bookings/:bookingId.
 export type BookingDetails = {
   booking: Booking;
   trip: Trip;

@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 import { api, type AuthResult, type UserProfile } from "@/api";
+import { setSessionExpiredHandler } from "@/api/session-events";
 
 const TOKEN_KEY = "covoiturage-taxi.token";
 const USER_KEY = "covoiturage-taxi.user";
@@ -72,3 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ token: null, user: null, hydrated: true });
   },
 }));
+
+setSessionExpiredHandler(() => {
+  useAuthStore.setState({ token: null, user: null, hydrated: true });
+});
