@@ -27,8 +27,8 @@ function EtatChargement() {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.contenuEtat}>
-        <EntetePage title="Je pars" description="Publiez un trajet sur votre axe." />
-        <EtatContenu type="chargement" title="Chargement des axes" description="Nous préparons les arrêts disponibles." />
+        <EntetePage title="Je pars" description="Publiez un trajet sur votre itinéraire." />
+        <EtatContenu type="chargement" title="Chargement des itinéraires" description="Nous préparons les arrêts disponibles." />
       </View>
     </SafeAreaView>
   );
@@ -85,7 +85,7 @@ export default function JePars() {
   const publier = () => {
     const error = erreurPublication(orderedStopIds, capacity, maxSeats);
     if (!corridor || error) {
-      setErreurSaisie(error ?? "Choisissez un axe.");
+      setErreurSaisie(error ?? "Choisissez un itinéraire.");
       return;
     }
     mutation.mutate();
@@ -96,7 +96,7 @@ export default function JePars() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Je pars" description="Publiez un trajet sur votre axe." />
+          <EntetePage title="Je pars" description="Publiez un trajet sur votre itinéraire." />
           <MessageEtat type="erreur">{messageErreur(corridorsQuery.error)}</MessageEtat>
           <Bouton onPress={() => corridorsQuery.refetch()}>Réessayer</Bouton>
         </View>
@@ -107,8 +107,8 @@ export default function JePars() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Je pars" description="Publiez un trajet sur votre axe." />
-          <MessageEtat>Aucun axe n’est disponible pour le moment.</MessageEtat>
+          <EntetePage title="Je pars" description="Publiez un trajet sur votre itinéraire." />
+          <MessageEtat>Aucun itinéraire n’est disponible pour le moment.</MessageEtat>
         </View>
       </SafeAreaView>
     );
@@ -117,7 +117,7 @@ export default function JePars() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Je pars" description="Publiez un trajet sur votre axe." />
+          <EntetePage title="Je pars" description="Publiez un trajet sur votre itinéraire." />
           <MessageEtat>Complétez les informations de votre véhicule avant de publier.</MessageEtat>
           <Bouton onPress={() => router.push("/profil")}>Compléter mon profil</Bouton>
         </View>
@@ -141,10 +141,10 @@ export default function JePars() {
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
-        <EntetePage title="Je pars" description="Choisissez l’axe, les arrêts desservis et votre heure de départ." />
+        <EntetePage title="Je pars" description="Choisissez l’itinéraire, les arrêts desservis et votre heure de départ." />
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitre}>AXE</Text>
+          <Text style={styles.sectionTitre}>ITINÉRAIRE</Text>
           <View style={styles.chips}>
             {corridors.map((item) => {
               const active = item.id === corridor.id;

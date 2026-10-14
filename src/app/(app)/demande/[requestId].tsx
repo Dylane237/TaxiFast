@@ -69,7 +69,7 @@ export default function WaitingRequestScreen() {
         <EtatContenu
           type="chargement"
           title="Recherche des chauffeurs"
-          description="Nous comparons les trajets sur votre axe."
+          description="Nous comparons les trajets sur votre itinéraire."
         />
       </State>
     );

@@ -32,9 +32,9 @@ function CarteTrajet({ trip, corridorName }: { trip: Trip; corridorName: string 
   return (
     <Carte style={styles.carte}>
       <View style={styles.carteEntete}>
-        <View style={styles.axe}>
-          <View style={styles.axeIcone}><IconRoute color={couleurs.texte} size={19} /></View>
-          <Text style={styles.axeNom} numberOfLines={2}>{corridorName}</Text>
+        <View style={styles.itineraire}>
+          <View style={styles.itineraireIcone}><IconRoute color={couleurs.texte} size={19} /></View>
+          <Text style={styles.itineraireNom} numberOfLines={2}>{corridorName}</Text>
         </View>
         <View style={[styles.statut, trip.status === "FULL" && styles.statutAttention, ["CLOSED", "COMPLETED", "CANCELLED"].includes(trip.status) && styles.statutNeutre]}>
           <Text style={[styles.statutTexte, trip.status === "FULL" && styles.statutTexteAttention, ["CLOSED", "COMPLETED", "CANCELLED"].includes(trip.status) && styles.statutTexteNeutre]}>{statuts[trip.status]}</Text>
@@ -99,7 +99,7 @@ export default function MesTrajets() {
       <FlatList
         data={trips}
         keyExtractor={(trip) => trip.id}
-        renderItem={({ item }) => <CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Axe"} />}
+        renderItem={({ item }) => <CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Itinéraire"} />}
         contentContainerStyle={[styles.liste, !trips.length && styles.listeVide]}
         ListHeaderComponent={<EntetePage title="Mes trajets" description="Statut et itinéraire de chaque publication." />}
         ListHeaderComponentStyle={styles.enteteListe}
@@ -121,9 +121,9 @@ const styles = StyleSheet.create({
   vide: { flex: 1, alignItems: "center", justifyContent: "center", gap: espacements.md },
   carte: { gap: espacements.md, padding: espacements.lg },
   carteEntete: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: espacements.md },
-  axe: { flex: 1, flexDirection: "row", alignItems: "center", gap: espacements.sm },
-  axeIcone: { width: 36, height: 36, borderRadius: rayons.sm, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
-  axeNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
+  itineraire: { flex: 1, flexDirection: "row", alignItems: "center", gap: espacements.sm },
+  itineraireIcone: { width: 36, height: 36, borderRadius: rayons.sm, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
+  itineraireNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
   statut: { paddingHorizontal: espacements.sm, paddingVertical: espacements.xs, borderRadius: rayons.rond, backgroundColor: couleurs.primaireClaire },
   statutAttention: { backgroundColor: couleurs.attentionClaire },
   statutNeutre: { backgroundColor: couleurs.fond },

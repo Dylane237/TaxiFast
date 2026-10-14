@@ -79,7 +79,7 @@ export default function DriverRequestsScreen() {
         keyExtractor={(item) => item.booking.id}
         renderItem={({ item }) => <RequestCard item={item} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListHeaderComponent={<EntetePage title="Demandes sur mon axe" description="Propositions compatibles avec vos arrêts et vos places disponibles." />}
+        ListHeaderComponent={<EntetePage title="Demandes compatibles" description="Propositions compatibles avec votre itinéraire et vos places disponibles." />}
         ListHeaderComponentStyle={styles.listHeader}
         ListEmptyComponent={
           <View style={styles.empty}><EtatContenu type="vide" title="Aucune demande pour le moment" description="Les nouvelles propositions compatibles apparaîtront ici." /></View>
@@ -95,7 +95,7 @@ function StatePage({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.stateContent}>
-        <EntetePage title="Demandes sur mon axe" description="Propositions compatibles avec vos trajets ouverts." />
+        <EntetePage title="Demandes compatibles" description="Propositions compatibles avec vos trajets ouverts." />
         {children}
       </View>
     </SafeAreaView>

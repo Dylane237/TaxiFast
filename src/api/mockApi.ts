@@ -311,7 +311,7 @@ export class MockApi implements Api {
     const corridor = this.data.corridors.find(
       (candidate) => candidate.id === values.corridorId,
     );
-    if (!corridor) throw new ApiError("NOT_FOUND", "Axe introuvable.");
+    if (!corridor) throw new ApiError("NOT_FOUND", "Itinéraire introuvable.");
     if (driver.vehicle && values.capacity > driver.vehicle.seats) {
       throw new ApiError(
         "INVALID_INPUT",

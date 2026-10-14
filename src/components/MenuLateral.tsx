@@ -70,7 +70,7 @@ const clientItems: MenuItem[] = [
 const driverItems: MenuItem[] = [
   {
     label: "Publier un trajet",
-    description: "Choisir un axe et des arrêts",
+    description: "Choisir un itinéraire et des arrêts",
     href: "/je-pars",
     icon: IconCar,
   },

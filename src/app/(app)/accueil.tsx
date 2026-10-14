@@ -44,8 +44,8 @@ export default function Accueil() {
           </Text>
           <Text style={styles.welcomeDescription}>
             {driver
-              ? "Publiez votre prochain départ et retrouvez les passagers sur votre axe."
-              : "Trouvez un chauffeur qui dessert votre axe, au moment qui vous convient."}
+              ? "Publiez votre prochain départ et retrouvez les passagers sur votre itinéraire."
+              : "Trouvez un chauffeur qui dessert votre itinéraire, au moment qui vous convient."}
           </Text>
         </View>
 
@@ -69,7 +69,7 @@ export default function Accueil() {
           </Text>
           <Text style={styles.heroDescription}>
             {driver
-              ? "Indiquez votre axe, vos arrêts et l’heure de départ."
+              ? "Indiquez votre itinéraire, vos arrêts et l’heure de départ."
               : "Choisissez votre montée, votre descente et proposez votre prix."}
           </Text>
           <Bouton

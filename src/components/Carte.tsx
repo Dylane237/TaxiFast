@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
-import { couleurs, espacements, ombres, rayons } from "@/theme";
+import { couleurs, ombres, rayons } from "@/theme";
 
 export function Carte({
   children,

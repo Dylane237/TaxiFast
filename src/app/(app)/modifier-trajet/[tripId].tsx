@@ -1,7 +1,7 @@
 import { IconCalendar, IconInfoCircle, IconTrash } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
@@ -17,35 +17,27 @@ export default function EditTripScreen() {
   const trips = useQuery({ queryKey: ["driver-trips"], queryFn: () => api.listDriverTrips() });
   const corridors = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const trip = trips.data?.find((item) => item.id === tripId);
-  const [initializedId, setInitializedId] = useState<string | null>(null);
-  const [corridorId, setCorridorId] = useState("");
-  const [sens, setSens] = useState<SensTrajet>("ALLER");
-  const [selectedStopIds, setSelectedStopIds] = useState<string[]>([]);
-  const [capacity, setCapacity] = useState("");
-  const [departure, setDeparture] = useState("");
+  const [corridorOverride, setCorridorOverride] = useState<string | null>(null);
+  const [sensOverride, setSensOverride] = useState<SensTrajet | null>(null);
+  const [stopsOverride, setStopsOverride] = useState<string[] | null>(null);
+  const [capacityOverride, setCapacityOverride] = useState<string | null>(null);
+  const [departureOverride, setDepartureOverride] = useState<string | null>(null);
+  const corridorId = corridorOverride ?? trip?.corridorId ?? "";
+  const initialSens: SensTrajet = (trip?.tripStops[0]?.stop.position ?? 0) <= (trip?.tripStops.at(-1)?.stop.position ?? 0) ? "ALLER" : "RETOUR";
+  const sens = sensOverride ?? initialSens;
+  const selectedStopIds = stopsOverride ?? trip?.tripStops.map((stop) => stop.stopId) ?? [];
+  const capacity = capacityOverride ?? (trip ? String(trip.capacity) : "");
+  const departure = departureOverride ?? (trip ? formatLocalDateTime(trip.departureAt) : "");
   const corridor = corridors.data?.find((item) => item.id === corridorId);
-  const orderedStopIds = useMemo(
-    () => corridor ? ordonnerArrets(corridor.stops, selectedStopIds, sens) : [],
-    [corridor, selectedStopIds, sens],
-  );
-
-  useEffect(() => {
-    if (!trip || initializedId === trip.id) return;
-    const firstPosition = trip.tripStops[0]?.stop.position ?? 0;
-    const lastPosition = trip.tripStops.at(-1)?.stop.position ?? 0;
-    setCorridorId(trip.corridorId);
-    setSens(firstPosition <= lastPosition ? "ALLER" : "RETOUR");
-    setSelectedStopIds(trip.tripStops.map((stop) => stop.stopId));
-    setCapacity(String(trip.capacity));
-    setDeparture(formatLocalDateTime(trip.departureAt));
-    setInitializedId(trip.id);
-  }, [initializedId, trip]);
+  const orderedStopIds = corridor
+    ? ordonnerArrets(corridor.stops, selectedStopIds, sens)
+    : [];
 
   const update = useMutation({
     mutationFn: async () => {
       const departureAt = parseLocalDateTime(departure);
       const parsedCapacity = Number(capacity);
-      if (!corridor || orderedStopIds.length < 2) throw new Error("Choisissez un axe et au moins deux arrêts.");
+      if (!corridor || orderedStopIds.length < 2) throw new Error("Choisissez un itinéraire et au moins deux arrêts.");
       if (!departureAt || new Date(departureAt) <= new Date()) throw new Error("Saisissez une date future au format indiqué.");
       if (!Number.isInteger(parsedCapacity) || parsedCapacity < 1) throw new Error("Saisissez une capacité valide.");
       return api.updateTrip(tripId!, { corridorId: corridor.id, stopIds: orderedStopIds, capacity: parsedCapacity, departureAt });
@@ -64,11 +56,13 @@ export default function EditTripScreen() {
   });
 
   const chooseCorridor = (id: string) => {
-    setCorridorId(id);
-    setSelectedStopIds([]);
+    setCorridorOverride(id);
+    setStopsOverride([]);
   };
-  const toggleStop = (id: string) => setSelectedStopIds((current) =>
-    current.includes(id) ? current.filter((stopId) => stopId !== id) : [...current, id],
+  const toggleStop = (id: string) => setStopsOverride((current) => {
+    const base = current ?? trip?.tripStops.map((stop) => stop.stopId) ?? [];
+    return base.includes(id) ? base.filter((stopId) => stopId !== id) : [...base, id];
+  }
   );
   const confirmCancel = () => Alert.alert("Annuler ce trajet ?", "Les propositions et réservations actives seront annulées. Cette action est définitive.", [
     { text: "Conserver", style: "cancel" },
@@ -80,19 +74,19 @@ export default function EditTripScreen() {
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <EntetePage title="Modifier le trajet" description="Axe, arrêts, départ et capacité peuvent être ajustés." />
+        <EntetePage title="Modifier le trajet" description="Itinéraire, arrêts, départ et capacité peuvent être ajustés." />
         {pending ? <MessageEtat>Chargement du trajet…</MessageEtat> : null}
         {error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}
         {!pending && !error && !trip ? <MessageEtat type="erreur">Trajet introuvable.</MessageEtat> : null}
         {trip && corridor ? (
           <>
             <View style={styles.section}>
-              <Text style={styles.label}>AXE</Text>
+              <Text style={styles.label}>ITINÉRAIRE</Text>
               <View style={styles.wrap}>{corridors.data?.map((item) => <PuceChoix key={item.id} label={item.name} selected={item.id === corridorId} onPress={() => chooseCorridor(item.id)} />)}</View>
             </View>
             <View style={styles.section}>
               <Text style={styles.label}>SENS</Text>
-              <View style={styles.wrap}>{(["ALLER", "RETOUR"] as const).map((value) => <PuceChoix key={value} label={value === "ALLER" ? "Aller" : "Retour"} selected={sens === value} onPress={() => { setSens(value); setSelectedStopIds([]); }} />)}</View>
+              <View style={styles.wrap}>{(["ALLER", "RETOUR"] as const).map((value) => <PuceChoix key={value} label={value === "ALLER" ? "Aller" : "Retour"} selected={sens === value} onPress={() => { setSensOverride(value); setStopsOverride([]); }} />)}</View>
             </View>
             <View style={styles.section}>
               <Text style={styles.label}>ARRÊTS DESSERVIS</Text>
@@ -107,8 +101,8 @@ export default function EditTripScreen() {
               </Carte>
             </View>
             <Carte style={styles.form}>
-              <Champ etiquette="Capacité" value={capacity} onChangeText={setCapacity} keyboardType="number-pad" />
-              <Champ etiquette="Départ (AAAA-MM-JJ HH:mm)" value={departure} onChangeText={setDeparture} autoCapitalize="none" />
+              <Champ etiquette="Capacité" value={capacity} onChangeText={setCapacityOverride} keyboardType="number-pad" />
+              <Champ etiquette="Départ (AAAA-MM-JJ HH:mm)" value={departure} onChangeText={setDepartureOverride} autoCapitalize="none" />
             </Carte>
             <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Les arrêts utilisés par une réservation confirmée doivent rester présents et dans le même sens.</Text></View>
             {update.isError ? <MessageEtat type="erreur">{messageErreur(update.error)}</MessageEtat> : null}

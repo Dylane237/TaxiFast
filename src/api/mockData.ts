@@ -93,7 +93,7 @@ export function createMockData(): MockData {
   const corridors: Corridor[] = [
     {
       id: "corridor-1",
-      name: "Axe Centre - Ouest (provisoire)",
+      name: "Itinéraire Centre - Ouest (provisoire)",
       stops: [
         "Carrefour Central",
         "Marché Ouest",
@@ -109,7 +109,7 @@ export function createMockData(): MockData {
     },
     {
       id: "corridor-2",
-      name: "Axe Centre - Est (provisoire)",
+      name: "Itinéraire Centre - Est (provisoire)",
       stops: [
         "Place du Centre",
         "Hôpital Général",

@@ -1,7 +1,7 @@
 import { IconCheck, IconInfoCircle, IconTrash } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
@@ -16,26 +16,20 @@ export default function EditRequestScreen() {
   const requests = useQuery({ queryKey: ["client-requests"], queryFn: () => api.listClientTripRequests() });
   const corridors = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const request = requests.data?.find((item) => item.id === requestId);
-  const [initializedId, setInitializedId] = useState<string | null>(null);
-  const [corridorId, setCorridorId] = useState("");
-  const [fromStopId, setFromStopId] = useState("");
-  const [toStopId, setToStopId] = useState("");
-  const [windowStart, setWindowStart] = useState("");
-  const [windowEnd, setWindowEnd] = useState("");
-  const [price, setPrice] = useState("");
+  const [corridorOverride, setCorridorOverride] = useState<string | null>(null);
+  const [fromOverride, setFromOverride] = useState<string | null>(null);
+  const [toOverride, setToOverride] = useState<string | null>(null);
+  const [startOverride, setStartOverride] = useState<string | null>(null);
+  const [endOverride, setEndOverride] = useState<string | null>(null);
+  const [priceOverride, setPriceOverride] = useState<string | null>(null);
+  const corridorId = corridorOverride ?? request?.corridorId ?? "";
+  const fromStopId = fromOverride ?? request?.fromStopId ?? "";
+  const toStopId = toOverride ?? request?.toStopId ?? "";
+  const windowStart = startOverride ?? (request ? formatLocalDateTime(request.windowStart) : "");
+  const windowEnd = endOverride ?? (request ? formatLocalDateTime(request.windowEnd) : "");
+  const price = priceOverride ?? (request ? String(request.proposedPrice) : "");
   const corridor = corridors.data?.find((item) => item.id === corridorId);
   const fromPosition = corridor?.stops.find((stop) => stop.id === fromStopId)?.position ?? -1;
-
-  useEffect(() => {
-    if (!request || initializedId === request.id) return;
-    setCorridorId(request.corridorId);
-    setFromStopId(request.fromStopId);
-    setToStopId(request.toStopId);
-    setWindowStart(formatLocalDateTime(request.windowStart));
-    setWindowEnd(formatLocalDateTime(request.windowEnd));
-    setPrice(String(request.proposedPrice));
-    setInitializedId(request.id);
-  }, [initializedId, request]);
 
   const update = useMutation({
     mutationFn: () => {
@@ -71,9 +65,9 @@ export default function EditRequestScreen() {
     },
   });
   const chooseCorridor = (id: string) => {
-    setCorridorId(id);
-    setFromStopId("");
-    setToStopId("");
+    setCorridorOverride(id);
+    setFromOverride("");
+    setToOverride("");
   };
   const confirmCancel = () => Alert.alert("Annuler cette demande ?", "Les offres encore en attente seront annulées.", [
     { text: "Conserver", style: "cancel" },
@@ -85,28 +79,28 @@ export default function EditRequestScreen() {
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <EntetePage title="Modifier la demande" description="Axe, arrêts, horaire et prix peuvent être ajustés." />
+        <EntetePage title="Modifier la demande" description="Itinéraire, arrêts, horaire et prix peuvent être ajustés." />
         {pending ? <MessageEtat>Chargement de la demande…</MessageEtat> : null}
         {error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}
         {!pending && !error && !request ? <MessageEtat type="erreur">Demande introuvable.</MessageEtat> : null}
         {request && corridor ? (
           <>
             <View style={styles.section}>
-              <Text style={styles.label}>AXE</Text>
+              <Text style={styles.label}>ITINÉRAIRE</Text>
               <View style={styles.wrap}>{corridors.data?.map((item) => <PuceChoix key={item.id} label={item.name} selected={item.id === corridorId} onPress={() => chooseCorridor(item.id)} />)}</View>
             </View>
             <View style={styles.section}>
               <Text style={styles.label}>MONTÉE</Text>
-              <View style={styles.wrap}>{corridor.stops.slice(0, -1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === fromStopId} onPress={() => { setFromStopId(stop.id); if (stop.position >= (corridor.stops.find((item) => item.id === toStopId)?.position ?? 0)) setToStopId(""); }} />)}</View>
+              <View style={styles.wrap}>{corridor.stops.slice(0, -1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === fromStopId} onPress={() => { setFromOverride(stop.id); if (stop.position >= (corridor.stops.find((item) => item.id === toStopId)?.position ?? 0)) setToOverride(""); }} />)}</View>
             </View>
             <View style={styles.section}>
               <Text style={styles.label}>DESCENTE</Text>
-              <View style={styles.wrap}>{corridor.stops.slice(1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === toStopId} disabled={fromPosition < 0 || stop.position <= fromPosition} onPress={() => setToStopId(stop.id)} />)}</View>
+              <View style={styles.wrap}>{corridor.stops.slice(1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === toStopId} disabled={fromPosition < 0 || stop.position <= fromPosition} onPress={() => setToOverride(stop.id)} />)}</View>
             </View>
             <Carte style={styles.form}>
-              <Champ etiquette="Début (AAAA-MM-JJ HH:mm)" value={windowStart} onChangeText={setWindowStart} autoCapitalize="none" />
-              <Champ etiquette="Fin (AAAA-MM-JJ HH:mm)" value={windowEnd} onChangeText={setWindowEnd} autoCapitalize="none" />
-              <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPrice} keyboardType="number-pad" />
+              <Champ etiquette="Début (AAAA-MM-JJ HH:mm)" value={windowStart} onChangeText={setStartOverride} autoCapitalize="none" />
+              <Champ etiquette="Fin (AAAA-MM-JJ HH:mm)" value={windowEnd} onChangeText={setEndOverride} autoCapitalize="none" />
+              <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPriceOverride} keyboardType="number-pad" />
             </Carte>
             <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Modifier la demande annule les offres encore en attente. Une réservation confirmée bloque la modification.</Text></View>
             {update.isError ? <MessageEtat type="erreur">{messageErreur(update.error)}</MessageEtat> : null}

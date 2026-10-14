@@ -117,7 +117,7 @@ export default function RechercheScreen() {
 
   const submit = () => {
     if (!corridor) {
-      setValidationError("Choisissez d’abord un axe.");
+      setValidationError("Choisissez d’abord un itinéraire.");
       return;
     }
     const parsed = parseClientRequestForm({
@@ -154,7 +154,7 @@ export default function RechercheScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Chargement des axes"
+          title="Chargement des itinéraires"
           description="Nous préparons les arrêts disponibles."
         />
       </State>
@@ -164,7 +164,7 @@ export default function RechercheScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Axes indisponibles"
+          title="Itinéraires indisponibles"
           description={messageErreur(corridorsQuery.error)}
           action={
             <Bouton onPress={() => void corridorsQuery.refetch()}>
@@ -179,8 +179,8 @@ export default function RechercheScreen() {
       <State>
         <EtatContenu
           type="vide"
-          title="Aucun axe disponible"
-          description="Revenez lorsque des axes auront été publiés."
+          title="Aucun itinéraire disponible"
+          description="Revenez lorsque des itinéraires auront été publiés."
         />
       </State>
     );
@@ -199,7 +199,7 @@ export default function RechercheScreen() {
         <View style={styles.fieldGroup}>
           <View style={styles.fieldHeading}>
             <IconRoute color={couleurs.texteSecondaire} size={18} />
-            <Text style={styles.fieldLabel}>Axe</Text>
+            <Text style={styles.fieldLabel}>Itinéraire</Text>
           </View>
           <View style={styles.wrap}>
             {corridorsQuery.data.map((item) => (
@@ -291,7 +291,7 @@ function State({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="Où allez-vous ?"
-          description="Recherche d’un trajet sur un axe."
+          description="Recherche d’un trajet sur un itinéraire."
         />
         {children}
       </View>
