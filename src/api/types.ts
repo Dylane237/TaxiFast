@@ -171,6 +171,11 @@ export type CreateTripInput = {
   stopIds: string[];
 };
 
+export type UpdateTripInput = {
+  capacity?: number;
+  departureAt?: IsoDateString;
+};
+
 export type CreateTripRequestInput = {
   corridorId: string;
   fromStopId: string;
@@ -179,6 +184,32 @@ export type CreateTripRequestInput = {
   windowEnd: IsoDateString;
   proposedPrice: number;
 };
+
+export type UpdateTripRequestInput = Partial<
+  Pick<
+    CreateTripRequestInput,
+    "fromStopId" | "toStopId" | "windowStart" | "windowEnd" | "proposedPrice"
+  >
+>;
+
+export type PushDeviceInput = {
+  token: string;
+  platform: "ANDROID" | "IOS";
+};
+
+export type TripLocation = {
+  tripId: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number | null;
+  heading: number | null;
+  updatedAt: IsoDateString;
+};
+
+export type UpdateTripLocationInput = Pick<
+  TripLocation,
+  "latitude" | "longitude" | "accuracy" | "heading"
+>;
 
 export type ProposeBookingInput = {
   tripId: string;

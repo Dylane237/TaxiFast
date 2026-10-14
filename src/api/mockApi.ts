@@ -16,11 +16,17 @@ import type {
   MatchedTripRequest,
   ProposeBookingInput,
   Rating,
+  RequestStatus,
   Role,
   Trip,
+  TripLocation,
   TripRequest,
   TripManifest,
   UpdateProfileInput,
+  UpdateTripInput,
+  UpdateTripLocationInput,
+  UpdateTripRequestInput,
+  PushDeviceInput,
   UserProfile,
   Wallet,
 } from "./types";
@@ -98,6 +104,8 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
 export class MockApi implements Api {
   private readonly data: MockData = createMockData();
   private readonly requestedPhones = new Set<string>();
+  private readonly pushTokens = new Set<string>();
+  private readonly locations = new Map<string, TripLocation>();
   private activeUserId: string | null;
   private sequence = 100;
   private readonly minDelayMs: number;
@@ -351,6 +359,53 @@ export class MockApi implements Api {
     return clone(trip);
   }
 
+  async updateTrip(tripId: string, input: UpdateTripInput): Promise<Trip> {
+    await this.wait();
+    const driver = this.currentUser(["DRIVER"]);
+    const trip = this.tripById(parse(idSchema, tripId));
+    if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
+    if (!input.capacity && !input.departureAt) throw new ApiError("INVALID_INPUT");
+    if (!["OPEN", "FULL"].includes(trip.status)) throw new ApiError("TRIP_NOT_OPEN");
+    if (input.capacity !== undefined) {
+      const capacity = parse(z.number().int().positive(), input.capacity);
+      const segments = this.confirmedSegments(trip);
+      const occupancy = Math.max(
+        0,
+        ...trip.tripStops.slice(0, -1).map((_, leg) =>
+          segments.filter(
+            (candidate) => candidate.pickup <= leg && candidate.dropoff > leg,
+          ).length,
+        ),
+      );
+      if (capacity < occupancy) throw new ApiError("CAPACITY_EXCEEDED");
+      trip.capacity = capacity;
+    }
+    if (input.departureAt) trip.departureAt = parse(isoDateSchema, input.departureAt);
+    this.recalculateTripStatus(trip);
+    return clone(trip);
+  }
+
+  async cancelTrip(tripId: string): Promise<Trip> {
+    await this.wait();
+    const driver = this.currentUser(["DRIVER"]);
+    const trip = this.tripById(parse(idSchema, tripId));
+    if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
+    if (!["OPEN", "FULL"].includes(trip.status)) throw new ApiError("TRIP_NOT_OPEN");
+    trip.status = "CANCELLED";
+    this.data.bookings
+      .filter(
+        (booking) =>
+          booking.tripId === trip.id &&
+          ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER", "CONFIRMED"].includes(booking.status),
+      )
+      .forEach((booking) => {
+        booking.status = "CANCELLED";
+        booking.updatedAt = new Date().toISOString();
+      });
+    this.locations.delete(trip.id);
+    return clone(trip);
+  }
+
   async listDriverTrips(): Promise<Trip[]> {
     await this.wait();
     const driver = this.currentUser(["DRIVER"]);
@@ -439,6 +494,33 @@ export class MockApi implements Api {
     return clone(request);
   }
 
+  async updateTripRequest(
+    requestId: string,
+    input: UpdateTripRequestInput,
+  ): Promise<TripRequest> {
+    await this.wait();
+    const client = this.currentUser(["CLIENT"]);
+    const request = this.data.requests.find((item) => item.id === parse(idSchema, requestId));
+    if (!request) throw new ApiError("NOT_FOUND");
+    if (request.clientId !== client.id) throw new ApiError("FORBIDDEN");
+    if (request.status !== "OPEN") throw new ApiError("INVALID_INPUT");
+    const activeBookings = this.data.bookings.filter(
+      (booking) =>
+        booking.requestId === request.id &&
+        ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER", "CONFIRMED"].includes(booking.status),
+    );
+    if (activeBookings.some((booking) => booking.status === "CONFIRMED")) {
+      throw new ApiError("BOOKING_NOT_CONFIRMABLE");
+    }
+    const values = parse(createRequestSchema, { ...request, ...input });
+    Object.assign(request, values);
+    activeBookings.forEach((booking) => {
+      booking.status = "CANCELLED";
+      booking.updatedAt = new Date().toISOString();
+    });
+    return clone(request);
+  }
+
   async listClientTripRequests(): Promise<TripRequest[]> {
     await this.wait();
     const client = this.currentUser(["CLIENT"]);
@@ -455,6 +537,20 @@ export class MockApi implements Api {
     );
     if (!request) throw new ApiError("NOT_FOUND");
     if (request.clientId !== client.id) throw new ApiError("FORBIDDEN");
+    if (!(["OPEN", "MATCHED"] as RequestStatus[]).includes(request.status)) {
+      throw new ApiError("INVALID_INPUT");
+    }
+    const activeBookings = this.data.bookings.filter(
+      (booking) => booking.requestId === request.id &&
+        ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER", "CONFIRMED"].includes(booking.status),
+    );
+    if (activeBookings.some((booking) => booking.status === "CONFIRMED")) {
+      throw new ApiError("BOOKING_NOT_CONFIRMABLE");
+    }
+    activeBookings.forEach((booking) => {
+      booking.status = "CANCELLED";
+      booking.updatedAt = new Date().toISOString();
+    });
     request.status = "CANCELLED";
     return clone(request);
   }
@@ -886,6 +982,59 @@ export class MockApi implements Api {
       ),
       transactions,
     });
+  }
+
+  async registerPushDevice(input: PushDeviceInput): Promise<void> {
+    await this.wait();
+    this.currentUser(["CLIENT", "DRIVER"]);
+    this.pushTokens.add(input.token);
+  }
+
+  async unregisterPushDevice(token: string): Promise<void> {
+    await this.wait();
+    this.currentUser(["CLIENT", "DRIVER"]);
+    this.pushTokens.delete(token);
+  }
+
+  async updateTripLocation(
+    tripId: string,
+    input: UpdateTripLocationInput,
+  ): Promise<TripLocation> {
+    await this.wait();
+    const driver = this.currentUser(["DRIVER"]);
+    const trip = this.tripById(parse(idSchema, tripId));
+    if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
+    const location: TripLocation = {
+      tripId: trip.id,
+      ...input,
+      updatedAt: new Date().toISOString(),
+    };
+    this.locations.set(trip.id, location);
+    return clone(location);
+  }
+
+  async getTripLocation(tripId: string): Promise<TripLocation | null> {
+    await this.wait();
+    const user = this.currentUser(["CLIENT", "DRIVER"]);
+    const trip = this.tripById(parse(idSchema, tripId));
+    const participant =
+      trip.driverId === user.id ||
+      this.data.bookings.some(
+        (booking) =>
+          booking.tripId === trip.id &&
+          booking.clientId === user.id &&
+          booking.status === "CONFIRMED",
+      );
+    if (!participant) throw new ApiError("FORBIDDEN");
+    const location = this.locations.get(trip.id) ?? {
+      tripId: trip.id,
+      latitude: 4.0511,
+      longitude: 9.7679,
+      accuracy: 12,
+      heading: null,
+      updatedAt: new Date().toISOString(),
+    };
+    return clone(location);
   }
 }
 

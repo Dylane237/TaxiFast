@@ -32,6 +32,27 @@
         {
           "backgroundColor": "#171916"
         }
+      ],
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Autoriser Covoiturage Taxi à utiliser votre position pendant un trajet."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Autoriser Covoiturage Taxi à utiliser votre position pendant un trajet."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#FFD33D",
+          "defaultChannel": "trajets"
+        }
       ]
     ],
     "experiments": {

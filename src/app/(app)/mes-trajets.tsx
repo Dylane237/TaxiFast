@@ -1,5 +1,6 @@
-import { IconMapPin, IconRoute } from "@tabler/icons-react-native";
+import { IconEdit, IconMapPin, IconRoute } from "@tabler/icons-react-native";
 import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip, type TripStatus } from "@/api";
@@ -45,6 +46,15 @@ function CarteTrajet({ trip, corridorName }: { trip: Trip; corridorName: string 
         <Text style={styles.tronconTexte}>{first} → {last}</Text>
       </View>
       <Text style={styles.details}>{trip.tripStops.length} arrêts · {trip.capacity} place{trip.capacity > 1 ? "s" : ""}</Text>
+      {trip.status === "OPEN" || trip.status === "FULL" ? (
+        <Bouton
+          variante="secondaire"
+          icone={<IconEdit color={couleurs.texte} size={18} />}
+          onPress={() => router.push({ pathname: "/modifier-trajet/[tripId]", params: { tripId: trip.id } } as never)}
+        >
+          Modifier ou annuler
+        </Bouton>
+      ) : null}
     </Carte>
   );
 }

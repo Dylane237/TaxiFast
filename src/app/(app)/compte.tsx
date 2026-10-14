@@ -10,7 +10,14 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
 import {
@@ -22,6 +29,11 @@ import {
   MessageEtat,
 } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+  notificationsEnabled,
+} from "@/notifications/push-notifications";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
 
@@ -41,6 +53,20 @@ export default function CompteScreen() {
       await clearSession();
       queryClient.clear();
       router.replace("/connexion");
+    },
+  });
+  const notificationState = useQuery({
+    queryKey: ["notification-settings"],
+    queryFn: notificationsEnabled,
+  });
+  const toggleNotifications = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (enabled) await enablePushNotifications();
+      else await disablePushNotifications();
+      return enabled;
+    },
+    onSuccess: (enabled) => {
+      queryClient.setQueryData(["notification-settings"], enabled);
     },
   });
 
@@ -150,16 +176,51 @@ export default function CompteScreen() {
         <View style={styles.group}>
           <Text style={styles.groupTitle}>PRÉFÉRENCES</Text>
           <Carte style={styles.list}>
-            <LigneAction
-              icon={<IconBell color={couleurs.texte} size={20} />}
-              title="Notifications"
-              description="Offres, réservations et changements"
-              badge="Bientôt"
-              onPress={() => undefined}
-            />
+            <View style={styles.settingRow}>
+              <View style={styles.settingIcon}>
+                <IconBell color={couleurs.texte} size={20} />
+              </View>
+              <View style={styles.identityCopy}>
+                <Text style={styles.settingTitle}>Notifications</Text>
+                <Text style={styles.settingDescription}>
+                  Offres, réservations et changements
+                </Text>
+              </View>
+              {notificationState.isPending ||
+              toggleNotifications.isPending ? (
+                <ActivityIndicator color={couleurs.texte} />
+              ) : (
+                <Switch
+                  accessibilityLabel="Activer les notifications"
+                  value={notificationState.data ?? false}
+                  onValueChange={(value) =>
+                    toggleNotifications.mutate(value)
+                  }
+                  trackColor={{
+                    false: couleurs.desactive,
+                    true: couleurs.primairePresse,
+                  }}
+                  thumbColor={
+                    notificationState.data
+                      ? couleurs.primaire
+                      : couleurs.surface
+                  }
+                />
+              )}
+            </View>
           </Carte>
         </View>
 
+        {notificationState.isError ? (
+          <MessageEtat type="erreur">
+            {messageErreur(notificationState.error)}
+          </MessageEtat>
+        ) : null}
+        {toggleNotifications.isError ? (
+          <MessageEtat type="erreur">
+            {messageErreur(toggleNotifications.error)}
+          </MessageEtat>
+        ) : null}
         {signOut.isError ? (
           <MessageEtat type="erreur">
             {messageErreur(signOut.error)}
@@ -243,4 +304,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   list: { paddingHorizontal: espacements.md, paddingVertical: 0 },
+  settingRow: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: espacements.md,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: rayons.md,
+    backgroundColor: couleurs.surfaceSecondaire,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingTitle: {
+    color: couleurs.texte,
+    fontSize: taillesTexte.normal,
+    fontWeight: "800",
+  },
+  settingDescription: {
+    color: couleurs.texteSecondaire,
+    fontSize: taillesTexte.petit,
+  },
 });

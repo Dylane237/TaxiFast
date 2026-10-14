@@ -17,9 +17,14 @@ import type {
   Rating,
   Role,
   Trip,
+  TripLocation,
   TripManifest,
   TripRequest,
   UpdateProfileInput,
+  UpdateTripInput,
+  UpdateTripLocationInput,
+  UpdateTripRequestInput,
+  PushDeviceInput,
   UserProfile,
   Wallet,
 } from "./types";
@@ -46,6 +51,15 @@ const errorCodeByServerCode: Record<string, ApiErrorCode> = {
   BOOKING_NOT_FOUND: "NOT_FOUND",
   SOURCE_NOT_FOUND: "NOT_FOUND",
   TRIP_NOT_OPEN: "TRIP_NOT_OPEN",
+  TRIP_NOT_EDITABLE: "TRIP_NOT_OPEN",
+  TRIP_NOT_CANCELLABLE: "TRIP_NOT_OPEN",
+  REQUEST_NOT_EDITABLE: "INVALID_INPUT",
+  REQUEST_NOT_CANCELLABLE: "INVALID_INPUT",
+  REQUEST_ALREADY_CONFIRMED: "BOOKING_NOT_CONFIRMABLE",
+  INVALID_REQUEST_WINDOW: "INVALID_INPUT",
+  CAPACITY_BELOW_OCCUPANCY: "CAPACITY_EXCEEDED",
+  LOCATION_SHARING_NOT_ALLOWED: "TRIP_NOT_OPEN",
+  LOCATION_ACTION_FORBIDDEN: "FORBIDDEN",
   INVALID_TRIP_STOPS: "INVALID_TRIP_STOPS",
   STOPS_OUT_OF_ORDER: "INVALID_TRIP_STOPS",
   INVALID_REQUEST_STOPS: "INVALID_INPUT",
@@ -268,6 +282,14 @@ const bookingDetailsSchema = z.object({
   dropoffStop: stopSchema.pick({ id: true, name: true }),
   ratedByCurrentUser: z.boolean(),
 });
+const tripLocationSchema = z.object({
+  tripId: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  accuracy: z.number().nullable(),
+  heading: z.number().nullable(),
+  updatedAt: z.string(),
+});
 
 function json(input: unknown): string {
   return JSON.stringify(input);
@@ -319,6 +341,18 @@ export const httpApi: Api = {
     ).corridors,
   createTrip: (input: CreateTripInput): Promise<Trip> =>
     request("/trips", { method: "POST", body: json(input) }, tripSchema),
+  updateTrip: (tripId, input: UpdateTripInput): Promise<Trip> =>
+    request(
+      `/trips/${encodeURIComponent(tripId)}`,
+      { method: "PATCH", body: json(input) },
+      tripSchema,
+    ),
+  cancelTrip: (tripId): Promise<Trip> =>
+    request(
+      `/trips/${encodeURIComponent(tripId)}/cancel`,
+      { method: "POST" },
+      tripSchema,
+    ),
   listDriverTrips: async (): Promise<Trip[]> =>
     (await request("/trips", {}, z.object({ trips: z.array(tripSchema) })))
       .trips,
@@ -349,6 +383,15 @@ export const httpApi: Api = {
     request(
       "/trip-requests",
       { method: "POST", body: json(input) },
+      tripRequestSchema,
+    ),
+  updateTripRequest: (
+    requestId,
+    input: UpdateTripRequestInput,
+  ): Promise<TripRequest> =>
+    request(
+      `/trip-requests/${encodeURIComponent(requestId)}`,
+      { method: "PATCH", body: json(input) },
       tripRequestSchema,
     ),
   listClientTripRequests: async (): Promise<TripRequest[]> =>
@@ -450,4 +493,30 @@ export const httpApi: Api = {
         transactions: z.array(transactionSchema),
       }),
     ),
+  async registerPushDevice(input: PushDeviceInput): Promise<void> {
+    await request("/push-devices", { method: "POST", body: json(input) });
+  },
+  async unregisterPushDevice(token: string): Promise<void> {
+    await request("/push-devices", {
+      method: "DELETE",
+      body: json({ token }),
+    });
+  },
+  updateTripLocation: (
+    tripId,
+    input: UpdateTripLocationInput,
+  ): Promise<TripLocation> =>
+    request(
+      `/trips/${encodeURIComponent(tripId)}/location`,
+      { method: "PUT", body: json(input) },
+      tripLocationSchema,
+    ),
+  getTripLocation: async (tripId): Promise<TripLocation | null> =>
+    (
+      await request(
+        `/trips/${encodeURIComponent(tripId)}/location`,
+        {},
+        z.object({ location: tripLocationSchema.nullable() }),
+      )
+    ).location,
 };

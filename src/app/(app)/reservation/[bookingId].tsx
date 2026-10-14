@@ -3,6 +3,7 @@ import {
   IconCar,
   IconCircleCheck,
   IconMapPin,
+  IconRadar,
   IconX,
 } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -142,6 +143,13 @@ export default function ConfirmedBookingScreen() {
             </Text>
           </View>
         </Carte>
+        <Bouton
+          variante="secondaire"
+          icone={<IconRadar color={couleurs.texte} size={19} />}
+          onPress={() => router.push({ pathname: "/suivi/[tripId]", params: { tripId: data.trip.id } } as never)}
+        >
+          Suivre le chauffeur
+        </Bouton>
         {cancel.isError ? (
           <MessageEtat type="erreur">{messageErreur(cancel.error)}</MessageEtat>
         ) : null}

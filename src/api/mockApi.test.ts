@@ -56,6 +56,39 @@ describe("MockApi", () => {
     );
   });
 
+  it("permet de modifier puis d'annuler un trajet fictif", async () => {
+    const api = instantApi(mockIds.driver);
+    const trip = await api.createTrip({
+      corridorId: "corridor-1",
+      capacity: 3,
+      departureAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+      stopIds: ["c1-stop-1", "c1-stop-3"],
+    });
+
+    await expect(api.updateTrip(trip.id, { capacity: 2 })).resolves.toMatchObject({ capacity: 2 });
+    await expect(api.cancelTrip(trip.id)).resolves.toMatchObject({ status: "CANCELLED" });
+  });
+
+  it("modifie une demande ouverte et annule ses offres en attente", async () => {
+    const api = instantApi(mockIds.client);
+
+    await expect(api.updateTripRequest("request-1", { proposedPrice: 1900 })).resolves.toMatchObject({ proposedPrice: 1900 });
+    await expect(api.cancelTripRequest("request-1")).resolves.toMatchObject({ status: "CANCELLED" });
+  });
+
+  it("publie la position fictive du chauffeur", async () => {
+    const api = instantApi(mockIds.driver);
+    const location = await api.updateTripLocation(mockIds.tripWithOneSeatLeft, {
+      latitude: 4.0511,
+      longitude: 9.7679,
+      accuracy: 10,
+      heading: 90,
+    });
+
+    expect(location).toMatchObject({ latitude: 4.0511, longitude: 9.7679 });
+    await expect(api.getTripLocation(mockIds.tripWithOneSeatLeft)).resolves.toMatchObject({ heading: 90 });
+  });
+
   it("ne confirme qu’une réservation sur la dernière place disponible", async () => {
     const api = instantApi(mockIds.driver);
 

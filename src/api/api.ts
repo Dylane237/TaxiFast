@@ -13,9 +13,14 @@ import type {
   Rating,
   Role,
   Trip,
+  TripLocation,
   TripManifest,
   TripRequest,
   UpdateProfileInput,
+  UpdateTripInput,
+  UpdateTripLocationInput,
+  UpdateTripRequestInput,
+  PushDeviceInput,
   UserProfile,
   Wallet,
 } from "./types";
@@ -34,11 +39,17 @@ export interface Api {
 
   listCorridors(): Promise<Corridor[]>;
   createTrip(input: CreateTripInput): Promise<Trip>;
+  updateTrip(tripId: string, input: UpdateTripInput): Promise<Trip>;
+  cancelTrip(tripId: string): Promise<Trip>;
   listDriverTrips(): Promise<Trip[]>;
   getTripManifest(tripId: string): Promise<TripManifest>;
   closeTrip(tripId: string): Promise<Trip>;
 
   createTripRequest(input: CreateTripRequestInput): Promise<TripRequest>;
+  updateTripRequest(
+    requestId: string,
+    input: UpdateTripRequestInput,
+  ): Promise<TripRequest>;
   listClientTripRequests(): Promise<TripRequest[]>;
   cancelTripRequest(requestId: string): Promise<TripRequest>;
   listTripsForRequest(requestId: string): Promise<MatchedTrip[]>;
@@ -59,4 +70,12 @@ export interface Api {
 
   createRating(input: CreateRatingInput): Promise<Rating>;
   getWallet(): Promise<Wallet>;
+
+  registerPushDevice(input: PushDeviceInput): Promise<void>;
+  unregisterPushDevice(token: string): Promise<void>;
+  updateTripLocation(
+    tripId: string,
+    input: UpdateTripLocationInput,
+  ): Promise<TripLocation>;
+  getTripLocation(tripId: string): Promise<TripLocation | null>;
 }

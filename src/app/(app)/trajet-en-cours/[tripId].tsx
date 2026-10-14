@@ -1,4 +1,4 @@
-import { IconArrowDown, IconArrowUp, IconMapPin, IconPlayerStop, IconUsers } from "@tabler/icons-react-native";
+import { IconArrowDown, IconArrowUp, IconMapPin, IconPlayerStop, IconRadar, IconUsers } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
@@ -142,6 +142,13 @@ export default function ActiveTripDetailScreen() {
         ListFooterComponent={
           <View style={styles.footer}>
             {closeMutation.isError ? <MessageEtat type="erreur">{messageErreur(closeMutation.error)}</MessageEtat> : null}
+            <Bouton
+              variante="secondaire"
+              icone={<IconRadar color={couleurs.texte} size={20} />}
+              onPress={() => router.push({ pathname: "/suivi/[tripId]", params: { tripId } } as never)}
+            >
+              Partager ma position
+            </Bouton>
             <Bouton
               variante="sombre"
               icone={<IconPlayerStop color={couleurs.surface} size={20} />}

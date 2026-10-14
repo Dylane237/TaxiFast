@@ -1,5 +1,6 @@
 import {
   IconClock,
+  IconEdit,
   IconMapPin,
   IconSearch,
   IconX,
@@ -143,6 +144,15 @@ export default function WaitingRequestScreen() {
             </Text>
           </View>
         </Carte>
+        {!inactive ? (
+          <Bouton
+            variante="secondaire"
+            icone={<IconEdit color={couleurs.texte} size={19} />}
+            onPress={() => router.push({ pathname: "/modifier-demande/[requestId]", params: { requestId: request.id } } as never)}
+          >
+            Modifier la demande
+          </Bouton>
+        ) : null}
         {!inactive ? (
           <Bouton
             onPress={() =>
