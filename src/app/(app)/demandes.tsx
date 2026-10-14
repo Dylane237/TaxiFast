@@ -1,10 +1,10 @@
-import { IconArrowRight, IconInbox, IconMapPin, IconRoute } from "@tabler/icons-react-native";
+import { IconArrowRight, IconMapPin, IconRoute } from "@tabler/icons-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import { Carte, EntetePage, MessageEtat } from "@/components";
+import { Bouton, Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { selectDriverRequests, type DriverRequest } from "@/features/driver-requests/driver-requests";
 import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
@@ -61,16 +61,13 @@ export default function DriverRequestsScreen() {
   };
 
   if (pending) {
-    return <StatePage><MessageEtat>Chargement des demandes compatibles…</MessageEtat></StatePage>;
+    return <StatePage><EtatContenu type="chargement" title="Chargement des demandes" description="Nous recherchons les propositions compatibles avec vos trajets." /></StatePage>;
   }
 
   if (error) {
     return (
       <StatePage>
-        <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat>
-        <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.retry}>
-          <Text style={styles.retryText}>Réessayer</Text>
-        </Pressable>
+        <EtatContenu type="erreur" title="Demandes indisponibles" description={messageErreur(error)} action={<Bouton onPress={() => void refresh()}>Réessayer</Bouton>} />
       </StatePage>
     );
   }
@@ -85,11 +82,7 @@ export default function DriverRequestsScreen() {
         ListHeaderComponent={<EntetePage title="Demandes sur mon axe" description="Propositions compatibles avec vos arrêts et vos places disponibles." />}
         ListHeaderComponentStyle={styles.listHeader}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}><IconInbox color={couleurs.texteSecondaire} size={34} /></View>
-            <Text style={styles.emptyTitle}>Aucune demande pour le moment</Text>
-            <MessageEtat>Les nouvelles propositions compatibles apparaîtront ici.</MessageEtat>
-          </View>
+          <View style={styles.empty}><EtatContenu type="vide" title="Aucune demande pour le moment" description="Les nouvelles propositions compatibles apparaîtront ici." /></View>
         }
         contentContainerStyle={[styles.list, !requests.length && styles.emptyList]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} colors={[couleurs.primaire]} tintColor={couleurs.primaire} />}
@@ -125,9 +118,5 @@ const styles = StyleSheet.create({
   segmentText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "700" },
   price: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "900" },
   empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: espacements.md },
-  emptyIcon: { width: 68, height: 68, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" },
-  emptyTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
   stateContent: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
-  retry: { minHeight: 50, borderRadius: rayons.md, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
-  retryText: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
 });

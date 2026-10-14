@@ -33,11 +33,11 @@ export function EntetePage({
 }
 
 const styles = StyleSheet.create({
-  conteneur: { gap: espacements.sm },
-  ligne: { flexDirection: "row", alignItems: "center", gap: espacements.md },
+  conteneur: { gap: 6 },
+  ligne: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   retour: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: rayons.rond,
@@ -48,12 +48,13 @@ const styles = StyleSheet.create({
   titre: {
     flex: 1,
     color: couleurs.texte,
-    fontSize: taillesTexte.titre,
+    fontSize: 23,
+    lineHeight: 28,
     fontWeight: "900",
   },
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
-    lineHeight: 19,
+    lineHeight: 20,
   },
 });

@@ -41,11 +41,11 @@ export function LigneAction({
 
 const styles = StyleSheet.create({
   root: {
-    minHeight: 64,
+    minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
     gap: espacements.md,
-    paddingVertical: 9,
+    paddingVertical: espacements.sm,
     borderBottomWidth: 1,
     borderBottomColor: couleurs.bordure,
   },

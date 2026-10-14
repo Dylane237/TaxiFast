@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   contenu: { flexGrow: 1, backgroundColor: couleurs.encre },
   hero: {
-    minHeight: 258,
+    minHeight: 224,
     padding: espacements.lg,
     justifyContent: "flex-end",
     gap: espacements.md,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     color: couleurs.surface,
     fontSize: taillesTexte.hero,
     fontWeight: "900",
-    lineHeight: 40,
+    lineHeight: 36,
     letterSpacing: -0.5,
   },
   description: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   feuille: {
     flexGrow: 1,
-    minHeight: 360,
+    minHeight: 340,
     backgroundColor: couleurs.surface,
     borderTopLeftRadius: rayons.xl,
     borderTopRightRadius: rayons.xl,

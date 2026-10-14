@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     borderRadius: rayons.lg,
     borderWidth: 1,
     borderColor: couleurs.bordure,
-    padding: espacements.md,
+    padding: 14,
     ...ombres.carte,
   },
 });

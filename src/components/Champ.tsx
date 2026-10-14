@@ -48,7 +48,7 @@ export const Champ = forwardRef<TextInput, ChampProps>(function Champ(
 
 const styles = StyleSheet.create({
   conteneur: {
-    gap: 6,
+    gap: espacements.xs,
   },
   etiquette: {
     color: couleurs.texte,
@@ -56,13 +56,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   champ: {
-    minHeight: 50,
+    minHeight: 48,
     borderWidth: 1,
     borderColor: couleurs.bordure,
     borderRadius: rayons.md,
     backgroundColor: couleurs.surface,
     color: couleurs.texte,
-    paddingHorizontal: espacements.md,
+    paddingHorizontal: 14,
     fontSize: taillesTexte.normal,
   },
   champActif: {

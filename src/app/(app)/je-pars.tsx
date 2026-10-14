@@ -9,10 +9,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Corridor } from "@/api";
-import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
+import { Bouton, Carte, EntetePage, EtatContenu, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import {
   creerCreneaux,
@@ -26,9 +26,9 @@ import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
 function EtatChargement() {
   return (
     <SafeAreaView style={styles.page}>
-      <View style={styles.etatCentre}>
-        <ActivityIndicator color={couleurs.texte} size="large" />
-        <Text style={styles.texteSecondaire}>Chargement des axes…</Text>
+      <View style={styles.contenuEtat}>
+        <EntetePage title="Je pars" description="Publiez un trajet sur votre axe." />
+        <EtatContenu type="chargement" title="Chargement des axes" description="Nous préparons les arrêts disponibles." />
       </View>
     </SafeAreaView>
   );
@@ -237,8 +237,6 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond },
   contenu: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: espacements.xl },
   contenuEtat: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
-  etatCentre: { flex: 1, alignItems: "center", justifyContent: "center", gap: espacements.md },
-  texteSecondaire: { color: couleurs.texteSecondaire, fontSize: taillesTexte.normal },
   section: { gap: espacements.md, paddingTop: espacements.sm },
   sectionTitre: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.25 },
   aide: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19 },

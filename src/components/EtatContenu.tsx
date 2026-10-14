@@ -38,9 +38,9 @@ const styles = StyleSheet.create({
   root: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: espacements.xxl,
+    paddingVertical: espacements.xl,
     paddingHorizontal: espacements.lg,
-    gap: 7,
+    gap: espacements.sm,
   },
   icon: {
     width: 48,
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
-    lineHeight: 19,
+    lineHeight: 20,
     textAlign: "center",
     maxWidth: 290,
   },

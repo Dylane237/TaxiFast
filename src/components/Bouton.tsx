@@ -98,7 +98,7 @@ export function Bouton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 52,
+    minHeight: 50,
     borderRadius: rayons.md,
     paddingHorizontal: espacements.md,
     alignItems: "center",

@@ -166,8 +166,8 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: couleurs.texte,
-    fontSize: 30,
-    lineHeight: 35,
+    fontSize: 28,
+    lineHeight: 33,
     fontWeight: "900",
     letterSpacing: -0.8,
   },
@@ -206,8 +206,8 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     color: couleurs.texte,
-    fontSize: 29,
-    lineHeight: 33,
+    fontSize: 27,
+    lineHeight: 31,
     fontWeight: "900",
     letterSpacing: -0.6,
   },

@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip } from "@/api";
-import { Carte, EntetePage, MessageEtat } from "@/components";
+import { Bouton, Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
 
@@ -53,16 +53,13 @@ export default function ActiveTripsScreen() {
     .sort((a, b) => a.departureAt.localeCompare(b.departureAt));
 
   if (tripsQuery.isPending) {
-    return <StatePage><MessageEtat>Chargement de vos trajets actifs…</MessageEtat></StatePage>;
+    return <StatePage><EtatContenu type="chargement" title="Chargement des trajets" description="Nous préparons vos feuilles de route actives." /></StatePage>;
   }
 
   if (tripsQuery.isError) {
     return (
       <StatePage>
-        <MessageEtat type="erreur">{messageErreur(tripsQuery.error)}</MessageEtat>
-        <Pressable accessibilityRole="button" onPress={() => void tripsQuery.refetch()} style={styles.retry}>
-          <Text style={styles.retryText}>Réessayer</Text>
-        </Pressable>
+        <EtatContenu type="erreur" title="Trajets indisponibles" description={messageErreur(tripsQuery.error)} action={<Bouton onPress={() => void tripsQuery.refetch()}>Réessayer</Bouton>} />
       </StatePage>
     );
   }
@@ -77,11 +74,7 @@ export default function ActiveTripsScreen() {
         ListHeaderComponent={<EntetePage title="Trajet en cours" description="Suivez les montées, les descentes et les places sur chaque tronçon." />}
         ListHeaderComponentStyle={styles.listHeader}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}><IconRoute color={couleurs.texteSecondaire} size={35} /></View>
-            <Text style={styles.emptyTitle}>Aucun trajet actif</Text>
-            <MessageEtat>Publiez un départ pour préparer votre feuille de route.</MessageEtat>
-          </View>
+          <View style={styles.empty}><EtatContenu type="vide" title="Aucun trajet actif" description="Publiez un départ pour préparer votre feuille de route." /></View>
         }
         contentContainerStyle={[styles.list, !trips.length && styles.emptyList]}
         refreshControl={<RefreshControl refreshing={tripsQuery.isRefetching} onRefresh={() => void tripsQuery.refetch()} colors={[couleurs.primaire]} tintColor={couleurs.primaire} />}
@@ -117,9 +110,5 @@ const styles = StyleSheet.create({
   segmentText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
   details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: espacements.md },
-  emptyIcon: { width: 68, height: 68, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" },
-  emptyTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
   stateContent: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
-  retry: { minHeight: 50, borderRadius: rayons.md, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
-  retryText: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
 });
