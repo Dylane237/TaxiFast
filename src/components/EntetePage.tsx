@@ -1,6 +1,7 @@
 import { IconArrowLeft } from "@tabler/icons-react-native";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AvatarUtilisateur } from "./AvatarUtilisateur";
 import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
 
 export function EntetePage({
@@ -21,7 +22,10 @@ export function EntetePage({
         >
           <IconArrowLeft color={couleurs.texte} size={22} />
         </Pressable>
-        <Text style={styles.titre}>{title}</Text>
+        <Text numberOfLines={1} style={styles.titre}>
+          {title}
+        </Text>
+        <AvatarUtilisateur compact />
       </View>
       <Text style={styles.description}>{description}</Text>
     </View>
@@ -42,6 +46,7 @@ const styles = StyleSheet.create({
     borderColor: couleurs.bordure,
   },
   titre: {
+    flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.titre,
     fontWeight: "900",

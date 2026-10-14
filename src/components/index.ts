@@ -9,3 +9,5 @@ export { RouteBackdrop } from "./RouteBackdrop";
 export { EtatContenu } from "./EtatContenu";
 export { LigneAction } from "./LigneAction";
 export { PuceChoix } from "./PuceChoix";
+export { AvatarUtilisateur } from "./AvatarUtilisateur";
+export { MenuLateral } from "./MenuLateral";
