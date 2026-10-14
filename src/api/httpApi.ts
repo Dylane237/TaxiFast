@@ -162,6 +162,9 @@ const stopSchema = z.object({
   corridorId: z.string(),
   name: z.string(),
   position: z.number().int(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  meetingInstructions: z.string().nullable(),
 });
 const corridorSchema = z.object({
   id: z.string(),
@@ -373,6 +376,12 @@ export const httpApi: Api = {
           }),
         ),
       }),
+    ),
+  getTripRoute: (tripId): Promise<Trip> =>
+    request(
+      `/trips/${encodeURIComponent(tripId)}/route`,
+      {},
+      tripSchema,
     ),
   closeTrip: (tripId): Promise<Trip> =>
     request(

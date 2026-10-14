@@ -93,34 +93,35 @@ export function createMockData(): MockData {
   const corridors: Corridor[] = [
     {
       id: "corridor-1",
-      name: "Itinéraire Centre - Ouest (provisoire)",
+      name: "Bonabéri – Bonanjo",
       stops: [
-        "Carrefour Central",
-        "Marché Ouest",
-        "Rond-point du Fleuve",
-        "Gare Routière",
-        "Terminus Ouest",
-      ].map((name, position) => ({
+        { name: "Bonabéri Centre", latitude: 4.079, longitude: 9.6666, meetingInstructions: "Devant la mairie de Douala IV, côté stationnement." },
+        { name: "Pont du Wouri", latitude: 4.07222, longitude: 9.69389, meetingInstructions: "À l'arrêt aménagé côté Bonabéri, hors de la chaussée." },
+        { name: "Rond-point Deïdo", latitude: 4.0642, longitude: 9.70687, meetingInstructions: "Près de La Nouvelle Liberté, côté stationnement." },
+        { name: "Bessengué", latitude: 4.0517, longitude: 9.70811, meetingInstructions: "À l'arrêt situé près de la gare de Bessengué." },
+        { name: "Akwa", latitude: 4.05106, longitude: 9.69675, meetingInstructions: "Devant Akwa Palace, côté boulevard de la Liberté." },
+        { name: "Bonanjo", latitude: 4.04302, longitude: 9.6865, meetingInstructions: "Devant la Poste centrale de Bonanjo." },
+      ].map((stop, position) => ({
         id: `c1-stop-${position + 1}`,
         corridorId: "corridor-1",
-        name,
         position,
+        ...stop,
       })),
     },
     {
       id: "corridor-2",
-      name: "Itinéraire Centre - Est (provisoire)",
+      name: "Ndokoti – PK 14",
       stops: [
-        "Place du Centre",
-        "Hôpital Général",
-        "Carrefour des Écoles",
-        "Marché Est",
-        "Terminus Est",
-      ].map((name, position) => ({
+        { name: "Carrefour Ndokoti", latitude: 4.04345, longitude: 9.74248, meetingInstructions: "Devant TotalEnergies Ndokoti, à l'écart du carrefour." },
+        { name: "Logbaba", latitude: 4.03285, longitude: 9.76032, meetingInstructions: "Devant la mairie de Douala III, côté stationnement." },
+        { name: "Ndogpassi", latitude: 4.02824, longitude: 9.77167, meetingInstructions: "À l'entrée de Ndogpassi, au point de stationnement." },
+        { name: "PK 10", latitude: 4.05635, longitude: 9.7743, meetingInstructions: "Devant le marché PK 10, côté stationnement." },
+        { name: "Marché PK 14", latitude: 4.0794, longitude: 9.8004, meetingInstructions: "À l'entrée principale du marché PK 14." },
+      ].map((stop, position) => ({
         id: `c2-stop-${position + 1}`,
         corridorId: "corridor-2",
-        name,
         position,
+        ...stop,
       })),
     },
   ];
@@ -158,7 +159,7 @@ export function createMockData(): MockData {
       "driver-1",
       "corridor-1",
       2,
-      ["c1-stop-1", "c1-stop-2", "c1-stop-3", "c1-stop-4", "c1-stop-5"],
+      ["c1-stop-1", "c1-stop-2", "c1-stop-3", "c1-stop-4", "c1-stop-5", "c1-stop-6"],
       60,
     ),
     makeTrip(
@@ -166,7 +167,7 @@ export function createMockData(): MockData {
       "driver-2",
       "corridor-1",
       3,
-      ["c1-stop-2", "c1-stop-3", "c1-stop-4", "c1-stop-5"],
+      ["c1-stop-2", "c1-stop-3", "c1-stop-4", "c1-stop-5", "c1-stop-6"],
       90,
     ),
     makeTrip(

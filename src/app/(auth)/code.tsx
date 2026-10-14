@@ -1,4 +1,4 @@
-import { IconKey } from "@tabler/icons-react-native";
+import { IconArrowLeft, IconKey } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -61,9 +61,9 @@ export default function CodeOtp() {
     mutation.error.code === "ROLE_REQUIRED";
   return (
     <AuthPage
-      icon={<IconKey color={couleurs.primaire} size={40} strokeWidth={1.8} />}
-      title="Code de vérification"
-      description={`Saisissez le code envoyé au ${phone || "numéro indiqué"}.${otpLength === 4 ? " En mode fictif, utilisez 1234." : ""}`}
+      icon={<IconKey color={couleurs.primaire} size={25} strokeWidth={2} />}
+      title="Vérifiez votre numéro."
+      description={`Code envoyé au ${phone || "numéro indiqué"}.`}
     >
       <View style={styles.formulaire}>
         <Champ
@@ -73,16 +73,13 @@ export default function CodeOtp() {
             setCode(value.replace(/\D/g, "").slice(0, otpLength))
           }
           placeholder={otpLength === 4 ? "1234" : "123456"}
+          aide={otpLength === 4 ? "Mode fictif : saisissez 1234." : "Le code expire après quelques minutes."}
           keyboardType="number-pad"
           autoComplete="one-time-code"
           erreur={erreurSaisie ?? undefined}
           onSubmitEditing={verifier}
+          style={styles.code}
         />
-        {!code ? (
-          <MessageEtat>
-            Le code est requis pour vérifier votre numéro.
-          </MessageEtat>
-        ) : null}
         {mutation.isError && !roleRequis ? (
           <MessageEtat type="erreur">
             {messageErreur(mutation.error)}
@@ -95,7 +92,8 @@ export default function CodeOtp() {
           Vérifier le code
         </Bouton>
         <Bouton
-          variante="secondaire"
+          variante="fantome"
+          icone={<IconArrowLeft color={couleurs.texte} size={19} />}
           onPress={() => router.replace("/connexion")}
         >
           Changer de numéro
@@ -105,4 +103,7 @@ export default function CodeOtp() {
   );
 }
 
-const styles = StyleSheet.create({ formulaire: { gap: espacements.md } });
+const styles = StyleSheet.create({
+  formulaire: { gap: espacements.md },
+  code: { textAlign: "center", letterSpacing: 10, fontSize: 22, fontWeight: "800" },
+});

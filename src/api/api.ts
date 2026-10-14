@@ -43,6 +43,7 @@ export interface Api {
   cancelTrip(tripId: string): Promise<Trip>;
   listDriverTrips(): Promise<Trip[]>;
   getTripManifest(tripId: string): Promise<TripManifest>;
+  getTripRoute(tripId: string): Promise<Trip>;
   closeTrip(tripId: string): Promise<Trip>;
 
   createTripRequest(input: CreateTripRequestInput): Promise<TripRequest>;

@@ -1,4 +1,4 @@
-import { IconPhone } from "@tabler/icons-react-native";
+import { IconArrowRight, IconPhone } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -34,26 +34,33 @@ export default function Connexion() {
 
   return (
     <AuthPage
-      icon={<IconPhone color={couleurs.primaire} size={40} strokeWidth={1.8} />}
-      title="Connexion"
-      description="Recevez un code de vérification sur votre numéro camerounais."
+      icon={<IconPhone color={couleurs.primaire} size={25} strokeWidth={2} />}
+      title="Bougez simplement."
+      description="Connectez-vous avec votre numéro camerounais pour trouver ou publier un trajet."
     >
       <View style={styles.formulaire}>
         <Champ
           etiquette="Numéro de téléphone"
+          prefixe="+237"
           value={telephone}
           onChangeText={setTelephone}
           placeholder="6XX XXX XXX"
+          aide="Un code de vérification vous sera envoyé."
           keyboardType="phone-pad"
           autoComplete="tel"
           erreur={erreurSaisie ?? undefined}
           onSubmitEditing={envoyer}
           returnKeyType="send"
         />
-        {!telephone ? <MessageEtat>Le champ est vide. Entrez votre numéro pour continuer.</MessageEtat> : null}
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
         {mutation.isSuccess ? <MessageEtat type="succes">Code envoyé.</MessageEtat> : null}
-        <Bouton chargement={mutation.isPending} onPress={envoyer}>Recevoir le code</Bouton>
+        <Bouton
+          icone={<IconArrowRight color={couleurs.texte} size={19} />}
+          chargement={mutation.isPending}
+          onPress={envoyer}
+        >
+          Continuer
+        </Bouton>
       </View>
     </AuthPage>
   );

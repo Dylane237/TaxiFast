@@ -2,7 +2,7 @@ import { IconId } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { api, type UpdateProfileInput, type UserProfile } from "@/api";
 import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { placesValides } from "@/features/auth/auth-validation";
@@ -50,17 +50,19 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
 
   return (
     <AuthPage
-      icon={<IconId color={couleurs.primaire} size={40} />}
-      title="Complétez votre profil"
+      icon={<IconId color={couleurs.primaire} size={25} />}
+      title="Faisons connaissance."
       description={chauffeur ? "Ajoutez vos informations et celles de votre véhicule." : "Indiquez le nom affiché aux chauffeurs."}
     >
       <View style={styles.formulaire}>
-        <Champ etiquette="Nom" value={nom} onChangeText={setNom} placeholder="Votre nom" autoCapitalize="words" />
+        <Text style={styles.section}>VOS INFORMATIONS</Text>
+        <Champ etiquette="Nom affiché" value={nom} onChangeText={setNom} placeholder="Votre nom" aide="Le nom que verront les autres utilisateurs." autoCapitalize="words" />
         {chauffeur ? (
           <>
+            <Text style={styles.section}>VOTRE VÉHICULE</Text>
             <Champ etiquette="Plaque d’immatriculation" value={plaque} onChangeText={setPlaque} placeholder="LT 123 AB" autoCapitalize="characters" />
             <Champ etiquette="Modèle du véhicule" value={modele} onChangeText={setModele} placeholder="Toyota Yaris" />
-            <Champ etiquette="Nombre de places" value={places} onChangeText={setPlaces} placeholder="4" keyboardType="number-pad" />
+            <Champ etiquette="Nombre de places disponibles" value={places} onChangeText={setPlaces} placeholder="4" aide="La capacité reste vérifiée séparément sur chaque tronçon." keyboardType="number-pad" />
           </>
         ) : null}
         {erreurSaisie ? <MessageEtat type="erreur">{erreurSaisie}</MessageEtat> : null}
@@ -77,14 +79,14 @@ export default function Profil() {
 
   if (profileQuery.isPending) {
     return (
-      <AuthPage icon={<IconId color={couleurs.primaire} size={40} />} title="Votre profil" description="Chargement de vos informations…">
+      <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Chargement de vos informations…">
         <ActivityIndicator color={couleurs.texte} size="large" />
       </AuthPage>
     );
   }
   if (profileQuery.isError) {
     return (
-      <AuthPage icon={<IconId color={couleurs.primaire} size={40} />} title="Votre profil" description="Impossible de charger vos informations.">
+      <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Impossible de charger vos informations.">
         <MessageEtat type="erreur">{messageErreur(profileQuery.error)}</MessageEtat>
         <Bouton onPress={() => profileQuery.refetch()}>Réessayer</Bouton>
       </AuthPage>
@@ -92,7 +94,7 @@ export default function Profil() {
   }
   if (!profileQuery.data) {
     return (
-      <AuthPage icon={<IconId color={couleurs.primaire} size={40} />} title="Votre profil" description="Aucune session active.">
+      <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Aucune session active.">
         <MessageEtat>Reconnectez-vous pour compléter votre profil.</MessageEtat>
         <Bouton onPress={() => router.replace("/connexion")}>Se connecter</Bouton>
       </AuthPage>
@@ -101,4 +103,7 @@ export default function Profil() {
   return <FormulaireProfil profile={profileQuery.data} />;
 }
 
-const styles = StyleSheet.create({ formulaire: { gap: espacements.md } });
+const styles = StyleSheet.create({
+  formulaire: { gap: espacements.md },
+  section: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.4, marginTop: espacements.xs },
+});

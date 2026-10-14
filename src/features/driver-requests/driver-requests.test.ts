@@ -15,7 +15,15 @@ const trip = {
     tripId: "trip-1",
     stopId: `stop-${sequence}`,
     sequence,
-    stop: { id: `stop-${sequence}`, corridorId: "corridor-1", name, position: sequence },
+    stop: {
+      id: `stop-${sequence}`,
+      corridorId: "corridor-1",
+      name,
+      position: sequence,
+      latitude: null,
+      longitude: null,
+      meetingInstructions: null,
+    },
   })),
 } satisfies Trip;
 

@@ -39,6 +39,9 @@ export type Stop = {
   corridorId: string;
   name: string;
   position: number;
+  latitude: number | null;
+  longitude: number | null;
+  meetingInstructions: string | null;
 };
 
 // Forme d'un élément de GET /corridors.

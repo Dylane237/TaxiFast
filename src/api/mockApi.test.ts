@@ -106,6 +106,19 @@ describe("MockApi", () => {
     await expect(api.getTripLocation(mockIds.tripWithOneSeatLeft)).resolves.toMatchObject({ heading: 90 });
   });
 
+  it("renvoie les arrêts géolocalisés de l'itinéraire à un participant", async () => {
+    const api = instantApi(mockIds.secondClient);
+
+    const route = await api.getTripRoute(mockIds.tripWithOneSeatLeft);
+
+    expect(route.tripStops).toHaveLength(6);
+    expect(route.tripStops[0]?.stop).toMatchObject({
+      name: "Bonabéri Centre",
+      latitude: 4.079,
+      longitude: 9.6666,
+    });
+  });
+
   it("ne confirme qu’une réservation sur la dernière place disponible", async () => {
     const api = instantApi(mockIds.driver);
 
@@ -204,8 +217,8 @@ describe("MockApi", () => {
 
     const details = await api.getBookingDetails("booking-history");
     expect(details).toMatchObject({
-      pickupStop: { name: "Carrefour Central" },
-      dropoffStop: { name: "Gare Routière" },
+      pickupStop: { name: "Bonabéri Centre" },
+      dropoffStop: { name: "Bessengué" },
       driver: { name: "Alain" },
       ratedByCurrentUser: false,
     });

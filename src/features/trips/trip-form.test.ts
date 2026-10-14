@@ -3,9 +3,9 @@ import type { Stop } from "@/api";
 import { creerCreneaux, erreurPublication, ordonnerArrets } from "./trip-form";
 
 const stops: Stop[] = [
-  { id: "a", corridorId: "axe", name: "A", position: 0 },
-  { id: "b", corridorId: "axe", name: "B", position: 1 },
-  { id: "c", corridorId: "axe", name: "C", position: 2 },
+  { id: "a", corridorId: "itineraire", name: "A", position: 0, latitude: null, longitude: null, meetingInstructions: null },
+  { id: "b", corridorId: "itineraire", name: "B", position: 1, latitude: null, longitude: null, meetingInstructions: null },
+  { id: "c", corridorId: "itineraire", name: "C", position: 2, latitude: null, longitude: null, meetingInstructions: null },
 ];
 
 describe("formulaire de trajet chauffeur", () => {

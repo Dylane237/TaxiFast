@@ -471,6 +471,22 @@ export class MockApi implements Api {
     return clone({ trip, passengers });
   }
 
+  async getTripRoute(tripId: string): Promise<Trip> {
+    await this.wait();
+    const user = this.currentUser(["CLIENT", "DRIVER"]);
+    const trip = this.tripById(parse(idSchema, tripId));
+    const participant =
+      trip.driverId === user.id ||
+      this.data.bookings.some(
+        (booking) =>
+          booking.tripId === trip.id &&
+          booking.clientId === user.id &&
+          booking.status === "CONFIRMED",
+      );
+    if (!participant) throw new ApiError("FORBIDDEN");
+    return clone(trip);
+  }
+
   async closeTrip(tripId: string): Promise<Trip> {
     await this.wait();
     const driver = this.currentUser(["DRIVER"]);
@@ -1065,8 +1081,8 @@ export class MockApi implements Api {
     if (!participant) throw new ApiError("FORBIDDEN");
     const location = this.locations.get(trip.id) ?? {
       tripId: trip.id,
-      latitude: 4.0511,
-      longitude: 9.7679,
+      latitude: 4.0642,
+      longitude: 9.70687,
       accuracy: 12,
       heading: null,
       updatedAt: new Date().toISOString(),
