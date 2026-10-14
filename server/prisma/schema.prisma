@@ -1,0 +1,258 @@
+// Schéma v2 : axes prédéfinis, arrêts nommés, capacité par tronçon.
+//
+// RÈGLE DE CAPACITÉ (vérifiée en code, dans une transaction avec verrou de ligne sur Trip) :
+// Un trajet a des arrêts ordonnés (TripStop.sequence). Une réservation va d'un arrêt de montée
+// à un arrêt de descente (pickup.sequence < dropoff.sequence). Elle est acceptable si, pour chaque
+// tronçon s tel que pickup.sequence <= s < dropoff.sequence, le nombre de réservations CONFIRMED
+// qui couvrent ce tronçon est strictement inférieur à Trip.capacity.
+// Il n'y a volontairement PAS de compteur de places dans Trip.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  DRIVER
+  ADMIN
+}
+
+enum TripStatus {
+  OPEN      // accepte des réservations
+  FULL      // automatique et réversible (recalculé après chaque confirmation / annulation)
+  CLOSED    // décidé par le chauffeur, définitif
+  COMPLETED
+  CANCELLED
+}
+
+enum RequestStatus {
+  OPEN
+  MATCHED
+  EXPIRED
+  CANCELLED
+}
+
+enum BookingInitiator {
+  CLIENT
+  DRIVER
+}
+
+enum BookingStatus {
+  PROPOSED_BY_CLIENT
+  PROPOSED_BY_DRIVER
+  CONFIRMED
+  REFUSED
+  EXPIRED
+  CANCELLED
+  COMPLETED
+}
+
+enum TransactionType {
+  TOPUP
+  COMMISSION
+  PAYOUT
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+}
+
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  name      String?
+  role      Role
+  createdAt DateTime @default(now())
+
+  vehicle         Vehicle?
+  trips           Trip[]              @relation("DriverTrips")
+  requests        TripRequest[]
+  bookings        Booking[]
+  transactions    WalletTransaction[]
+  ratingsGiven    Rating[]            @relation("RatingAuthor")
+  ratingsReceived Rating[]            @relation("RatingTarget")
+  pushDevices     PushDevice[]
+}
+
+model Vehicle {
+  id       String @id @default(cuid())
+  driverId String @unique
+  plate    String
+  model    String?
+  seats    Int
+
+  driver User @relation(fields: [driverId], references: [id])
+}
+
+model Corridor {
+  id   String @id @default(cuid())
+  name String @unique
+
+  stops    Stop[]
+  trips    Trip[]
+  requests TripRequest[]
+}
+
+model Stop {
+  id                  String @id @default(cuid())
+  corridorId          String
+  name                String
+  position            Int // ordre de référence sur l'itinéraire
+  latitude            Float?
+  longitude           Float?
+  meetingInstructions String?
+
+  corridor Corridor @relation(fields: [corridorId], references: [id])
+
+  tripStops       TripStop[]
+  pickupBookings  Booking[]     @relation("Pickup")
+  dropoffBookings Booking[]     @relation("Dropoff")
+  requestsFrom    TripRequest[] @relation("RequestFrom")
+  requestsTo      TripRequest[] @relation("RequestTo")
+
+  @@unique([corridorId, position])
+  @@unique([corridorId, name])
+}
+
+model Trip {
+  id          String     @id @default(cuid())
+  driverId    String
+  corridorId  String
+  capacity    Int
+  departureAt DateTime
+  status      TripStatus @default(OPEN)
+  createdAt   DateTime   @default(now())
+
+  driver   User     @relation("DriverTrips", fields: [driverId], references: [id])
+  corridor Corridor @relation(fields: [corridorId], references: [id])
+
+  tripStops TripStop[]
+  bookings  Booking[]
+  location  TripLocation?
+
+  @@index([corridorId, status, departureAt])
+}
+
+model TripStop {
+  id       String @id @default(cuid())
+  tripId   String
+  stopId   String
+  sequence Int
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stop Stop @relation(fields: [stopId], references: [id])
+
+  @@unique([tripId, sequence])
+  @@unique([tripId, stopId])
+}
+
+model TripRequest {
+  id            String        @id @default(cuid())
+  clientId      String
+  corridorId    String
+  fromStopId    String
+  toStopId      String
+  windowStart   DateTime
+  windowEnd     DateTime
+  proposedPrice Int // en FCFA
+  status        RequestStatus @default(OPEN)
+  createdAt     DateTime      @default(now())
+
+  client   User     @relation(fields: [clientId], references: [id])
+  corridor Corridor @relation(fields: [corridorId], references: [id])
+  fromStop Stop     @relation("RequestFrom", fields: [fromStopId], references: [id])
+  toStop   Stop     @relation("RequestTo", fields: [toStopId], references: [id])
+
+  bookings Booking[]
+
+  @@index([corridorId, status, windowStart])
+}
+
+model Booking {
+  id            String           @id @default(cuid())
+  tripId        String
+  clientId      String
+  requestId     String?
+  pickupStopId  String
+  dropoffStopId String
+  initiatedBy   BookingInitiator
+  status        BookingStatus
+  proposedPrice Int // FCFA
+  counterPrice  Int? // une seule contre-proposition
+  agreedPrice   Int?
+  commission    Int?
+  expiresAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  trip        Trip         @relation(fields: [tripId], references: [id])
+  client      User         @relation(fields: [clientId], references: [id])
+  request     TripRequest? @relation(fields: [requestId], references: [id])
+  pickupStop  Stop         @relation("Pickup", fields: [pickupStopId], references: [id])
+  dropoffStop Stop         @relation("Dropoff", fields: [dropoffStopId], references: [id])
+
+  transactions WalletTransaction[]
+  ratings      Rating[]
+
+  @@index([tripId, status])
+  @@index([clientId, status])
+}
+
+model WalletTransaction {
+  id        String          @id @default(cuid())
+  userId    String
+  bookingId String?
+  type      TransactionType
+  amount    Int // FCFA, positif ou négatif
+  createdAt DateTime        @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  bookingId String
+  authorId  String
+  targetId  String
+  score     Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  author  User    @relation("RatingAuthor", fields: [authorId], references: [id])
+  target  User    @relation("RatingTarget", fields: [targetId], references: [id])
+
+  @@unique([bookingId, authorId])
+}
+
+model PushDevice {
+  id        String         @id @default(cuid())
+  userId    String
+  token     String         @unique
+  platform  DevicePlatform
+  enabled   Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, enabled])
+}
+
+model TripLocation {
+  tripId    String   @id
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  heading   Float?
+  updatedAt DateTime @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
