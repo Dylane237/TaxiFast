@@ -1,0 +1,12 @@
+diff --git a/node_modules/@rive-app/react-native/android/build.gradle b/node_modules/@rive-app/react-native/android/build.gradle
+index 6c88ff8..8ffed51 100644
+--- a/node_modules/@rive-app/react-native/android/build.gradle
++++ b/node_modules/@rive-app/react-native/android/build.gradle
+@@ -39,6 +39,7 @@ android {
+   namespace "com.rive"
+ 
+   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
++  ndkVersion getExtOrDefault("ndkVersion")
+ 
+   def skipSetup = project.hasProperty('Rive_RiveRuntimeAndroidSkipSetup') ?
+     project.property('Rive_RiveRuntimeAndroidSkipSetup').toBoolean() : false
