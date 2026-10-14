@@ -364,22 +364,53 @@ export class MockApi implements Api {
     const driver = this.currentUser(["DRIVER"]);
     const trip = this.tripById(parse(idSchema, tripId));
     if (trip.driverId !== driver.id) throw new ApiError("FORBIDDEN");
-    if (!input.capacity && !input.departureAt) throw new ApiError("INVALID_INPUT");
+    if (!Object.values(input).some((value) => value !== undefined)) throw new ApiError("INVALID_INPUT");
     if (!["OPEN", "FULL"].includes(trip.status)) throw new ApiError("TRIP_NOT_OPEN");
-    if (input.capacity !== undefined) {
-      const capacity = parse(z.number().int().positive(), input.capacity);
-      const segments = this.confirmedSegments(trip);
-      const occupancy = Math.max(
-        0,
-        ...trip.tripStops.slice(0, -1).map((_, leg) =>
-          segments.filter(
-            (candidate) => candidate.pickup <= leg && candidate.dropoff > leg,
-          ).length,
-        ),
-      );
-      if (capacity < occupancy) throw new ApiError("CAPACITY_EXCEEDED");
-      trip.capacity = capacity;
+    const corridorId = input.corridorId ?? trip.corridorId;
+    const corridor = this.data.corridors.find((candidate) => candidate.id === corridorId);
+    if (!corridor) throw new ApiError("NOT_FOUND");
+    const stopIds = input.stopIds ?? trip.tripStops.map((tripStop) => tripStop.stopId);
+    const positions = stopIds.map((stopId) => corridor.stops.find((stop) => stop.id === stopId)?.position);
+    const ordered = stopIds.length >= 2 && new Set(stopIds).size === stopIds.length &&
+      positions.every((position) => position !== undefined) &&
+      (positions.every((position, index) => index === 0 || position! > positions[index - 1]!) ||
+        positions.every((position, index) => index === 0 || position! < positions[index - 1]!));
+    if (!ordered) throw new ApiError("INVALID_TRIP_STOPS");
+
+    const confirmed = this.data.bookings.filter(
+      (booking) => booking.tripId === trip.id && booking.status === "CONFIRMED",
+    );
+    const sequenceByStop = new Map(stopIds.map((stopId, sequence) => [stopId, sequence]));
+    if (confirmed.some((booking) => {
+      const pickup = sequenceByStop.get(booking.pickupStopId);
+      const dropoff = sequenceByStop.get(booking.dropoffStopId);
+      return pickup === undefined || dropoff === undefined || pickup >= dropoff;
+    })) {
+      throw new ApiError("INVALID_BOOKING_STOPS");
     }
+    const occupancy = Math.max(0, ...stopIds.slice(0, -1).map((_, leg) =>
+      confirmed.filter((booking) =>
+        sequenceByStop.get(booking.pickupStopId)! <= leg && sequenceByStop.get(booking.dropoffStopId)! > leg,
+      ).length,
+    ));
+    const capacity = input.capacity === undefined ? trip.capacity : parse(z.number().int().positive(), input.capacity);
+    if (capacity < occupancy) throw new ApiError("CAPACITY_EXCEEDED");
+
+    const routeChanged = corridorId !== trip.corridorId || input.stopIds !== undefined;
+    if (routeChanged) {
+      this.data.bookings
+        .filter((booking) => booking.tripId === trip.id && ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status))
+        .forEach((booking) => { booking.status = "CANCELLED"; });
+      trip.corridorId = corridorId;
+      trip.tripStops = stopIds.map((stopId, sequence) => ({
+        id: this.nextId("trip-stop"),
+        tripId: trip.id,
+        stopId,
+        sequence,
+        stop: corridor.stops.find((stop) => stop.id === stopId)!,
+      }));
+    }
+    trip.capacity = capacity;
     if (input.departureAt) trip.departureAt = parse(isoDateSchema, input.departureAt);
     this.recalculateTripStatus(trip);
     return clone(trip);
@@ -513,6 +544,12 @@ export class MockApi implements Api {
       throw new ApiError("BOOKING_NOT_CONFIRMABLE");
     }
     const values = parse(createRequestSchema, { ...request, ...input });
+    const corridor = this.data.corridors.find((candidate) => candidate.id === values.corridorId);
+    const from = corridor?.stops.find((stop) => stop.id === values.fromStopId);
+    const to = corridor?.stops.find((stop) => stop.id === values.toStopId);
+    if (!corridor || !from || !to || from.position >= to.position) {
+      throw new ApiError("INVALID_INPUT", "La descente doit se trouver après la montée.");
+    }
     Object.assign(request, values);
     activeBookings.forEach((booking) => {
       booking.status = "CANCELLED";

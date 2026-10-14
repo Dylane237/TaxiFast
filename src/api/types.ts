@@ -172,8 +172,10 @@ export type CreateTripInput = {
 };
 
 export type UpdateTripInput = {
+  corridorId?: string;
   capacity?: number;
   departureAt?: IsoDateString;
+  stopIds?: string[];
 };
 
 export type CreateTripRequestInput = {
@@ -188,7 +190,7 @@ export type CreateTripRequestInput = {
 export type UpdateTripRequestInput = Partial<
   Pick<
     CreateTripRequestInput,
-    "fromStopId" | "toStopId" | "windowStart" | "windowEnd" | "proposedPrice"
+    "corridorId" | "fromStopId" | "toStopId" | "windowStart" | "windowEnd" | "proposedPrice"
   >
 >;
 

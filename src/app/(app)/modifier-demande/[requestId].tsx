@@ -1,26 +1,62 @@
-import { IconCheck, IconTrash } from "@tabler/icons-react-native";
+import { IconCheck, IconInfoCircle, IconTrash } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { Alert, ScrollView, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import { Bouton, Carte, Champ, EntetePage, MessageEtat } from "@/components";
+import { Bouton, Carte, Champ, EntetePage, MessageEtat, PuceChoix } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { couleurs, espacements } from "@/theme";
+import { formatLocalDateTime, parseLocalDateTime } from "@/features/date-time-input";
+import { couleurs, espacements, taillesTexte } from "@/theme";
 
 export default function EditRequestScreen() {
   const { requestId } = useLocalSearchParams<{ requestId?: string }>();
   const queryClient = useQueryClient();
   const requests = useQuery({ queryKey: ["client-requests"], queryFn: () => api.listClientTripRequests() });
+  const corridors = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const request = requests.data?.find((item) => item.id === requestId);
+  const [initializedId, setInitializedId] = useState<string | null>(null);
+  const [corridorId, setCorridorId] = useState("");
+  const [fromStopId, setFromStopId] = useState("");
+  const [toStopId, setToStopId] = useState("");
+  const [windowStart, setWindowStart] = useState("");
+  const [windowEnd, setWindowEnd] = useState("");
   const [price, setPrice] = useState("");
-  const displayedPrice = price || (request ? String(request.proposedPrice) : "");
+  const corridor = corridors.data?.find((item) => item.id === corridorId);
+  const fromPosition = corridor?.stops.find((stop) => stop.id === fromStopId)?.position ?? -1;
+
+  useEffect(() => {
+    if (!request || initializedId === request.id) return;
+    setCorridorId(request.corridorId);
+    setFromStopId(request.fromStopId);
+    setToStopId(request.toStopId);
+    setWindowStart(formatLocalDateTime(request.windowStart));
+    setWindowEnd(formatLocalDateTime(request.windowEnd));
+    setPrice(String(request.proposedPrice));
+    setInitializedId(request.id);
+  }, [initializedId, request]);
+
   const update = useMutation({
     mutationFn: () => {
-      const value = Number(displayedPrice);
+      const start = parseLocalDateTime(windowStart);
+      const end = parseLocalDateTime(windowEnd);
+      const value = Number(price);
+      if (!corridor || !fromStopId || !toStopId || fromPosition >= (corridor.stops.find((stop) => stop.id === toStopId)?.position ?? -1)) {
+        throw new Error("Choisissez une montée et une descente dans le bon ordre.");
+      }
+      if (!start || !end || new Date(start) <= new Date() || new Date(start) >= new Date(end)) {
+        throw new Error("Saisissez une fenêtre future valide au format indiqué.");
+      }
       if (!Number.isInteger(value) || value < 100) throw new Error("Saisissez un prix entier valide en FCFA.");
-      return api.updateTripRequest(requestId!, { proposedPrice: value });
+      return api.updateTripRequest(requestId!, {
+        corridorId: corridor.id,
+        fromStopId,
+        toStopId,
+        windowStart: start,
+        windowEnd: end,
+        proposedPrice: value,
+      });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["client-requests"] });
@@ -34,36 +70,49 @@ export default function EditRequestScreen() {
       router.replace("/mes-demandes");
     },
   });
-
-  const confirmCancel = () => Alert.alert(
-    "Annuler cette demande ?",
-    "Les offres encore en attente seront annulées. Une réservation déjà confirmée doit être gérée séparément.",
-    [
-      { text: "Conserver", style: "cancel" },
-      { text: "Annuler la demande", style: "destructive", onPress: () => cancel.mutate() },
-    ],
-  );
+  const chooseCorridor = (id: string) => {
+    setCorridorId(id);
+    setFromStopId("");
+    setToStopId("");
+  };
+  const confirmCancel = () => Alert.alert("Annuler cette demande ?", "Les offres encore en attente seront annulées.", [
+    { text: "Conserver", style: "cancel" },
+    { text: "Annuler la demande", style: "destructive", onPress: () => cancel.mutate() },
+  ]);
+  const pending = requests.isPending || corridors.isPending;
+  const error = requests.error ?? corridors.error;
 
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <EntetePage title="Modifier la demande" description="Le nouveau prix remplacera votre proposition actuelle." />
-        {requests.isPending ? <MessageEtat>Chargement de la demande…</MessageEtat> : null}
-        {requests.isError ? <MessageEtat type="erreur">{messageErreur(requests.error)}</MessageEtat> : null}
-        {!requests.isPending && !requests.isError && !request ? <MessageEtat type="erreur">Demande introuvable.</MessageEtat> : null}
-        {request ? (
+        <EntetePage title="Modifier la demande" description="Axe, arrêts, horaire et prix peuvent être ajustés." />
+        {pending ? <MessageEtat>Chargement de la demande…</MessageEtat> : null}
+        {error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}
+        {!pending && !error && !request ? <MessageEtat type="erreur">Demande introuvable.</MessageEtat> : null}
+        {request && corridor ? (
           <>
-            <Carte>
-              <Champ etiquette="Prix proposé (FCFA)" value={displayedPrice} onChangeText={setPrice} keyboardType="number-pad" />
+            <View style={styles.section}>
+              <Text style={styles.label}>AXE</Text>
+              <View style={styles.wrap}>{corridors.data?.map((item) => <PuceChoix key={item.id} label={item.name} selected={item.id === corridorId} onPress={() => chooseCorridor(item.id)} />)}</View>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.label}>MONTÉE</Text>
+              <View style={styles.wrap}>{corridor.stops.slice(0, -1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === fromStopId} onPress={() => { setFromStopId(stop.id); if (stop.position >= (corridor.stops.find((item) => item.id === toStopId)?.position ?? 0)) setToStopId(""); }} />)}</View>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.label}>DESCENTE</Text>
+              <View style={styles.wrap}>{corridor.stops.slice(1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === toStopId} disabled={fromPosition < 0 || stop.position <= fromPosition} onPress={() => setToStopId(stop.id)} />)}</View>
+            </View>
+            <Carte style={styles.form}>
+              <Champ etiquette="Début (AAAA-MM-JJ HH:mm)" value={windowStart} onChangeText={setWindowStart} autoCapitalize="none" />
+              <Champ etiquette="Fin (AAAA-MM-JJ HH:mm)" value={windowEnd} onChangeText={setWindowEnd} autoCapitalize="none" />
+              <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPrice} keyboardType="number-pad" />
             </Carte>
+            <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Modifier la demande annule les offres encore en attente. Une réservation confirmée bloque la modification.</Text></View>
             {update.isError ? <MessageEtat type="erreur">{messageErreur(update.error)}</MessageEtat> : null}
-            <Bouton icone={<IconCheck color={couleurs.texte} size={19} />} chargement={update.isPending} onPress={() => update.mutate()}>
-              Enregistrer le prix
-            </Bouton>
+            <Bouton icone={<IconCheck color={couleurs.texte} size={19} />} chargement={update.isPending} onPress={() => update.mutate()}>Enregistrer les modifications</Bouton>
             {cancel.isError ? <MessageEtat type="erreur">{messageErreur(cancel.error)}</MessageEtat> : null}
-            <Bouton variante="fantome" icone={<IconTrash color={couleurs.erreur} size={19} />} chargement={cancel.isPending} onPress={confirmCancel}>
-              Annuler la demande
-            </Bouton>
+            <Bouton variante="fantome" icone={<IconTrash color={couleurs.erreur} size={19} />} chargement={cancel.isPending} onPress={confirmCancel}>Annuler la demande</Bouton>
           </>
         ) : null}
       </ScrollView>
@@ -73,5 +122,11 @@ export default function EditRequestScreen() {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond },
-  content: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: espacements.md },
+  content: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: espacements.lg },
+  section: { gap: espacements.sm },
+  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 1.1 },
+  wrap: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
+  form: { gap: espacements.md },
+  notice: { flexDirection: "row", alignItems: "flex-start", gap: espacements.sm },
+  noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 20 },
 });

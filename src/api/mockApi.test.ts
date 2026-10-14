@@ -65,15 +65,32 @@ describe("MockApi", () => {
       stopIds: ["c1-stop-1", "c1-stop-3"],
     });
 
-    await expect(api.updateTrip(trip.id, { capacity: 2 })).resolves.toMatchObject({ capacity: 2 });
+    await expect(api.updateTrip(trip.id, {
+      corridorId: "corridor-2",
+      stopIds: ["c2-stop-1", "c2-stop-3", "c2-stop-5"],
+      capacity: 2,
+    })).resolves.toMatchObject({ corridorId: "corridor-2", capacity: 2 });
     await expect(api.cancelTrip(trip.id)).resolves.toMatchObject({ status: "CANCELLED" });
   });
 
   it("modifie une demande ouverte et annule ses offres en attente", async () => {
     const api = instantApi(mockIds.client);
 
-    await expect(api.updateTripRequest("request-1", { proposedPrice: 1900 })).resolves.toMatchObject({ proposedPrice: 1900 });
+    await expect(api.updateTripRequest("request-1", {
+      corridorId: "corridor-2",
+      fromStopId: "c2-stop-1",
+      toStopId: "c2-stop-4",
+      proposedPrice: 1900,
+    })).resolves.toMatchObject({ corridorId: "corridor-2", proposedPrice: 1900 });
     await expect(api.cancelTripRequest("request-1")).resolves.toMatchObject({ status: "CANCELLED" });
+  });
+
+  it("protège les arrêts d'une réservation confirmée pendant une modification", async () => {
+    const api = instantApi(mockIds.driver);
+
+    await expect(api.updateTrip(mockIds.tripWithOneSeatLeft, {
+      stopIds: ["c1-stop-4", "c1-stop-5"],
+    })).rejects.toMatchObject({ code: "INVALID_BOOKING_STOPS" });
   });
 
   it("publie la position fictive du chauffeur", async () => {

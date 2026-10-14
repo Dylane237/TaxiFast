@@ -18,5 +18,6 @@ const messages: Partial<Record<ApiError["code"], string>> = {
 
 export function messageErreur(error: unknown): string {
   if (error instanceof ApiError) return messages[error.code] ?? error.message;
+  if (error instanceof Error && error.message) return error.message;
   return "Une erreur inattendue est survenue. Réessayez.";
 }
