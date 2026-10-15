@@ -193,7 +193,10 @@ export type UpdateTripInput = {
   corridorId?: string;
   capacity?: number;
   departureAt?: IsoDateString;
+  availableUntil?: IsoDateString | null;
+  availabilityMode?: AvailabilityMode;
   stopIds?: string[];
+  fares?: Pick<TripFare, "fromStopId" | "toStopId" | "price">[];
 };
 
 export type CreateTripRequestInput = {

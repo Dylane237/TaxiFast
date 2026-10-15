@@ -24,7 +24,7 @@ export function RouteMiniMap({ stops, compact = false }: { stops: Stop[]; compac
         <View style={styles.caption}>
           <Text numberOfLines={1} style={styles.captionText}>{stops[0]!.name}</Text>
           <Text style={styles.arrow}>→</Text>
-          <Text numberOfLines={1} style={[styles.captionText, styles.end]}>{stops.at(-1)!.name}</Text>
+          <Text numberOfLines={1} style={[styles.captionText, styles.end]}>{stops.length > 1 ? stops.at(-1)!.name : "Destination à définir"}</Text>
         </View>
       ) : <Text style={styles.placeholder}>Votre itinéraire apparaîtra ici</Text>}
     </View>

@@ -432,6 +432,35 @@ export class MockApi implements Api {
     if (capacity < occupancy) throw new ApiError("CAPACITY_EXCEEDED");
 
     const routeChanged = corridorId !== trip.corridorId || input.stopIds !== undefined;
+    const fares = input.fares ?? (routeChanged ? [] : trip.fares);
+    const fareKeys = new Set<string>();
+    const invalidFare = fares.some((fare) => {
+      const from = sequenceByStop.get(fare.fromStopId);
+      const to = sequenceByStop.get(fare.toStopId);
+      const key = `${fare.fromStopId}:${fare.toStopId}`;
+      if (
+        from === undefined ||
+        to === undefined ||
+        from >= to ||
+        !Number.isInteger(fare.price) ||
+        fare.price <= 0 ||
+        fareKeys.has(key)
+      ) return true;
+      fareKeys.add(key);
+      return false;
+    });
+    if (invalidFare) throw new ApiError("INVALID_INPUT", "Tarifs invalides.");
+    const departureAt = input.departureAt
+      ? parse(isoDateSchema, input.departureAt)
+      : trip.departureAt;
+    const availableUntil = input.availableUntil === null
+      ? null
+      : input.availableUntil
+        ? parse(isoDateSchema, input.availableUntil)
+        : trip.availableUntil;
+    if (availableUntil && new Date(availableUntil) <= new Date(departureAt)) {
+      throw new ApiError("INVALID_INPUT", "Créneau invalide.");
+    }
     if (routeChanged) {
       this.data.bookings
         .filter((booking) => booking.tripId === trip.id && ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"].includes(booking.status))
@@ -446,7 +475,16 @@ export class MockApi implements Api {
       }));
     }
     trip.capacity = capacity;
-    if (input.departureAt) trip.departureAt = parse(isoDateSchema, input.departureAt);
+    trip.departureAt = departureAt;
+    trip.availableUntil = availableUntil;
+    trip.availabilityMode = input.availabilityMode ?? trip.availabilityMode;
+    if (input.fares !== undefined || routeChanged) {
+      trip.fares = fares.map((fare) => ({
+        id: this.nextId("trip-fare"),
+        tripId: trip.id,
+        ...fare,
+      }));
+    }
     this.recalculateTripStatus(trip);
     return clone(trip);
   }

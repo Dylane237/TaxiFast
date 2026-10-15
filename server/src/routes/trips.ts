@@ -43,12 +43,21 @@ const updateTripSchema = z
     corridorId: z.string().trim().min(1).optional(),
     capacity: z.number().int().positive().optional(),
     departureAt: z.iso.datetime({ offset: true }).optional(),
+    availableUntil: z.iso.datetime({ offset: true }).nullable().optional(),
+    availabilityMode: z.enum(["IMMEDIATE", "SCHEDULED"]).optional(),
     stopIds: z
       .array(z.string().trim().min(1))
       .min(2)
       .refine((stopIds) => new Set(stopIds).size === stopIds.length, {
         message: "Les arrêts doivent être uniques",
       })
+      .optional(),
+    fares: z
+      .array(fareSchema)
+      .refine(
+        (fares) => new Set(fares.map((fare) => `${fare.fromStopId}:${fare.toStopId}`)).size === fares.length,
+        { message: "Les tarifs doivent être uniques" },
+      )
       .optional(),
   })
   .refine((input) => Object.values(input).some((value) => value !== undefined), {
@@ -245,7 +254,11 @@ export function registerTripRoutes(
           corridorId: true,
           status: true,
           capacity: true,
+          departureAt: true,
+          availableUntil: true,
+          availabilityMode: true,
           tripStops: { select: { stopId: true, sequence: true } },
+          fares: { select: { fromStopId: true, toStopId: true, price: true } },
           bookings: {
             where: { status: { in: ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER", "CONFIRMED"] } },
             select: { pickupStopId: true, dropoffStopId: true, clientId: true, status: true },
@@ -280,6 +293,25 @@ export function registerTripRoutes(
       }
 
       const sequenceByStop = new Map(stopIds.map((stopId, sequence) => [stopId, sequence]));
+      const fares = body.data.fares ?? (routeChanged ? [] : current.fares);
+      if (fares.some((fare) => {
+        const from = sequenceByStop.get(fare.fromStopId);
+        const to = sequenceByStop.get(fare.toStopId);
+        return from === undefined || to === undefined || from >= to;
+      })) {
+        return { error: "INVALID_TRIP_FARES" as const };
+      }
+      const departureAt = body.data.departureAt
+        ? new Date(body.data.departureAt)
+        : current.departureAt;
+      const availableUntil = body.data.availableUntil === null
+        ? null
+        : body.data.availableUntil
+          ? new Date(body.data.availableUntil)
+          : current.availableUntil;
+      if (availableUntil && availableUntil <= departureAt) {
+        return { error: "INVALID_TRIP_WINDOW" as const };
+      }
       const confirmedBookings = current.bookings.filter((booking) => booking.status === "CONFIRMED");
       if (confirmedBookings.some((booking) => {
         const pickup = sequenceByStop.get(booking.pickupStopId);
@@ -316,12 +348,24 @@ export function registerTripRoutes(
         data: {
           corridorId,
           capacity,
-          ...(body.data.departureAt ? { departureAt: new Date(body.data.departureAt) } : {}),
+          departureAt,
+          availableUntil,
+          availabilityMode: body.data.availabilityMode ?? current.availabilityMode,
           status: capacity <= maximumOccupancy ? "FULL" : "OPEN",
           ...(routeChanged ? {
             tripStops: {
               deleteMany: {},
               create: stopIds.map((stopId, sequence) => ({ stopId, sequence })),
+            },
+          } : {}),
+          ...(body.data.fares !== undefined || routeChanged ? {
+            fares: {
+              deleteMany: {},
+              create: fares.map((fare) => ({
+                fromStopId: fare.fromStopId,
+                toStopId: fare.toStopId,
+                price: fare.price,
+              })),
             },
           } : {}),
         },
@@ -335,7 +379,10 @@ export function registerTripRoutes(
         ? 404
         : result.error === "TRIP_ACTION_FORBIDDEN"
           ? 403
-          : result.error === "INVALID_TRIP_STOPS" || result.error === "STOPS_OUT_OF_ORDER"
+          : result.error === "INVALID_TRIP_STOPS" ||
+              result.error === "STOPS_OUT_OF_ORDER" ||
+              result.error === "INVALID_TRIP_FARES" ||
+              result.error === "INVALID_TRIP_WINDOW"
             ? 400
             : 409;
       return reply.status(status).send({ error: result.error });

@@ -186,3 +186,68 @@ describe("POST /trips", () => {
     expect(prisma.trip.create).not.toHaveBeenCalled();
   });
 });
+
+describe("PATCH /trips/:tripId", () => {
+  it("remplace le créneau et les tarifs avec l’itinéraire complet", async () => {
+    const tx = {
+      $queryRaw: vi.fn().mockResolvedValue([{ id: "trip-1" }]),
+      corridor: { findUnique: vi.fn().mockResolvedValue({ id: "corridor-1" }) },
+      stop: { findMany: vi.fn().mockResolvedValue([
+        { id: "stop-1", position: 1 },
+        { id: "stop-2", position: 2 },
+      ]) },
+      booking: { updateMany: vi.fn() },
+      trip: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "trip-1",
+          driverId: "driver-1",
+          corridorId: "corridor-1",
+          status: "OPEN",
+          capacity: 3,
+          departureAt: new Date("2027-01-15T08:00:00+01:00"),
+          availableUntil: new Date("2027-01-15T10:00:00+01:00"),
+          availabilityMode: "SCHEDULED",
+          tripStops: [
+            { stopId: "stop-1", sequence: 0 },
+            { stopId: "stop-2", sequence: 1 },
+          ],
+          fares: [],
+          bookings: [],
+        }),
+        update: vi.fn().mockResolvedValue({ id: "trip-1", fares: [] }),
+      },
+    };
+    const prisma = {
+      $transaction: vi.fn((callback: (client: typeof tx) => unknown) => callback(tx)),
+    };
+    const app = buildApp({
+      prisma: prisma as unknown as PrismaClient,
+      authentication: authenticationAs("driver-1", "DRIVER"),
+    });
+    apps.push(app);
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/trips/trip-1",
+      headers: { authorization: "Bearer test-token" },
+      payload: {
+        stopIds: ["stop-1", "stop-2"],
+        departureAt: "2027-01-15T09:00:00+01:00",
+        availableUntil: "2027-01-15T11:00:00+01:00",
+        availabilityMode: "SCHEDULED",
+        fares: [{ fromStopId: "stop-1", toStopId: "stop-2", price: 900 }],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(tx.trip.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        availableUntil: new Date("2027-01-15T11:00:00+01:00"),
+        fares: {
+          deleteMany: {},
+          create: [{ fromStopId: "stop-1", toStopId: "stop-2", price: 900 }],
+        },
+      }),
+    }));
+  });
+});

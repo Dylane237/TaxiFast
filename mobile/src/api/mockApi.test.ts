@@ -86,7 +86,14 @@ describe("MockApi", () => {
       corridorId: "corridor-2",
       stopIds: ["c2-stop-1", "c2-stop-3", "c2-stop-5"],
       capacity: 2,
-    })).resolves.toMatchObject({ corridorId: "corridor-2", capacity: 2 });
+      availabilityMode: "SCHEDULED",
+      availableUntil: new Date(Date.now() + 3 * 60 * 60_000).toISOString(),
+      fares: [{ fromStopId: "c2-stop-1", toStopId: "c2-stop-5", price: 1800 }],
+    })).resolves.toMatchObject({
+      corridorId: "corridor-2",
+      capacity: 2,
+      fares: [expect.objectContaining({ price: 1800 })],
+    });
     await expect(api.cancelTrip(trip.id)).resolves.toMatchObject({ status: "CANCELLED" });
   });
 
