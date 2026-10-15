@@ -22,7 +22,7 @@ export function EntetePage({
         >
           <IconArrowLeft color={couleurs.texte} size={22} />
         </Pressable>
-        <Text numberOfLines={1} style={styles.titre}>
+        <Text style={styles.titre}>
           {title}
         </Text>
         <AvatarUtilisateur compact />
@@ -33,7 +33,7 @@ export function EntetePage({
 }
 
 const styles = StyleSheet.create({
-  conteneur: { gap: 6 },
+  conteneur: { gap: 4 },
   ligne: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   retour: {
     width: 40,
@@ -47,14 +47,15 @@ const styles = StyleSheet.create({
   },
   titre: {
     flex: 1,
+    flexShrink: 1,
     color: couleurs.texte,
-    fontSize: 23,
-    lineHeight: 28,
-    fontWeight: "900",
+    fontSize: taillesTexte.titre,
+    lineHeight: 27,
+    fontWeight: "800",
   },
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

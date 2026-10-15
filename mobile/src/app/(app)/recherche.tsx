@@ -1,330 +1,140 @@
-import {
-  IconClock,
-  IconMapPin,
-  IconRoute,
-  IconWallet,
-} from "@tabler/icons-react-native";
+import { IconCheck, IconClock, IconRoute, IconWallet } from "@tabler/icons-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { api, type Corridor } from "@/api";
-import {
-  Bouton,
-  Champ,
-  EntetePage,
-  EtatContenu,
-  MessageEtat,
-  PuceChoix,
-} from "@/components";
+import { api, type AvailabilityMode, type Stop } from "@/api";
+import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { parseClientRequestForm } from "@/features/client-request/client-request";
-import { couleurs, espacements, taillesTexte } from "@/theme";
+import { formatDateTime, formatPrice } from "@/features/format";
+import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
+import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
+import { WizardProgress } from "@/features/route-composer/WizardProgress";
+import { buildAvailability, findRouteSelection, nearestStop } from "@/features/route-composer/route-composer";
+import { couleurs, espacements, ombres, rayons, taillesTexte } from "@/theme";
 
-const starts = [
-  { label: "Maintenant", value: 0 },
-  { label: "+30 min", value: 30 },
-  { label: "+1 h", value: 60 },
-];
-const durations = [
-  { label: "30 min", value: 30 },
-  { label: "1 heure", value: 60 },
-  { label: "2 heures", value: 120 },
-];
-
-function StopChoices({
-  corridor,
-  fromId,
-  toId,
-  onFrom,
-  onTo,
-}: {
-  corridor: Corridor;
-  fromId: string;
-  toId: string;
-  onFrom: (id: string) => void;
-  onTo: (id: string) => void;
-}) {
-  const fromPosition =
-    corridor.stops.find((stop) => stop.id === fromId)?.position ?? -1;
-  return (
-    <>
-      <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>Montée</Text>
-        <View style={styles.wrap}>
-          {corridor.stops.slice(0, -1).map((stop) => (
-            <PuceChoix
-              key={stop.id}
-              label={stop.name}
-              selected={fromId === stop.id}
-              onPress={() => {
-                onFrom(stop.id);
-                if (
-                  toId &&
-                  stop.position >=
-                    (corridor.stops.find((item) => item.id === toId)
-                      ?.position ?? 0)
-                )
-                  onTo("");
-              }}
-            />
-          ))}
-        </View>
-      </View>
-      <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>Descente</Text>
-        <View style={styles.wrap}>
-          {corridor.stops.slice(1).map((stop) => (
-            <PuceChoix
-              key={stop.id}
-              label={stop.name}
-              selected={toId === stop.id}
-              disabled={fromPosition < 0 || stop.position <= fromPosition}
-              onPress={() => onTo(stop.id)}
-            />
-          ))}
-        </View>
-      </View>
-    </>
-  );
-}
+const labels = ["VOTRE TRAJET", "HORAIRE ET PRIX", "VÉRIFICATION"];
 
 export default function RechercheScreen() {
-  const corridorsQuery = useQuery({
-    queryKey: ["corridors"],
-    queryFn: () => api.listCorridors(),
-  });
-  const [corridorId, setCorridorId] = useState("");
-  const [fromStopId, setFromStopId] = useState("");
-  const [toStopId, setToStopId] = useState("");
-  const [price, setPrice] = useState("1500");
-  const [startMinutes, setStartMinutes] = useState(0);
+  const corridorsQuery = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
+  const [step, setStep] = useState(0);
+  const [from, setFrom] = useState<Stop | null>(null);
+  const [to, setTo] = useState<Stop | null>(null);
+  const [mode, setMode] = useState<AvailabilityMode>("IMMEDIATE");
+  const [startMinutes, setStartMinutes] = useState(30);
   const [durationMinutes, setDurationMinutes] = useState(60);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const corridor = useMemo(
-    () => corridorsQuery.data?.find((item) => item.id === corridorId),
-    [corridorId, corridorsQuery.data],
-  );
+  const [price, setPrice] = useState("1500");
+  const [error, setError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const corridors = useMemo(() => corridorsQuery.data ?? [], [corridorsQuery.data]);
+  const route = useMemo(() => findRouteSelection(corridors, from?.id ?? "", to?.id ?? ""), [corridors, from, to]);
+  const availability = useMemo(() => buildAvailability(mode, startMinutes, durationMinutes), [durationMinutes, mode, startMinutes]);
+  const parsedPrice = Number(price.replace(/\s/g, ""));
   const mutation = useMutation({
-    mutationFn: api.createTripRequest,
-    onSuccess: (request) =>
-      router.replace({
-        pathname: "/demande/[requestId]",
-        params: { requestId: request.id },
-      }),
+    mutationFn: () => api.createTripRequest({
+      corridorId: route!.corridor.id,
+      fromStopId: from!.id,
+      toStopId: to!.id,
+      windowStart: availability.departureAt,
+      windowEnd: availability.availableUntil,
+      proposedPrice: parsedPrice,
+    }),
+    onSuccess: (request) => router.replace({ pathname: "/demande/[requestId]", params: { requestId: request.id } }),
   });
 
-  const submit = () => {
-    if (!corridor) {
-      setValidationError("Choisissez d’abord un itinéraire.");
-      return;
+  const locate = async () => {
+    setLocating(true);
+    setError(null);
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (!permission.granted) throw new Error("Autorisez la localisation pour utiliser votre position.");
+      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const closest = nearestStop(corridors, current.coords.latitude, current.coords.longitude);
+      if (!closest) throw new Error("Aucun arrêt géolocalisé n’est disponible.");
+      setFrom(closest);
+      if (to?.corridorId !== closest.corridorId) setTo(null);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Localisation impossible.");
+    } finally {
+      setLocating(false);
     }
-    const parsed = parseClientRequestForm({
-      corridorId,
-      fromStopId,
-      toStopId,
-      price,
-      startMinutes,
-      durationMinutes,
-    });
-    if (!parsed.success) {
-      setValidationError(parsed.message);
-      return;
-    }
-    const from = corridor.stops.find((stop) => stop.id === fromStopId);
-    const to = corridor.stops.find((stop) => stop.id === toStopId);
-    if (!from || !to || from.position >= to.position) {
-      setValidationError("La descente doit se trouver après la montée.");
-      return;
-    }
-    setValidationError(null);
-    mutation.mutate({
-      corridorId,
-      fromStopId,
-      toStopId,
-      proposedPrice: parsed.data.price,
-      windowStart: parsed.data.windowStart,
-      windowEnd: parsed.data.windowEnd,
-    });
   };
 
-  if (corridorsQuery.isPending)
-    return (
-      <State>
-        <EtatContenu
-          type="chargement"
-          title="Chargement des itinéraires"
-          description="Nous préparons les arrêts disponibles."
-        />
-      </State>
-    );
-  if (corridorsQuery.isError)
-    return (
-      <State>
-        <EtatContenu
-          type="erreur"
-          title="Itinéraires indisponibles"
-          description={messageErreur(corridorsQuery.error)}
-          action={
-            <Bouton onPress={() => void corridorsQuery.refetch()}>
-              Réessayer
-            </Bouton>
-          }
-        />
-      </State>
-    );
-  if (!corridorsQuery.data.length)
-    return (
-      <State>
-        <EtatContenu
-          type="vide"
-          title="Aucun itinéraire disponible"
-          description="Revenez lorsque des itinéraires auront été publiés."
-        />
-      </State>
-    );
+  const next = () => {
+    setError(null);
+    if (step === 0) {
+      if (!route) return setError("Choisissez un départ et une destination sur le même itinéraire.");
+      return setStep(1);
+    }
+    if (step === 1) {
+      if (!Number.isInteger(parsedPrice) || parsedPrice < 100) return setError("Proposez un prix entier d’au moins 100 FCFA.");
+      return setStep(2);
+    }
+    mutation.mutate();
+  };
 
-  return (
-    <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <EntetePage
-          title="Où allez-vous ?"
-          description="Composez votre trajet, puis proposez un prix au chauffeur."
-        />
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeading}>
-            <IconRoute color={couleurs.texteSecondaire} size={18} />
-            <Text style={styles.fieldLabel}>Itinéraire</Text>
-          </View>
-          <View style={styles.wrap}>
-            {corridorsQuery.data.map((item) => (
-              <PuceChoix
-                key={item.id}
-                label={item.name}
-                selected={item.id === corridorId}
-                onPress={() => {
-                  setCorridorId(item.id);
-                  setFromStopId("");
-                  setToStopId("");
-                }}
-              />
-            ))}
-          </View>
+  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de votre recherche" description="Chargement des adresses et points de rencontre…" /></State>;
+  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Recherche indisponible" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
+  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun itinéraire disponible" description="Revenez lorsque des itinéraires auront été publiés." /></State>;
+
+  return <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
+    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <EntetePage title="Où allez-vous ?" description="Trouvez votre trajet en quelques étapes." />
+      <WizardProgress step={step} total={3} label={labels[step]!} />
+
+      {step === 0 ? <View style={styles.stage}>
+        <Text style={styles.hero}>Choisissez votre trajet</Text>
+        <Text style={styles.subtitle}>Recherchez vos points de montée et de descente, ou partez de votre position.</Text>
+        <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
+        <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
+      </View> : null}
+
+      {step === 1 ? <View style={styles.stage}>
+        <Text style={styles.hero}>Quand souhaitez-vous partir ?</Text>
+        <Text style={styles.subtitle}>Indiquez votre fenêtre de disponibilité et le prix que vous proposez.</Text>
+        <View style={styles.modeGrid}>
+          <Choice active={mode === "IMMEDIATE"} title="Maintenant" detail="Recherche immédiate" icon={<IconRoute color={couleurs.texte} size={22} />} onPress={() => setMode("IMMEDIATE")} />
+          <Choice active={mode === "SCHEDULED"} title="Plus tard" detail="Planifier le départ" icon={<IconClock color={couleurs.texte} size={22} />} onPress={() => setMode("SCHEDULED")} />
         </View>
-        {corridor ? (
-          <StopChoices
-            corridor={corridor}
-            fromId={fromStopId}
-            toId={toStopId}
-            onFrom={setFromStopId}
-            onTo={setToStopId}
-          />
-        ) : null}
-        <View style={styles.divider} />
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeading}>
-            <IconClock color={couleurs.texteSecondaire} size={18} />
-            <Text style={styles.fieldLabel}>Départ souhaité</Text>
-          </View>
-          <View style={styles.wrap}>
-            {starts.map((item) => (
-              <PuceChoix
-                key={item.value}
-                label={item.label}
-                selected={startMinutes === item.value}
-                onPress={() => setStartMinutes(item.value)}
-              />
-            ))}
-          </View>
-          <Text style={styles.helper}>Fenêtre de disponibilité</Text>
-          <View style={styles.wrap}>
-            {durations.map((item) => (
-              <PuceChoix
-                key={item.value}
-                label={item.label}
-                selected={durationMinutes === item.value}
-                onPress={() => setDurationMinutes(item.value)}
-              />
-            ))}
-          </View>
-        </View>
-        <View style={styles.priceRow}>
-          <IconWallet color={couleurs.texteSecondaire} size={20} />
-          <View style={styles.priceField}>
-            <Champ
-              etiquette="Prix proposé (FCFA)"
-              value={price}
-              onChangeText={setPrice}
-              keyboardType="number-pad"
-              placeholder="1 500"
-            />
-          </View>
-        </View>
-        {validationError ? (
-          <MessageEtat type="erreur">{validationError}</MessageEtat>
-        ) : null}
-        {mutation.isError ? (
-          <MessageEtat type="erreur">
-            {messageErreur(mutation.error)}
-          </MessageEtat>
-        ) : null}
-        <Bouton
-          icone={<IconMapPin color={couleurs.texte} size={19} />}
-          chargement={mutation.isPending}
-          onPress={submit}
-        >
-          Envoyer ma demande
-        </Bouton>
-      </ScrollView>
-    </SafeAreaView>
-  );
+        {mode === "SCHEDULED" ? <Options label="DÉPART DANS" values={[30, 60, 120]} value={startMinutes} onChange={setStartMinutes} /> : null}
+        <Options label="JE SUIS FLEXIBLE PENDANT" values={[30, 60, 120]} value={durationMinutes} onChange={setDurationMinutes} />
+        <View style={styles.priceHeading}><IconWallet color={couleurs.texteSecondaire} size={22} /><View><Text style={styles.priceTitle}>Votre proposition</Text><Text style={styles.priceDetail}>Le chauffeur pourra l’accepter ou contre-proposer une fois.</Text></View></View>
+        <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPrice} keyboardType="number-pad" placeholder="1 500" />
+      </View> : null}
+
+      {step === 2 && route ? <View style={styles.stage}>
+        <Text style={styles.hero}>Confirmez votre demande</Text><Text style={styles.subtitle}>Votre demande sera signalée aux chauffeurs compatibles.</Text>
+        <RouteMiniMap stops={route.stops} />
+        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Fenêtre" value={`${formatDateTime(availability.departureAt)} — ${new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
+      </View> : null}
+
+      {error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}
+      {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
+    </ScrollView>
+    <View style={styles.footer}>{step > 0 ? <View style={styles.back}><Bouton variante="secondaire" onPress={() => setStep((value) => value - 1)}>Retour</Bouton></View> : null}<View style={styles.next}><Bouton variante={step === 2 ? "sombre" : "primaire"} chargement={mutation.isPending} onPress={next}>{step === 2 ? "Envoyer ma demande" : "Continuer"}</Bouton></View></View>
+  </SafeAreaView>;
 }
 
+function Choice({ active, title, detail, icon, onPress }: { active: boolean; title: string; detail: string; icon: React.ReactNode; onPress: () => void }) {
+  return <Pressable onPress={onPress} style={[styles.choice, active && styles.choiceActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.check}><IconCheck color={couleurs.encre} size={14} /></View> : null}</Pressable>;
+}
+function Options({ label, values, value, onChange }: { label: string; values: number[]; value: number; onChange: (value: number) => void }) {
+  return <View style={styles.options}><Text style={styles.eyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <Pressable key={item} onPress={() => onChange(item)} style={[styles.pill, item === value && styles.pillActive]}><Text style={styles.pillText}>{item < 60 ? `${item} min` : `${item / 60} h`}</Text></Pressable>)}</View></View>;
+}
+function Summary({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return <View style={[styles.summaryRow, last && styles.summaryLast]}><Text style={styles.summaryLabel}>{label}</Text><Text style={styles.summaryValue}>{value}</Text></View>;
+}
 function State({ children }: { children: React.ReactNode }) {
-  return (
-    <SafeAreaView style={styles.page}>
-      <View style={styles.state}>
-        <EntetePage
-          title="Où allez-vous ?"
-          description="Recherche d’un trajet sur un itinéraire."
-        />
-        {children}
-      </View>
-    </SafeAreaView>
-  );
+  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Où allez-vous ?" description="Trouvez votre trajet en quelques étapes." />{children}</View></SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: couleurs.fond },
-  content: {
-    padding: espacements.lg,
-    paddingBottom: espacements.xxl,
-    gap: espacements.lg,
-  },
-  state: { flex: 1, padding: espacements.lg },
-  fieldGroup: { gap: espacements.sm },
-  fieldHeading: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: espacements.sm,
-  },
-  fieldLabel: {
-    color: couleurs.texte,
-    fontSize: taillesTexte.normal,
-    fontWeight: "900",
-  },
-  helper: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
-  wrap: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
-  divider: { height: 1, backgroundColor: couleurs.bordure },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: espacements.md,
-  },
-  priceField: { flex: 1 },
+  page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 }, hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontWeight: "800" }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18 },
+  footer: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, back: { width: 98 }, next: { flex: 1 },
+  modeGrid: { flexDirection: "row", gap: espacements.sm }, choice: { flex: 1, minHeight: 122, padding: espacements.md, gap: 6, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, choiceActive: { borderColor: couleurs.primairePresse, backgroundColor: couleurs.primaireClaire }, choiceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" }, choiceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17 }, check: { position: "absolute", right: espacements.md, top: espacements.md, width: 23, height: 23, borderRadius: rayons.rond, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
+  options: { gap: espacements.sm }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 0.8 }, pills: { flexDirection: "row", gap: espacements.sm }, pill: { flex: 1, minHeight: 46, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, pillActive: { backgroundColor: couleurs.primaire }, pillText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
+  priceHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, priceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" }, priceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, maxWidth: 280 },
+  summary: { paddingVertical: 0 }, summaryRow: { paddingVertical: espacements.md, gap: 3, borderBottomWidth: 1, borderBottomColor: couleurs.bordure }, summaryLast: { borderBottomWidth: 0 }, summaryLabel: { color: couleurs.texteSecondaire, fontSize: 12, fontWeight: "700" }, summaryValue: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 20, fontWeight: "900" },
 });

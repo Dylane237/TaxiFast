@@ -222,6 +222,7 @@ export function registerBookingRoutes(
               orderBy: { sequence: "asc" },
               include: { stop: true },
             },
+            fares: true,
             driver: {
               select: {
                 id: true,

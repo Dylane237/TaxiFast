@@ -9,8 +9,11 @@ const manifest: TripManifest = {
     corridorId: "corridor-1",
     capacity: 2,
     departureAt: "2026-10-13T12:00:00.000Z",
+    availableUntil: "2026-10-13T14:00:00.000Z",
+    availabilityMode: "SCHEDULED",
     status: "OPEN",
     createdAt: "2026-10-13T10:00:00.000Z",
+    fares: [],
     tripStops: ["Départ", "Milieu", "Arrivée"].map((name, sequence) => ({
       id: `trip-stop-${sequence}`,
       tripId: "trip-1",

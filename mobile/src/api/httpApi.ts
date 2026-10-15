@@ -62,6 +62,7 @@ const errorCodeByServerCode: Record<string, ApiErrorCode> = {
   LOCATION_SHARING_NOT_ALLOWED: "TRIP_NOT_OPEN",
   LOCATION_ACTION_FORBIDDEN: "FORBIDDEN",
   INVALID_TRIP_STOPS: "INVALID_TRIP_STOPS",
+  INVALID_TRIP_FARES: "INVALID_INPUT",
   STOPS_OUT_OF_ORDER: "INVALID_TRIP_STOPS",
   INVALID_REQUEST_STOPS: "INVALID_INPUT",
   INVALID_BOOKING_STOPS: "INVALID_BOOKING_STOPS",
@@ -178,15 +179,25 @@ const tripStopSchema = z.object({
   sequence: z.number().int(),
   stop: stopSchema,
 });
+const tripFareSchema = z.object({
+  id: z.string(),
+  tripId: z.string(),
+  fromStopId: z.string(),
+  toStopId: z.string(),
+  price: z.number().int(),
+});
 const tripSchema = z.object({
   id: z.string(),
   driverId: z.string(),
   corridorId: z.string(),
   capacity: z.number().int(),
   departureAt: z.string(),
+  availableUntil: z.string().nullable(),
+  availabilityMode: z.enum(["IMMEDIATE", "SCHEDULED"]),
   status: z.enum(["OPEN", "FULL", "CLOSED", "COMPLETED", "CANCELLED"]),
   createdAt: z.string(),
   tripStops: z.array(tripStopSchema),
+  fares: z.array(tripFareSchema),
 });
 const tripRequestSchema = z.object({
   id: z.string(),

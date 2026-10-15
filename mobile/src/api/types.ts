@@ -2,6 +2,7 @@ export type IsoDateString = string;
 
 export type Role = "CLIENT" | "DRIVER" | "ADMIN";
 export type TripStatus = "OPEN" | "FULL" | "CLOSED" | "COMPLETED" | "CANCELLED";
+export type AvailabilityMode = "IMMEDIATE" | "SCHEDULED";
 export type RequestStatus = "OPEN" | "MATCHED" | "EXPIRED" | "CANCELLED";
 export type BookingInitiator = "CLIENT" | "DRIVER";
 export type BookingStatus =
@@ -59,6 +60,14 @@ export type TripStop = {
   stop: Stop;
 };
 
+export type TripFare = {
+  id: string;
+  tripId: string;
+  fromStopId: string;
+  toStopId: string;
+  price: number;
+};
+
 // Forme renvoyée par POST /trips.
 export type Trip = {
   id: string;
@@ -66,9 +75,12 @@ export type Trip = {
   corridorId: string;
   capacity: number;
   departureAt: IsoDateString;
+  availableUntil: IsoDateString | null;
+  availabilityMode: AvailabilityMode;
   status: TripStatus;
   createdAt: IsoDateString;
   tripStops: TripStop[];
+  fares: TripFare[];
 };
 
 // Forme d'un élément de GET /matching/requests/:requestId/trips.
@@ -171,7 +183,10 @@ export type CreateTripInput = {
   corridorId: string;
   capacity: number;
   departureAt: IsoDateString;
+  availableUntil?: IsoDateString;
+  availabilityMode: AvailabilityMode;
   stopIds: string[];
+  fares: Pick<TripFare, "fromStopId" | "toStopId" | "price">[];
 };
 
 export type UpdateTripInput = {

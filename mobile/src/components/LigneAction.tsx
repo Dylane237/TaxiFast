@@ -28,7 +28,7 @@ export function LigneAction({
       <View style={styles.copy}>
         <Text style={styles.title}>{title}</Text>
         {description ? (
-          <Text style={styles.description} numberOfLines={1}>
+          <Text style={styles.description}>
             {description}
           </Text>
         ) : null}
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  copy: { flex: 1, gap: 2 },
+  copy: { flex: 1, flexShrink: 1, gap: 2, paddingVertical: espacements.xs },
   title: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    lineHeight: 19,
   },
   badge: {
     color: couleurs.texte,

@@ -5,17 +5,37 @@ import { requireUser } from "../http/authorization.js";
 import type { Authentication } from "../services/authentication.js";
 import type { Notifier } from "../services/notifications.js";
 
-const createTripSchema = z.object({
-  corridorId: z.string().trim().min(1),
-  capacity: z.number().int().positive(),
-  departureAt: z.iso.datetime({ offset: true }),
-  stopIds: z
-    .array(z.string().trim().min(1))
-    .min(2)
-    .refine((stopIds) => new Set(stopIds).size === stopIds.length, {
-      message: "Les arrêts doivent être uniques",
-    }),
+const fareSchema = z.object({
+  fromStopId: z.string().trim().min(1),
+  toStopId: z.string().trim().min(1),
+  price: z.number().int().positive(),
 });
+
+const createTripSchema = z
+  .object({
+    corridorId: z.string().trim().min(1),
+    capacity: z.number().int().positive(),
+    departureAt: z.iso.datetime({ offset: true }),
+    availableUntil: z.iso.datetime({ offset: true }).optional(),
+    availabilityMode: z.enum(["IMMEDIATE", "SCHEDULED"]).default("SCHEDULED"),
+    stopIds: z
+      .array(z.string().trim().min(1))
+      .min(2)
+      .refine((stopIds) => new Set(stopIds).size === stopIds.length, {
+        message: "Les arrêts doivent être uniques",
+      }),
+    fares: z
+      .array(fareSchema)
+      .refine(
+        (fares) => new Set(fares.map((fare) => `${fare.fromStopId}:${fare.toStopId}`)).size === fares.length,
+        { message: "Les tarifs doivent être uniques" },
+      )
+      .default([]),
+  })
+  .refine(
+    (input) => !input.availableUntil || new Date(input.departureAt) < new Date(input.availableUntil),
+    { message: "La fin de disponibilité doit suivre le départ", path: ["availableUntil"] },
+  );
 
 const tripParamsSchema = z.object({ tripId: z.string().trim().min(1) });
 const updateTripSchema = z
@@ -46,6 +66,7 @@ const tripInclude = {
     orderBy: { sequence: "asc" as const },
     include: { stop: true },
   },
+  fares: true,
 } as const;
 
 function followsCorridorOrder(positions: number[]): boolean {
@@ -79,7 +100,15 @@ export function registerTripRoutes(
       });
     }
 
-    const { corridorId, capacity, departureAt, stopIds } = parsed.data;
+    const {
+      corridorId,
+      capacity,
+      departureAt,
+      availableUntil,
+      availabilityMode,
+      stopIds,
+      fares,
+    } = parsed.data;
     const [corridor, stops] = await Promise.all([
       prisma.corridor.findUnique({
         where: { id: corridorId },
@@ -103,6 +132,14 @@ export function registerTripRoutes(
     if (!followsCorridorOrder(positions)) {
       return reply.status(400).send({ error: "STOPS_OUT_OF_ORDER" });
     }
+    const sequenceByStop = new Map(stopIds.map((stopId, sequence) => [stopId, sequence]));
+    if (fares.some((fare) => {
+      const from = sequenceByStop.get(fare.fromStopId);
+      const to = sequenceByStop.get(fare.toStopId);
+      return from === undefined || to === undefined || from >= to;
+    })) {
+      return reply.status(400).send({ error: "INVALID_TRIP_FARES" });
+    }
 
     const trip = await prisma.trip.create({
       data: {
@@ -110,8 +147,17 @@ export function registerTripRoutes(
         corridorId,
         capacity,
         departureAt: new Date(departureAt),
+        availableUntil: availableUntil ? new Date(availableUntil) : null,
+        availabilityMode,
         tripStops: {
           create: stopIds.map((stopId, sequence) => ({ stopId, sequence })),
+        },
+        fares: {
+          create: fares.map((fare) => ({
+            fromStopId: fare.fromStopId,
+            toStopId: fare.toStopId,
+            price: fare.price,
+          })),
         },
       },
       include: {

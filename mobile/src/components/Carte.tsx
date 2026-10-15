@@ -17,10 +17,10 @@ export function Carte({
 const styles = StyleSheet.create({
   carte: {
     backgroundColor: couleurs.surface,
-    borderRadius: rayons.lg,
+    borderRadius: rayons.md,
     borderWidth: 1,
     borderColor: couleurs.bordure,
-    padding: 14,
+    padding: 13,
     ...ombres.carte,
   },
 });

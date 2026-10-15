@@ -41,7 +41,9 @@ describe("MockApi", () => {
       corridorId: "corridor-1",
       capacity: 2,
       departureAt,
+      availabilityMode: "SCHEDULED",
       stopIds: ["c1-stop-1", "c1-stop-3", "c1-stop-5"],
+      fares: [{ fromStopId: "c1-stop-1", toStopId: "c1-stop-5", price: 1500 }],
     });
 
     expect(trip.tripStops.map((stop) => stop.stopId)).toEqual([
@@ -56,13 +58,28 @@ describe("MockApi", () => {
     );
   });
 
+  it("refuse un tarif qui ne suit pas l'ordre des arrêts du trajet", async () => {
+    const api = instantApi(mockIds.driver);
+
+    await expect(api.createTrip({
+      corridorId: "corridor-1",
+      capacity: 2,
+      departureAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+      availabilityMode: "SCHEDULED",
+      stopIds: ["c1-stop-1", "c1-stop-3", "c1-stop-5"],
+      fares: [{ fromStopId: "c1-stop-5", toStopId: "c1-stop-1", price: 1500 }],
+    })).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  });
+
   it("permet de modifier puis d'annuler un trajet fictif", async () => {
     const api = instantApi(mockIds.driver);
     const trip = await api.createTrip({
       corridorId: "corridor-1",
       capacity: 3,
       departureAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+      availabilityMode: "SCHEDULED",
       stopIds: ["c1-stop-1", "c1-stop-3"],
+      fares: [{ fromStopId: "c1-stop-1", toStopId: "c1-stop-3", price: 1000 }],
     });
 
     await expect(api.updateTrip(trip.id, {

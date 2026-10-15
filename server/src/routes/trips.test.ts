@@ -66,7 +66,13 @@ describe("POST /trips", () => {
         corridorId: "corridor-1",
         capacity: 3,
         departureAt: "2027-01-15T08:00:00+01:00",
+        availableUntil: "2027-01-15T10:00:00+01:00",
+        availabilityMode: "SCHEDULED",
         stopIds: ["stop-deido", "stop-akwa", "stop-bonanjo"],
+        fares: [
+          { fromStopId: "stop-deido", toStopId: "stop-akwa", price: 700 },
+          { fromStopId: "stop-deido", toStopId: "stop-bonanjo", price: 1200 },
+        ],
       },
     });
 
@@ -82,9 +88,46 @@ describe("POST /trips", () => {
               { stopId: "stop-bonanjo", sequence: 2 },
             ],
           },
+          fares: {
+            create: [
+              { fromStopId: "stop-deido", toStopId: "stop-akwa", price: 700 },
+              { fromStopId: "stop-deido", toStopId: "stop-bonanjo", price: 1200 },
+            ],
+          },
         }),
       }),
     );
+  });
+
+  it("refuse un tarif qui ne suit pas l’ordre des arrêts du trajet", async () => {
+    const prisma = createPrismaMock();
+    prisma.corridor.findUnique.mockResolvedValue({ id: "corridor-1" });
+    prisma.stop.findMany.mockResolvedValue([
+      { id: "stop-1", position: 1 },
+      { id: "stop-2", position: 2 },
+    ]);
+    const app = buildApp({
+      prisma: prisma as unknown as PrismaClient,
+      authentication: authenticationAs("driver-1", "DRIVER"),
+    });
+    apps.push(app);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/trips",
+      headers: { authorization: "Bearer test-token" },
+      payload: {
+        corridorId: "corridor-1",
+        capacity: 2,
+        departureAt: "2027-01-15T08:00:00+01:00",
+        stopIds: ["stop-1", "stop-2"],
+        fares: [{ fromStopId: "stop-2", toStopId: "stop-1", price: 500 }],
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ error: "INVALID_TRIP_FARES" });
+    expect(prisma.trip.create).not.toHaveBeenCalled();
   });
 
   it("refuse les entrées invalides avant tout accès à la base", async () => {

@@ -98,6 +98,7 @@ describe("appareils push et position du trajet", () => {
     expect(prisma.trip.findUnique).toHaveBeenCalledWith({
       where: { id: "trip-1" },
       include: {
+        fares: true,
         tripStops: {
           orderBy: { sequence: "asc" },
           include: { stop: true },

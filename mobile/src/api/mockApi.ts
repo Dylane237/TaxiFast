@@ -44,11 +44,18 @@ const createTripSchema = z.object({
   corridorId: idSchema,
   capacity: z.number().int().positive(),
   departureAt: isoDateSchema,
+  availableUntil: isoDateSchema.optional(),
+  availabilityMode: z.enum(["IMMEDIATE", "SCHEDULED"]),
   stopIds: z
     .array(idSchema)
     .min(2)
     .refine((ids) => new Set(ids).size === ids.length),
-});
+  fares: z.array(z.object({
+    fromStopId: idSchema,
+    toStopId: idSchema,
+    price: positivePriceSchema,
+  })),
+}).refine((input) => !input.availableUntil || new Date(input.departureAt) < new Date(input.availableUntil));
 
 const createRequestSchema = z
   .object({
@@ -338,6 +345,27 @@ export class MockApi implements Api {
         ));
     if (!ordered) throw new ApiError("INVALID_TRIP_STOPS");
 
+    const sequenceByStop = new Map(
+      values.stopIds.map((stopId, sequence) => [stopId, sequence]),
+    );
+    const fareKeys = new Set<string>();
+    const invalidFare = values.fares.some((fare) => {
+      const fromSequence = sequenceByStop.get(fare.fromStopId);
+      const toSequence = sequenceByStop.get(fare.toStopId);
+      const key = `${fare.fromStopId}:${fare.toStopId}`;
+      if (
+        fromSequence === undefined ||
+        toSequence === undefined ||
+        fromSequence >= toSequence ||
+        fareKeys.has(key)
+      ) {
+        return true;
+      }
+      fareKeys.add(key);
+      return false;
+    });
+    if (invalidFare) throw new ApiError("INVALID_INPUT", "Tarifs invalides.");
+
     const id = this.nextId("trip");
     const trip: Trip = {
       id,
@@ -345,6 +373,8 @@ export class MockApi implements Api {
       corridorId: corridor.id,
       capacity: values.capacity,
       departureAt: values.departureAt,
+      availableUntil: values.availableUntil ?? null,
+      availabilityMode: values.availabilityMode,
       status: "OPEN",
       createdAt: new Date().toISOString(),
       tripStops: values.stopIds.map((stopId, sequence) => ({
@@ -353,6 +383,11 @@ export class MockApi implements Api {
         stopId,
         sequence,
         stop: corridor.stops.find((stop) => stop.id === stopId)!,
+      })),
+      fares: values.fares.map((fare) => ({
+        id: this.nextId("trip-fare"),
+        tripId: id,
+        ...fare,
       })),
     };
     this.data.trips.push(trip);
@@ -524,10 +559,10 @@ export class MockApi implements Api {
     );
     const from = corridor?.stops.find((stop) => stop.id === values.fromStopId);
     const to = corridor?.stops.find((stop) => stop.id === values.toStopId);
-    if (!corridor || !from || !to || from.position >= to.position) {
+    if (!corridor || !from || !to || from.id === to.id) {
       throw new ApiError(
         "INVALID_INPUT",
-        "L’arrêt d’arrivée doit suivre l’arrêt de départ.",
+        "Les arrêts de départ et d’arrivée doivent être différents.",
       );
     }
     const request: TripRequest = {

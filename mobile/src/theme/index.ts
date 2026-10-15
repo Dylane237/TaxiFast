@@ -1,16 +1,16 @@
 export const couleurs = {
-  fond: "#F6F6F1",
+  fond: "#F7F7F4",
   surface: "#FFFFFF",
-  surfaceSecondaire: "#EEEFE9",
+  surfaceSecondaire: "#F0F1ED",
   texte: "#171914",
   texteSecondaire: "#62675F",
   primaire: "#FFD43B",
   primairePresse: "#E5B91F",
-  primaireClaire: "#FFF2B2",
+  primaireClaire: "#FFF7D1",
   encre: "#151712",
   encreDouce: "#252821",
   texteInverseSecondaire: "#C7CBC1",
-  bordure: "#E2E4DD",
+  bordure: "#DFE2DA",
   succes: "#207A4A",
   succesClaire: "#E4F4EA",
   erreur: "#B42318",
@@ -39,10 +39,10 @@ export const rayons = {
 
 export const taillesTexte = {
   micro: 11,
-  petit: 14,
-  normal: 16,
-  titre: 24,
-  hero: 32,
+  petit: 13,
+  normal: 15,
+  titre: 22,
+  hero: 28,
 } as const;
 
 export const mouvements = {
@@ -56,8 +56,8 @@ export const ombres = {
   carte: {
     shadowColor: "#151714",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.035,
-    shadowRadius: 8,
+    shadowOpacity: 0.025,
+    shadowRadius: 6,
     elevation: 1,
   },
   feuille: {

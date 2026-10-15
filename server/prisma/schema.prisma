@@ -23,11 +23,16 @@ enum Role {
 }
 
 enum TripStatus {
-  OPEN      // accepte des réservations
-  FULL      // automatique et réversible (recalculé après chaque confirmation / annulation)
-  CLOSED    // décidé par le chauffeur, définitif
+  OPEN // accepte des réservations
+  FULL // automatique et réversible (recalculé après chaque confirmation / annulation)
+  CLOSED // décidé par le chauffeur, définitif
   COMPLETED
   CANCELLED
+}
+
+enum AvailabilityMode {
+  IMMEDIATE
+  SCHEDULED
 }
 
 enum RequestStatus {
@@ -81,8 +86,8 @@ model User {
 }
 
 model Vehicle {
-  id       String @id @default(cuid())
-  driverId String @unique
+  id       String  @id @default(cuid())
+  driverId String  @unique
   plate    String
   model    String?
   seats    Int
@@ -100,7 +105,7 @@ model Corridor {
 }
 
 model Stop {
-  id                  String @id @default(cuid())
+  id                  String  @id @default(cuid())
   corridorId          String
   name                String
   position            Int // ordre de référence sur l'itinéraire
@@ -115,19 +120,23 @@ model Stop {
   dropoffBookings Booking[]     @relation("Dropoff")
   requestsFrom    TripRequest[] @relation("RequestFrom")
   requestsTo      TripRequest[] @relation("RequestTo")
+  faresFrom       TripFare[]    @relation("FareFrom")
+  faresTo         TripFare[]    @relation("FareTo")
 
   @@unique([corridorId, position])
   @@unique([corridorId, name])
 }
 
 model Trip {
-  id          String     @id @default(cuid())
-  driverId    String
-  corridorId  String
-  capacity    Int
-  departureAt DateTime
-  status      TripStatus @default(OPEN)
-  createdAt   DateTime   @default(now())
+  id               String           @id @default(cuid())
+  driverId         String
+  corridorId       String
+  capacity         Int
+  departureAt      DateTime
+  availableUntil   DateTime?
+  availabilityMode AvailabilityMode @default(SCHEDULED)
+  status           TripStatus       @default(OPEN)
+  createdAt        DateTime         @default(now())
 
   driver   User     @relation("DriverTrips", fields: [driverId], references: [id])
   corridor Corridor @relation(fields: [corridorId], references: [id])
@@ -135,8 +144,24 @@ model Trip {
   tripStops TripStop[]
   bookings  Booking[]
   location  TripLocation?
+  fares     TripFare[]
 
   @@index([corridorId, status, departureAt])
+}
+
+model TripFare {
+  id         String @id @default(cuid())
+  tripId     String
+  fromStopId String
+  toStopId   String
+  price      Int
+
+  trip     Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fromStop Stop @relation("FareFrom", fields: [fromStopId], references: [id])
+  toStop   Stop @relation("FareTo", fields: [toStopId], references: [id])
+
+  @@unique([tripId, fromStopId, toStopId])
+  @@index([tripId])
 }
 
 model TripStop {

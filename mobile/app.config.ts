@@ -9,6 +9,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
     ...base,
+    extra: {
+      ...base.extra,
+      googleMapsConfigured: Boolean(googleMapsApiKey),
+    },
     android: {
       ...base.android,
       ...(googleServicesFile ? { googleServicesFile } : {}),

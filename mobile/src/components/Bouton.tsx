@@ -98,7 +98,7 @@ export function Bouton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 50,
+    minHeight: 48,
     borderRadius: rayons.md,
     paddingHorizontal: espacements.md,
     alignItems: "center",
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   texte: {
     color: couleurs.texte,
-    fontSize: taillesTexte.normal,
+    fontSize: taillesTexte.petit,
     fontWeight: "700",
   },
   texteClair: {

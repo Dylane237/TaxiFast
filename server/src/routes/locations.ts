@@ -34,6 +34,7 @@ export function registerLocationRoutes(
           orderBy: { sequence: "asc" },
           include: { stop: true },
         },
+        fares: true,
         bookings: {
           where: { clientId: principal.userId, status: "CONFIRMED" },
           select: { id: true },

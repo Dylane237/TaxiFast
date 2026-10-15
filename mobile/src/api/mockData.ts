@@ -141,6 +141,8 @@ export function createMockData(): MockData {
       corridorId,
       capacity,
       departureAt: iso(departureOffset),
+      availableUntil: iso(departureOffset + 120),
+      availabilityMode: "SCHEDULED",
       status: "OPEN",
       createdAt: iso(-30),
       tripStops: stopIds.map((stopId, sequence) => ({
@@ -150,6 +152,15 @@ export function createMockData(): MockData {
         sequence,
         stop: corridor.stops.find((stop) => stop.id === stopId)!,
       })),
+      fares: stopIds.flatMap((fromStopId, fromIndex) =>
+        stopIds.slice(fromIndex + 1).map((toStopId, offset) => ({
+          id: `${id}-fare-${fromIndex}-${fromIndex + offset + 1}`,
+          tripId: id,
+          fromStopId,
+          toStopId,
+          price: (offset + 1) * 500,
+        })),
+      ),
     };
   };
 

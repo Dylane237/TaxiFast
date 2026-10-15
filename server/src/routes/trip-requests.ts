@@ -86,11 +86,6 @@ export function registerTripRequestRoutes(
       return reply.status(404).send({ error: "CORRIDOR_NOT_FOUND" });
     if (stops.length !== 2)
       return reply.status(400).send({ error: "INVALID_REQUEST_STOPS" });
-    const positionById = new Map(stops.map((stop) => [stop.id, stop.position]));
-    if (positionById.get(fromStopId)! >= positionById.get(toStopId)!) {
-      return reply.status(400).send({ error: "INVALID_REQUEST_STOPS" });
-    }
-
     const tripRequest = await prisma.tripRequest.create({
       data: {
         clientId: principal.userId,
