@@ -1,14 +1,15 @@
-import { IconCheck, IconClock, IconRoute, IconWallet } from "@tabler/icons-react-native";
+import { IconArrowLeft, IconCheck, IconClock, IconRoute, IconWallet } from "@tabler/icons-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Stop } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
+import { CityMapBackdrop } from "@/features/maps/CityMapBackdrop";
 import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { WizardProgress } from "@/features/route-composer/WizardProgress";
@@ -16,6 +17,24 @@ import { buildAvailability, findRouteSelection, nearestStop } from "@/features/r
 import { couleurs, espacements, ombres, rayons, taillesTexte } from "@/theme";
 
 const labels = ["VOTRE TRAJET", "HORAIRE ET PRIX", "VÉRIFICATION"];
+const LOCATION_TIMEOUT_MS = 8_000;
+
+async function currentPositionWithTimeout() {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("Position indisponible. Choisissez un point de départ dans la liste.")),
+          LOCATION_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 export default function RechercheScreen() {
   const corridorsQuery = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
@@ -50,7 +69,7 @@ export default function RechercheScreen() {
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (!permission.granted) throw new Error("Autorisez la localisation pour utiliser votre position.");
-      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const current = await currentPositionWithTimeout();
       const closest = nearestStop(corridors, current.coords.latitude, current.coords.longitude);
       if (!closest) throw new Error("Aucun arrêt géolocalisé n’est disponible.");
       setFrom(closest);
@@ -78,6 +97,25 @@ export default function RechercheScreen() {
   if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de votre recherche" description="Chargement des adresses et points de rencontre…" /></State>;
   if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Recherche indisponible" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
   if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun itinéraire disponible" description="Revenez lorsque des itinéraires auront été publiés." /></State>;
+
+  if (step === 0) return <View style={styles.mapPage}>
+    <CityMapBackdrop route={Boolean(route)} destinationLabel={to?.name} />
+    <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
+      <Pressable accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></Pressable>
+      <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "ITINÉRAIRE TROUVÉ" : "RECHERCHE DE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.mapSheetWrap}>
+        <View style={styles.mapSheet}>
+          <View style={styles.sheetHandle} />
+          <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez vos points de rencontre.</Text></View>
+          {error ? <View style={styles.mapFeedback}><MessageEtat type="erreur">{error}</MessageEtat></View> : null}
+          <ScrollView contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
+          </ScrollView>
+          <View style={styles.mapFooter}><Bouton onPress={next}>{route ? "Continuer" : "Choisir le trajet"}</Bouton></View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  </View>;
 
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -131,10 +169,22 @@ function State({ children }: { children: React.ReactNode }) {
 }
 
 const styles = StyleSheet.create({
+  mapPage: { flex: 1, backgroundColor: couleurs.fond },
+  mapBack: { position: "absolute", left: espacements.lg, top: 46, width: 48, height: 48, zIndex: 2, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", alignItems: "center", justifyContent: "center", ...ombres.carte },
+  mapStatus: { position: "absolute", left: 76, right: espacements.lg, top: 46, minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: espacements.md, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", ...ombres.carte },
+  mapStatusLabel: { color: couleurs.texteSecondaire, fontSize: 9, fontWeight: "900", letterSpacing: 0.8 }, mapStatusValue: { marginTop: 1, color: couleurs.texte, fontSize: taillesTexte.micro, fontWeight: "900" },
+  mapSheetWrap: { position: "absolute", left: 0, right: 0, bottom: 0, height: "69%", justifyContent: "flex-end" },
+  mapSheet: { flex: 1, overflow: "hidden", borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: couleurs.surface, ...ombres.feuille },
+  sheetHandle: { width: 42, height: 4, alignSelf: "center", marginTop: espacements.sm, borderRadius: rayons.rond, backgroundColor: couleurs.bordure },
+  mapHeading: { paddingHorizontal: espacements.lg, paddingTop: espacements.md, paddingBottom: espacements.sm }, mapTitle: { color: couleurs.texte, fontSize: 24, lineHeight: 28, fontWeight: "900", letterSpacing: -0.7 }, mapSubtitle: { marginTop: 2, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  mapFeedback: { paddingHorizontal: espacements.lg, paddingBottom: espacements.sm },
+  placeScroll: { paddingHorizontal: espacements.lg, paddingBottom: espacements.md },
+  mapFooter: { paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: couleurs.bordure, backgroundColor: couleurs.surface },
   page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 }, hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontWeight: "800" }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18 },
   footer: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, back: { width: 98 }, next: { flex: 1 },
   modeGrid: { flexDirection: "row", gap: espacements.sm }, choice: { flex: 1, minHeight: 122, padding: espacements.md, gap: 6, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, choiceActive: { borderColor: couleurs.primairePresse, backgroundColor: couleurs.primaireClaire }, choiceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" }, choiceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17 }, check: { position: "absolute", right: espacements.md, top: espacements.md, width: 23, height: 23, borderRadius: rayons.rond, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   options: { gap: espacements.sm }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 0.8 }, pills: { flexDirection: "row", gap: espacements.sm }, pill: { flex: 1, minHeight: 46, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, pillActive: { backgroundColor: couleurs.primaire }, pillText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
   priceHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, priceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" }, priceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, maxWidth: 280 },
   summary: { paddingVertical: 0 }, summaryRow: { paddingVertical: espacements.md, gap: 3, borderBottomWidth: 1, borderBottomColor: couleurs.bordure }, summaryLast: { borderBottomWidth: 0 }, summaryLabel: { color: couleurs.texteSecondaire, fontSize: 12, fontWeight: "700" }, summaryValue: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 20, fontWeight: "900" },
+  pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
 });
