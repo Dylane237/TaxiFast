@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export function WizardProgress({ step, total, label }: { step: number; total: number; label: string }) {
   return (
@@ -18,8 +18,8 @@ export function WizardProgress({ step, total, label }: { step: number; total: nu
 const styles = StyleSheet.create({
   root: { gap: espacements.sm },
   copy: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 0.8 },
-  count: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "800" },
+  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 0.8, fontFamily: polices.texteGras },
+  count: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   track: { height: 4, borderRadius: rayons.rond, backgroundColor: couleurs.bordure, overflow: "hidden" },
   fill: { height: "100%", borderRadius: rayons.rond, backgroundColor: couleurs.primaire },
 });

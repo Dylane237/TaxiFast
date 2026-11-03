@@ -7,7 +7,7 @@ import { api } from "@/api";
 import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { buildTripTimeline, parseTripId, type StopTimelineItem } from "@/features/active-trip/active-trip";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 function PassengerNames({ names, direction }: { names: string[]; direction: "in" | "out" }) {
   if (!names.length) return null;
@@ -183,28 +183,28 @@ const styles = StyleSheet.create({
   summary: { padding: espacements.lg, flexDirection: "row", alignItems: "center", gap: espacements.md },
   summaryIcon: { width: 46, height: 46, borderRadius: rayons.md, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   summaryText: { flex: 1, gap: espacements.sm },
-  summaryRoute: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
+  summaryRoute: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteExtraGras },
   passengerCount: { flexDirection: "row", alignItems: "center", gap: espacements.xs },
-  summaryDetails: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  summaryDetails: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   stopRow: { flexDirection: "row", gap: espacements.md },
   timeline: { width: 38, alignItems: "center" },
   stopNumber: { width: 36, height: 36, borderRadius: rayons.rond, backgroundColor: couleurs.encre, alignItems: "center", justifyContent: "center", zIndex: 1 },
-  stopNumberText: { color: couleurs.surface, fontSize: taillesTexte.petit, fontWeight: "900" },
+  stopNumberText: { color: couleurs.surface, fontSize: taillesTexte.petit, fontFamily: polices.texteExtraGras },
   line: { flex: 1, width: 2, minHeight: 110, backgroundColor: couleurs.bordure },
   stopContent: { flex: 1, paddingBottom: espacements.lg, gap: espacements.sm },
-  stopName: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900", minHeight: 36, textAlignVertical: "center" },
-  noMovement: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  stopName: { color: couleurs.texte, fontSize: taillesTexte.normal, minHeight: 36, textAlignVertical: "center", fontFamily: polices.texteExtraGras },
+  noMovement: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   movements: { gap: espacements.xs },
   movement: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   movementIcon: { width: 28, height: 28, borderRadius: rayons.rond, backgroundColor: couleurs.succesClaire, alignItems: "center", justifyContent: "center" },
   movementIconOut: { backgroundColor: couleurs.attentionClaire },
-  movementText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "700" },
+  movementText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteDemiGras },
   leg: { marginTop: espacements.sm, borderRadius: rayons.md, backgroundColor: couleurs.surface, padding: espacements.md, gap: espacements.xs },
   legHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: espacements.sm },
-  legLabel: { color: couleurs.texteSecondaire, fontSize: 10, fontWeight: "900", letterSpacing: 1 },
-  available: { color: couleurs.succes, fontSize: taillesTexte.petit, fontWeight: "900" },
-  legRoute: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
-  occupied: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  legLabel: { color: couleurs.texteSecondaire, fontSize: 10, letterSpacing: 1, fontFamily: polices.texteGras },
+  available: { color: couleurs.succes, fontSize: taillesTexte.petit, fontFamily: polices.texteExtraGras },
+  legRoute: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
+  occupied: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   footer: { paddingTop: espacements.md, gap: espacements.md },
   stateContent: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
 });

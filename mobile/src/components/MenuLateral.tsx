@@ -28,7 +28,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNavigationStore } from "@/stores/navigation-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type MenuItem = {
   label: string;
@@ -283,19 +283,19 @@ const styles = StyleSheet.create({
   logoText: {
     color: couleurs.primaire,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   headerCopy: { flex: 1, gap: 2 },
   product: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   role: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "800",
     letterSpacing: 0.8,
+    fontFamily: polices.texteGras,
   },
   closeButton: {
     width: 38,
@@ -330,11 +330,12 @@ const styles = StyleSheet.create({
   itemLabel: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   itemDescription: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   account: {
     margin: espacements.md,
@@ -356,6 +357,6 @@ const styles = StyleSheet.create({
   accountName: {
     color: couleurs.surface,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
 });

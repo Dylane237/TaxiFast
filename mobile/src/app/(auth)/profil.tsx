@@ -8,7 +8,7 @@ import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { placesValides } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements } from "@/theme";
+import { couleurs, espacements, polices } from "@/theme";
 
 function FormulaireProfil({ profile }: { profile: UserProfile }) {
   const queryClient = useQueryClient();
@@ -105,5 +105,5 @@ export default function Profil() {
 
 const styles = StyleSheet.create({
   formulaire: { gap: espacements.md },
-  section: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.4, marginTop: espacements.xs },
+  section: { color: couleurs.texteSecondaire, fontSize: 11, letterSpacing: 1.4, marginTop: espacements.xs, fontFamily: polices.texteGras },
 });

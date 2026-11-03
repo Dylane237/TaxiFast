@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip, type TripStatus } from "@/api";
 import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const statuts: Record<TripStatus, string> = {
   OPEN: "Ouvert",
@@ -123,15 +123,15 @@ const styles = StyleSheet.create({
   carteEntete: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: espacements.md },
   itineraire: { flex: 1, flexDirection: "row", alignItems: "center", gap: espacements.sm },
   itineraireIcone: { width: 36, height: 36, borderRadius: rayons.sm, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
-  itineraireNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
+  itineraireNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteGras },
   statut: { paddingHorizontal: espacements.sm, paddingVertical: espacements.xs, borderRadius: rayons.rond, backgroundColor: couleurs.primaireClaire },
   statutAttention: { backgroundColor: couleurs.attentionClaire },
   statutNeutre: { backgroundColor: couleurs.fond },
-  statutTexte: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
+  statutTexte: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
   statutTexteAttention: { color: couleurs.attention },
   statutTexteNeutre: { color: couleurs.texteSecondaire },
-  depart: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "700", textTransform: "capitalize" },
+  depart: { color: couleurs.texte, fontSize: taillesTexte.normal, textTransform: "capitalize", fontFamily: polices.texteDemiGras },
   troncon: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
-  tronconTexte: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal },
-  details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  tronconTexte: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, fontFamily: polices.texte },
+  details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
 });

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import type { Stop } from "@/api";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export function RouteMiniMap({ stops, compact = false }: { stops: Stop[]; compact?: boolean }) {
   const points = stops.map((_, index) => ({
@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
   root: { height: 184, borderRadius: rayons.lg, backgroundColor: couleurs.surfaceSecondaire, overflow: "hidden", borderWidth: 1, borderColor: couleurs.bordure },
   compact: { height: 146 },
   caption: { position: "absolute", left: espacements.md, right: espacements.md, bottom: espacements.md, flexDirection: "row", alignItems: "center", gap: espacements.sm, borderRadius: rayons.rond, backgroundColor: couleurs.surface, paddingHorizontal: espacements.md, paddingVertical: espacements.sm },
-  captionText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.micro, fontWeight: "800" },
+  captionText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   end: { textAlign: "right" },
-  arrow: { color: couleurs.texteSecondaire, fontWeight: "900" },
-  placeholder: { position: "absolute", alignSelf: "center", top: 64, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontWeight: "700" },
+  arrow: { color: couleurs.texteSecondaire, fontFamily: polices.texteExtraGras },
+  placeholder: { position: "absolute", alignSelf: "center", top: 64, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texteDemiGras },
 });

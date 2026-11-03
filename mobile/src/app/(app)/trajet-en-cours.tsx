@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip } from "@/api";
 import { Bouton, Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 function formatDeparture(value: string): string {
   return new Date(value).toLocaleString("fr-FR", {
@@ -104,11 +104,11 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: "row", alignItems: "center", gap: espacements.md },
   icon: { width: 44, height: 44, borderRadius: rayons.md, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   cardHeaderText: { flex: 1, gap: 3 },
-  status: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.1 },
-  departure: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800", textTransform: "capitalize" },
+  status: { color: couleurs.texteSecondaire, fontSize: 11, letterSpacing: 1.1, fontFamily: polices.texteGras },
+  departure: { color: couleurs.texte, fontSize: taillesTexte.petit, textTransform: "capitalize", fontFamily: polices.texteGras },
   segment: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
-  segmentText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
-  details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  segmentText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteGras },
+  details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: espacements.md },
   stateContent: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
 });

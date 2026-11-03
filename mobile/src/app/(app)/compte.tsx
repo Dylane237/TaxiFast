@@ -35,7 +35,7 @@ import {
   notificationsEnabled,
 } from "@/notifications/push-notifications";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function CompteScreen() {
   const queryClient = useQueryClient();
@@ -276,11 +276,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   identityCopy: { flex: 1, gap: 3 },
-  name: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  name: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
   role: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   verified: {
     flexDirection: "row",
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
   verifiedText: {
     color: couleurs.succes,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
   group: { gap: espacements.sm },
   groupTitle: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: polices.texteGras,
   },
   list: { paddingHorizontal: espacements.md, paddingVertical: 0 },
   settingRow: {
@@ -321,10 +321,11 @@ const styles = StyleSheet.create({
   settingTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   settingDescription: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
 });

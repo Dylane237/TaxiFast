@@ -6,7 +6,7 @@ import {
   View,
   type TextInputProps,
 } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type ChampProps = TextInputProps & {
   etiquette: string;
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   etiquette: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   cadre: {
     minHeight: 48,
@@ -76,11 +76,11 @@ const styles = StyleSheet.create({
   prefixe: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
     paddingRight: espacements.sm,
     marginRight: espacements.sm,
     borderRightWidth: 1,
     borderRightColor: couleurs.bordure,
+    fontFamily: polices.texteGras,
   },
   champ: {
     flex: 1,
@@ -88,14 +88,17 @@ const styles = StyleSheet.create({
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
     paddingVertical: 0,
+    fontFamily: polices.texte,
   },
   erreur: {
     color: couleurs.erreur,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   aide: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
     lineHeight: 16,
+    fontFamily: polices.texte,
   },
 });

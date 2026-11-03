@@ -10,7 +10,7 @@ import { api, type WalletTransaction } from "@/api";
 import { EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 function TransactionRow({ item }: { item: WalletTransaction }) {
   const commission = item.type === "COMMISSION";
@@ -165,21 +165,21 @@ const styles = StyleSheet.create({
   balanceLabel: {
     color: "#AEB4AC",
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1.1,
+    fontFamily: polices.texteGras,
   },
-  balanceValue: { color: couleurs.surface, fontSize: 32, fontWeight: "900" },
+  balanceValue: { color: couleurs.surface, fontSize: 32, fontFamily: polices.titre },
   stats: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: espacements.md,
   },
   stat: { flex: 1, gap: 2 },
-  statLabel: { color: "#AEB4AC", fontSize: taillesTexte.petit },
+  statLabel: { color: "#AEB4AC", fontSize: taillesTexte.petit, fontFamily: polices.texte },
   statValue: {
     color: couleurs.surface,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   statDivider: {
     width: 1,
@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1.1,
+    fontFamily: polices.texteGras,
   },
   transaction: {
     minHeight: 68,
@@ -214,16 +214,17 @@ const styles = StyleSheet.create({
   transactionTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   transactionDate: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
+    fontFamily: polices.texte,
   },
   amount: {
     color: couleurs.succes,
     fontSize: taillesTexte.petit,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   amountNegative: { color: couleurs.attention },
 });

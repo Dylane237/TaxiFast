@@ -18,7 +18,7 @@ import { api, type BookingDetails } from "@/api";
 import { Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const statusLabels = {
   COMPLETED: "Terminée",
@@ -185,26 +185,27 @@ const styles = StyleSheet.create({
   statusText: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
-  price: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 18, fontFamily: polices.titre },
   route: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   routeText: {
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   meta: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   metaText: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   rateBadge: { flexDirection: "row", alignItems: "center", gap: 3 },
   rateText: {
     color: couleurs.attention,
     fontSize: taillesTexte.petit,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
 });

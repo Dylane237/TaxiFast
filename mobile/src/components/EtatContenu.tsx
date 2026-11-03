@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { IconAlertCircle, IconInbox } from "@tabler/icons-react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type EtatContenuProps = {
   type: "chargement" | "vide" | "erreur";
@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
   title: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
     textAlign: "center",
+    fontFamily: polices.texteExtraGras,
   },
   description: {
     color: couleurs.texteSecondaire,
@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: "center",
     maxWidth: 290,
+    fontFamily: polices.texte,
   },
   loadingText: { textAlign: "left", maxWidth: undefined },
   action: { alignSelf: "stretch", marginTop: espacements.sm },

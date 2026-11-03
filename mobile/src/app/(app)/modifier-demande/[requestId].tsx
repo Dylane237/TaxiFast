@@ -8,7 +8,7 @@ import { api } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, MessageEtat, PuceChoix } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatLocalDateTime, parseLocalDateTime } from "@/features/date-time-input";
-import { couleurs, espacements, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, taillesTexte } from "@/theme";
 
 export default function EditRequestScreen() {
   const { requestId } = useLocalSearchParams<{ requestId?: string }>();
@@ -118,9 +118,9 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond },
   content: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: espacements.lg },
   section: { gap: espacements.sm },
-  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 1.1 },
+  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 1.1, fontFamily: polices.texteGras },
   wrap: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
   form: { gap: espacements.md },
   notice: { flexDirection: "row", alignItems: "flex-start", gap: espacements.sm },
-  noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 20 },
+  noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 20, fontFamily: polices.texte },
 });

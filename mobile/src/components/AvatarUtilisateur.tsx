@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNavigationStore } from "@/stores/navigation-store";
-import { couleurs, rayons, taillesTexte } from "@/theme";
+import { couleurs, polices, rayons, taillesTexte } from "@/theme";
 
 function initiales(name: string | null | undefined): string {
   if (!name?.trim()) return "TF";
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
   text: {
     color: couleurs.primaire,
     fontSize: taillesTexte.petit,
-    fontWeight: "900",
     letterSpacing: 0.3,
+    fontFamily: polices.texteExtraGras,
   },
   pressed: { opacity: 0.72, transform: [{ scale: 0.96 }] },
 });

@@ -20,6 +20,19 @@ export const couleurs = {
   desactive: "#B6BAB3",
 } as const;
 
+/**
+ * Deux familles : Bricolage Grotesque pour les titres et les prix,
+ * Figtree pour tout le reste. Les noms correspondent aux clés
+ * chargées dans theme/polices-sources.ts.
+ */
+export const polices = {
+  texte: "Figtree_400Regular",
+  texteDemiGras: "Figtree_600SemiBold",
+  texteGras: "Figtree_700Bold",
+  texteExtraGras: "Figtree_800ExtraBold",
+  titre: "BricolageGrotesque_800ExtraBold",
+} as const;
+
 export const espacements = {
   xs: 4,
   sm: 8,

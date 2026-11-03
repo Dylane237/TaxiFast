@@ -9,7 +9,7 @@ import { codeOtpValide } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements } from "@/theme";
+import { couleurs, espacements, polices } from "@/theme";
 
 export default function CodeOtp() {
   const otpLength = process.env.EXPO_PUBLIC_USE_MOCK === "false" ? 6 : 4;
@@ -105,5 +105,5 @@ export default function CodeOtp() {
 
 const styles = StyleSheet.create({
   formulaire: { gap: espacements.md },
-  code: { textAlign: "center", letterSpacing: 10, fontSize: 22, fontWeight: "800" },
+  code: { textAlign: "center", letterSpacing: 10, fontSize: 22, fontFamily: polices.titre },
 });

@@ -8,7 +8,7 @@ import { api, ApiError } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { parseCounterPrice, selectDriverRequests } from "@/features/driver-requests/driver-requests";
-import { couleurs, espacements, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, taillesTexte } from "@/theme";
 
 type Action = "accept" | "counter" | "refuse";
 
@@ -173,12 +173,12 @@ const styles = StyleSheet.create({
   content: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: espacements.xl },
   stateContent: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
   summary: { padding: espacements.lg, gap: espacements.md },
-  label: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1.2 },
-  price: { color: couleurs.texte, fontSize: 36, fontWeight: "900" },
+  label: { color: couleurs.texteSecondaire, fontSize: 11, letterSpacing: 1.2, fontFamily: polices.texteGras },
+  price: { color: couleurs.texte, fontSize: 36, fontFamily: polices.titre },
   row: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
-  rowText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 22 },
+  rowText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, lineHeight: 22, fontFamily: polices.texte },
   actions: { gap: espacements.md },
   counterCard: { padding: espacements.lg, gap: espacements.md, backgroundColor: couleurs.surface },
-  counterTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
-  counterDescription: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19 },
+  counterTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteExtraGras },
+  counterDescription: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19, fontFamily: polices.texte },
 });

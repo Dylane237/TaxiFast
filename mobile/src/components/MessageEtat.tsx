@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type MessageEtatProps = {
   children: string;
@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: taillesTexte.petit,
     lineHeight: 18,
+    fontFamily: polices.texte,
   },
   erreur: { color: couleurs.erreur, backgroundColor: couleurs.erreurClaire },
   succes: { color: couleurs.succes, backgroundColor: couleurs.succesClaire },

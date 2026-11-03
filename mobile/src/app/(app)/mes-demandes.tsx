@@ -19,7 +19,7 @@ import { api, type TripRequest } from "@/api";
 import { Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const labels = {
   OPEN: "En recherche",
@@ -196,21 +196,22 @@ const styles = StyleSheet.create({
   statusText: {
     color: couleurs.texte,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
-  price: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 18, fontFamily: polices.titre },
   route: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   routeText: {
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   meta: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   metaText: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   emptyAction: {
     minHeight: 48,
@@ -221,5 +222,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: espacements.sm,
   },
-  emptyActionText: { color: couleurs.texte, fontWeight: "800" },
+  emptyActionText: { color: couleurs.texte, fontFamily: polices.texteGras },
 });

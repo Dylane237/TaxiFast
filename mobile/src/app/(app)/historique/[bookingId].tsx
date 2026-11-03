@@ -17,7 +17,7 @@ import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function HistoryDetailScreen() {
   const params = useLocalSearchParams<{ bookingId?: string | string[] }>();
@@ -210,12 +210,13 @@ const styles = StyleSheet.create({
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   meta: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   total: {
     flexDirection: "row",
@@ -225,13 +226,13 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
   ratingCard: { gap: espacements.md },
   ratingTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
     lineHeight: 22,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   stars: {
     flexDirection: "row",

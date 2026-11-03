@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RouteBackdrop } from "./RouteBackdrop";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type AuthPageProps = {
   icon: ReactNode;
@@ -91,15 +91,15 @@ const styles = StyleSheet.create({
   },
   marqueTexte: {
     color: couleurs.surface,
-    fontWeight: "900",
     fontSize: taillesTexte.petit,
     letterSpacing: -0.2,
+    fontFamily: polices.texteExtraGras,
   },
   marqueVille: {
     color: couleurs.texteInverseSecondaire,
-    fontWeight: "800",
     fontSize: 9,
     letterSpacing: 1.8,
+    fontFamily: polices.texteGras,
   },
   icone: {
     width: 48,
@@ -114,16 +114,16 @@ const styles = StyleSheet.create({
   surtitre: {
     color: couleurs.primaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1.6,
     marginBottom: espacements.xs,
+    fontFamily: polices.texteGras,
   },
   titre: {
     color: couleurs.surface,
     fontSize: taillesTexte.hero,
-    fontWeight: "900",
     lineHeight: 38,
     letterSpacing: -0.8,
+    fontFamily: polices.titre,
   },
   description: {
     color: couleurs.texteInverseSecondaire,
@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: espacements.sm,
     maxWidth: 330,
+    fontFamily: polices.texte,
   },
   feuille: {
     flexGrow: 1,

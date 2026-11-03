@@ -7,7 +7,7 @@ import { api } from "@/api";
 import { Bouton, Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { selectDriverRequests, type DriverRequest } from "@/features/driver-requests/driver-requests";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 function formatPrice(value: number): string {
   return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
@@ -112,11 +112,11 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: "row", alignItems: "center", gap: espacements.md },
   icon: { width: 42, height: 42, borderRadius: rayons.md, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   headerText: { flex: 1, gap: 3 },
-  kicker: { color: couleurs.texteSecondaire, fontSize: 11, fontWeight: "900", letterSpacing: 1 },
-  departure: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "700", textTransform: "capitalize" },
+  kicker: { color: couleurs.texteSecondaire, fontSize: 11, letterSpacing: 1, fontFamily: polices.texteGras },
+  departure: { color: couleurs.texte, fontSize: taillesTexte.petit, textTransform: "capitalize", fontFamily: polices.texteDemiGras },
   segment: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
-  segmentText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "700" },
-  price: { color: couleurs.texte, fontSize: taillesTexte.titre, fontWeight: "900" },
+  segmentText: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteDemiGras },
+  price: { color: couleurs.texte, fontSize: taillesTexte.titre, fontFamily: polices.titre },
   empty: { flex: 1, justifyContent: "center", alignItems: "center", gap: espacements.md },
   stateContent: { flex: 1, justifyContent: "center", padding: espacements.lg, gap: espacements.lg },
 });

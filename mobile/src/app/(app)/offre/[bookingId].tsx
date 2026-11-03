@@ -23,7 +23,7 @@ import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseCounterPrice } from "@/features/driver-requests/driver-requests";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type Action = "accept" | "counter" | "refuse";
 
@@ -298,10 +298,10 @@ const styles = StyleSheet.create({
   kicker: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: polices.texteGras,
   },
-  driverName: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  driverName: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
   rating: {
     flexDirection: "row",
     alignItems: "center",
@@ -311,13 +311,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5,
   },
-  ratingText: { color: couleurs.texte, fontWeight: "900" },
-  vehicle: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  ratingText: { color: couleurs.texte, fontFamily: polices.texteExtraGras },
+  vehicle: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   price: {
     color: couleurs.texte,
     fontSize: 28,
-    fontWeight: "900",
     marginTop: espacements.sm,
+    fontFamily: polices.titre,
   },
   details: { gap: espacements.md },
   row: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
@@ -325,12 +325,12 @@ const styles = StyleSheet.create({
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   counter: { gap: espacements.md },
   counterTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
 });

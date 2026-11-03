@@ -21,7 +21,7 @@ import {
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function ConfirmedBookingScreen() {
   const params = useLocalSearchParams<{ bookingId?: string | string[] }>();
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
   title: {
     color: couleurs.texte,
     fontSize: 22,
-    fontWeight: "900",
     textAlign: "center",
+    fontFamily: polices.titre,
   },
   card: { gap: espacements.md },
   row: { flexDirection: "row", gap: espacements.md, alignItems: "flex-start" },
@@ -213,15 +213,15 @@ const styles = StyleSheet.create({
   label: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: polices.texteGras,
   },
   value: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
-  meta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  meta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   total: {
     flexDirection: "row",
     alignItems: "center",
@@ -230,5 +230,5 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
 });

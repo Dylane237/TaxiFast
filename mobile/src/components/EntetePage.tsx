@@ -2,7 +2,7 @@ import { IconArrowLeft } from "@tabler/icons-react-native";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AvatarUtilisateur } from "./AvatarUtilisateur";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export function EntetePage({
   title,
@@ -51,11 +51,12 @@ const styles = StyleSheet.create({
     color: couleurs.texte,
     fontSize: taillesTexte.titre,
     lineHeight: 27,
-    fontWeight: "800",
+    fontFamily: polices.titre,
   },
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
     lineHeight: 18,
+    fontFamily: polices.texte,
   },
 });

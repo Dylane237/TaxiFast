@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type PuceChoixProps = {
   label: string;
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   label: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   disabled: { opacity: 0.36 },
   pressed: { opacity: 0.7 },

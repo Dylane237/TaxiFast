@@ -19,7 +19,7 @@ import {
 } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function WaitingRequestScreen() {
   const { requestId } = useLocalSearchParams<{ requestId?: string }>();
@@ -234,8 +234,8 @@ const styles = StyleSheet.create({
   centerTitle: {
     color: couleurs.texte,
     fontSize: 22,
-    fontWeight: "900",
     textAlign: "center",
+    fontFamily: polices.titre,
   },
   centerCopy: {
     color: couleurs.texteSecondaire,
@@ -243,6 +243,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: "center",
     paddingHorizontal: espacements.lg,
+    fontFamily: polices.texte,
   },
   summary: { gap: espacements.md, marginVertical: espacements.sm },
   row: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
@@ -250,12 +251,13 @@ const styles = StyleSheet.create({
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   meta: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   priceRow: {
     flexDirection: "row",
@@ -264,5 +266,5 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 18, fontFamily: polices.titre },
 });

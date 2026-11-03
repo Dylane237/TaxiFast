@@ -9,7 +9,7 @@ import { AuthPage, Bouton, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements } from "@/theme";
+import { couleurs, espacements, polices } from "@/theme";
 
 type ChoixRole = Extract<Role, "CLIENT" | "DRIVER">;
 
@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
   roleIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: couleurs.surface, alignItems: "center", justifyContent: "center" },
   roleIconSelected: { backgroundColor: couleurs.primaire },
   roleCopy: { flex: 1, gap: 3 },
-  roleTitle: { color: couleurs.texte, fontSize: 16, fontWeight: "900" },
-  roleDescription: { color: couleurs.texteSecondaire, fontSize: 13, lineHeight: 18 },
+  roleTitle: { color: couleurs.texte, fontSize: 16, fontFamily: polices.texteExtraGras },
+  roleDescription: { color: couleurs.texteSecondaire, fontSize: 13, lineHeight: 18, fontFamily: polices.texte },
   check: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: couleurs.bordure, alignItems: "center", justifyContent: "center" },
   checkSelected: { backgroundColor: couleurs.primaire, borderColor: couleurs.primairePresse },
 });

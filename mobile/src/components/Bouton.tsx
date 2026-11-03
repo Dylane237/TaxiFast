@@ -17,6 +17,7 @@ import {
   couleurs,
   espacements,
   mouvements,
+  polices,
   rayons,
   taillesTexte,
 } from "@/theme";
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
   texte: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   texteClair: {
     color: couleurs.surface,

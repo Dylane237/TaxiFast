@@ -19,7 +19,7 @@ import {
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function CompatibleTripScreen() {
   const params = useLocalSearchParams<{
@@ -215,17 +215,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   driverCopy: { flex: 1, gap: 2 },
-  driverName: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
-  meta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  driverName: { color: couleurs.texte, fontSize: 18, fontFamily: polices.texteExtraGras },
+  meta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   rating: { flexDirection: "row", alignItems: "center", gap: 3 },
-  ratingText: { color: couleurs.texte, fontWeight: "900" },
+  ratingText: { color: couleurs.texte, fontFamily: polices.texteExtraGras },
   details: { gap: espacements.md },
   row: { flexDirection: "row", gap: espacements.sm, alignItems: "center" },
   rowText: {
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   priceRow: {
     flexDirection: "row",
@@ -235,5 +235,5 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
 });

@@ -24,7 +24,7 @@ import {
   routeDistanceKm,
 } from "@/features/tracking/route-metrics";
 import { DemoRouteMap } from "@/features/tracking/DemoRouteMap";
-import { couleurs, espacements, ombres, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
 
 export default function TripTrackingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   liveDot: { width: 8, height: 8, borderRadius: rayons.rond, backgroundColor: couleurs.desactive },
   liveDotActive: { backgroundColor: couleurs.succes },
-  liveText: { flexShrink: 1, color: couleurs.texte, fontSize: 12, fontWeight: "800" },
+  liveText: { flexShrink: 1, color: couleurs.texte, fontSize: 12, fontFamily: polices.texteGras },
   sheetBackground: {
     backgroundColor: couleurs.surface, borderTopLeftRadius: rayons.xl,
     borderTopRightRadius: rayons.xl, ...ombres.feuille,
@@ -312,16 +312,17 @@ const styles = StyleSheet.create({
   sheetHeadingCopy: { flex: 1, gap: espacements.xs },
   eyebrow: {
     color: couleurs.texteSecondaire, fontSize: taillesTexte.micro,
-    fontWeight: "900", letterSpacing: 0.8,
+    letterSpacing: 0.8,
+    fontFamily: polices.texteGras,
   },
-  title: { color: couleurs.texte, fontSize: 22, lineHeight: 27, fontWeight: "900" },
+  title: { color: couleurs.texte, fontSize: 22, lineHeight: 27, fontFamily: polices.titre },
   etaBadge: {
     minWidth: 64, minHeight: 64, paddingHorizontal: espacements.sm,
     borderRadius: rayons.lg, backgroundColor: couleurs.primaire,
     alignItems: "center", justifyContent: "center",
   },
-  etaValue: { color: couleurs.encre, fontSize: taillesTexte.normal, fontWeight: "900" },
-  etaUnit: { color: couleurs.encreDouce, fontSize: taillesTexte.micro, fontWeight: "800" },
+  etaValue: { color: couleurs.encre, fontSize: taillesTexte.normal, fontFamily: polices.titre },
+  etaUnit: { color: couleurs.encreDouce, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   metrics: {
     minHeight: 48, borderRadius: rayons.md, backgroundColor: couleurs.surfaceSecondaire,
     paddingHorizontal: espacements.md, flexDirection: "row", alignItems: "center",
@@ -329,13 +330,13 @@ const styles = StyleSheet.create({
   metric: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: espacements.sm,
   },
-  metricText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
+  metricText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
   metricDivider: { width: 1, height: 22, backgroundColor: couleurs.bordure },
   notice: { borderRadius: rayons.md, padding: espacements.md, backgroundColor: couleurs.primaireClaire },
-  noticeText: { color: couleurs.encreDouce, fontSize: taillesTexte.petit, lineHeight: 19, fontWeight: "700" },
+  noticeText: { color: couleurs.encreDouce, fontSize: taillesTexte.petit, lineHeight: 19, fontFamily: polices.texteDemiGras },
   sectionHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
-  stopCount: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontWeight: "700" },
+  sectionTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteExtraGras },
+  stopCount: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texteDemiGras },
   timeline: { paddingBottom: espacements.sm },
   stopRow: { minHeight: 68, flexDirection: "row", gap: espacements.md },
   timelineRail: { width: 28, alignItems: "center" },
@@ -348,13 +349,13 @@ const styles = StyleSheet.create({
   },
   stopMarkerEndpoint: { backgroundColor: couleurs.encre, borderColor: couleurs.encre },
   stopMarkerLast: { backgroundColor: couleurs.primaire, borderColor: couleurs.primaire },
-  stopMarkerText: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900" },
+  stopMarkerText: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   stopMarkerTextEndpoint: { color: couleurs.surface },
   stopMarkerTextLast: { color: couleurs.encre },
   stopCopy: { flex: 1, paddingTop: espacements.sm, paddingBottom: espacements.md, gap: 3 },
-  stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "900" },
-  stopInstruction: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17 },
+  stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteExtraGras },
+  stopInstruction: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte },
   empty: { alignItems: "center", gap: espacements.sm, paddingVertical: espacements.xl },
-  emptyTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
-  emptyCopy: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19, textAlign: "center" },
+  emptyTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteExtraGras },
+  emptyCopy: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19, textAlign: "center", fontFamily: polices.texte },
 });

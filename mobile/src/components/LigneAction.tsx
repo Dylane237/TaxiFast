@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { IconChevronRight } from "@tabler/icons-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type LigneActionProps = {
   icon: ReactNode;
@@ -62,12 +62,13 @@ const styles = StyleSheet.create({
   title: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
     lineHeight: 19,
+    fontFamily: polices.texte,
   },
   badge: {
     color: couleurs.texte,
@@ -76,6 +77,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: rayons.rond,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
 });

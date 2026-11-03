@@ -20,7 +20,7 @@ import { Carte, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatPrice, formatTime } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type OfferItem =
   | { kind: "offer"; id: string; booking: Booking }
@@ -253,19 +253,20 @@ const styles = StyleSheet.create({
   offerBadgeText: {
     color: couleurs.texte,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
-  price: { color: couleurs.texte, fontSize: 19, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 19, fontFamily: polices.titre },
   cardTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   meta: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   metaText: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   driverRow: {
     flexDirection: "row",
@@ -285,6 +286,6 @@ const styles = StyleSheet.create({
   ratingText: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
 });
