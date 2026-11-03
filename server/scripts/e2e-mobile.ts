@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { buildApp } from "../src/app.js";
 import { seedCorridors } from "../src/seeds/corridors.js";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL est requis");
+process.env.NODE_ENV ??= "development";
+process.env.JWT_SECRET ??= randomBytes(48).toString("base64url");
 process.env.DEV_OTP_CODE = "123456";
 
 const prisma = new PrismaClient();

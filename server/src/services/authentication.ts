@@ -97,9 +97,17 @@ export interface OtpSender {
   send(phone: string, code: string): Promise<void>;
 }
 
+/**
+ * Vrai seulement si l'environnement se déclare explicitement de développement ou de test.
+ * Un NODE_ENV absent ou mal orthographié compte comme de la production : on ferme par défaut.
+ */
+export function isDevelopmentEnvironment(nodeEnv: string | undefined): boolean {
+  return nodeEnv === "development" || nodeEnv === "test";
+}
+
 export class DevelopmentOtpSender implements OtpSender {
   async send(phone: string, code: string): Promise<void> {
-    if (process.env.NODE_ENV === "production") {
+    if (!isDevelopmentEnvironment(process.env.NODE_ENV)) {
       throw new Error("Aucun fournisseur OTP n'est configuré en production");
     }
     console.info(`[auth] Code OTP pour ${phone}: ${code}`);
@@ -217,19 +225,29 @@ export class AuthenticationService implements Authentication {
   }
 }
 
+// Valeurs déjà publiées (ancien repli, fichier d'exemple) : elles ne doivent jamais signer de jetons.
+const PUBLIC_SECRETS = new Set([
+  "development-only-jwt-secret-change-before-production",
+  "replace-with-at-least-32-random-characters",
+]);
+
 export function createDefaultAuthentication(
   prisma: PrismaClient,
+  env: NodeJS.ProcessEnv = process.env,
 ): Authentication {
-  const secret =
-    process.env.JWT_SECRET ??
-    (process.env.NODE_ENV === "production"
-      ? ""
-      : "development-only-jwt-secret-change-before-production");
+  // Pas de secret de repli : un jeton signé avec un secret connu de tous serait falsifiable.
+  const secret = env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET est obligatoire, y compris en développement");
+  if (PUBLIC_SECRETS.has(secret)) {
+    throw new Error("JWT_SECRET reprend une valeur d'exemple publique : générez-en un vrai");
+  }
 
-  const configuredDevelopmentCode =
-    process.env.NODE_ENV === "production"
-      ? undefined
-      : process.env.DEV_OTP_CODE;
+  const configuredDevelopmentCode = env.DEV_OTP_CODE;
+  if (configuredDevelopmentCode && !isDevelopmentEnvironment(env.NODE_ENV)) {
+    throw new Error(
+      "DEV_OTP_CODE n'est accepté que si NODE_ENV vaut development ou test",
+    );
+  }
   if (configuredDevelopmentCode && !/^\d{6}$/.test(configuredDevelopmentCode)) {
     throw new Error("DEV_OTP_CODE doit contenir exactement 6 chiffres");
   }

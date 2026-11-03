@@ -70,5 +70,8 @@ Le mode fictif reste activé par défaut. Pour utiliser PostgreSQL et l'API rée
    `http://192.168.1.20:3000`. Le téléphone et le PC doivent être sur le même réseau.
 4. Relance Expo après toute modification des variables `EXPO_PUBLIC_*`.
 
-En développement, `DEV_OTP_CODE=123456` fixe le code OTP. Cette variable est ignorée en
-production, où un fournisseur d'envoi OTP devra être configuré.
+`JWT_SECRET` est obligatoire partout : le serveur refuse de démarrer sans lui ou avec une valeur
+d'exemple. En développement, mettez `NODE_ENV=development` ; `DEV_OTP_CODE=123456` fixe alors le
+code OTP. Si `NODE_ENV` est absent ou vaut autre chose, le serveur se comporte comme en production :
+il refuse `DEV_OTP_CODE`, n'affiche aucun code dans les logs, et un fournisseur d'envoi OTP devra
+être configuré.
