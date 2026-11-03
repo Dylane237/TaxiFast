@@ -19,7 +19,7 @@ function ClientHome({ firstName }: { firstName?: string }) {
       <CityMapBackdrop />
       <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
         <Apparition style={styles.mapTopbar}>
-          <View style={styles.clientBrand}><View style={styles.brandMarkSmall}><Text style={styles.brandMarkText}>CT</Text></View><View><Text style={styles.clientBrandName}>TaxiFast</Text><Text style={styles.online}>Douala · Service disponible</Text></View></View>
+          <View style={styles.clientBrand}><View style={styles.brandMarkSmall}><Text style={styles.brandMarkText}>TF</Text></View><View><Text style={styles.clientBrandName}>Taxi Fast</Text><Text style={styles.online}>Douala · Service disponible</Text></View></View>
           <AvatarUtilisateur compact />
         </Apparition>
         <View style={styles.positionBadge}><IconCurrentLocation color={couleurs.texte} size={17} /><View><Text style={styles.positionLabel}>Votre position</Text><Text style={styles.positionValue}>Douala, Cameroun</Text></View></View>
@@ -47,7 +47,7 @@ function QuickPlace({ icon, name, detail, onPress, last = false }: { icon: React
 
 function DriverHome({ firstName }: { firstName?: string }) {
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-    <View style={styles.topbar}><View style={styles.brand}><View style={styles.brandMark}><Text style={styles.brandMarkText}>CT</Text></View><View><Text style={styles.brandName}>Covoiturage Taxi</Text><Text style={styles.location}>Douala, Cameroun</Text></View></View><AvatarUtilisateur /></View>
+    <View style={styles.topbar}><View style={styles.brand}><View style={styles.brandMark}><Text style={styles.brandMarkText}>TF</Text></View><View><Text style={styles.brandName}>Taxi Fast</Text><Text style={styles.location}>Douala, Cameroun</Text></View></View><AvatarUtilisateur /></View>
     <View style={styles.welcome}><Text style={styles.eyebrow}>ESPACE CHAUFFEUR</Text><Text style={styles.greeting}>Bonjour{firstName ? `, ${firstName}` : ""}</Text><Text style={styles.welcomeDescription}>Publiez votre prochain départ et retrouvez les passagers sur votre itinéraire.</Text></View>
     <View style={styles.hero}><View style={styles.heroTop}><View style={styles.heroIcon}><IconRoute color={couleurs.texte} size={26} /></View><Text style={styles.heroKicker}>NOUVEAU DÉPART</Text></View><Text style={styles.heroTitle}>Vous prenez la route ?</Text><Text style={styles.heroDescription}>Indiquez votre itinéraire, vos arrêts et l’heure de départ.</Text><Bouton variante="sombre" icone={<IconArrowRight color={couleurs.surface} size={19} />} onPress={() => router.push("/je-pars")}>Publier un trajet</Bouton></View>
     <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>À SUIVRE</Text><Text style={styles.sectionHint}>Le reste est dans votre menu</Text></View>

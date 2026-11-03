@@ -45,7 +45,7 @@ export function AuthPage({
                 <IconRoute color={couleurs.encre} size={21} strokeWidth={2.4} />
               </View>
               <View>
-                <Text style={styles.marqueTexte}>Covoiturage Taxi</Text>
+                <Text style={styles.marqueTexte}>Taxi Fast</Text>
                 <Text style={styles.marqueVille}>DOUALA</Text>
               </View>
             </View>

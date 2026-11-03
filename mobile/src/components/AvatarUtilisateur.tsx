@@ -4,7 +4,7 @@ import { useNavigationStore } from "@/stores/navigation-store";
 import { couleurs, rayons, taillesTexte } from "@/theme";
 
 function initiales(name: string | null | undefined): string {
-  if (!name?.trim()) return "CT";
+  if (!name?.trim()) return "TF";
   return name
     .trim()
     .split(/\s+/)

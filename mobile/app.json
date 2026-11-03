@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Covoiturage Taxi",
+    "name": "Taxi Fast",
     "slug": "covoiturage-taxi",
     "scheme": "covoiturage-taxi",
     "version": "1.0.0",
@@ -40,13 +40,13 @@
         "expo-maps",
         {
           "requestLocationPermission": true,
-          "locationPermission": "Autoriser Covoiturage Taxi à utiliser votre position pendant un trajet."
+          "locationPermission": "Autoriser Taxi Fast à utiliser votre position pendant un trajet."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Autoriser Covoiturage Taxi à utiliser votre position pendant un trajet."
+          "locationAlwaysAndWhenInUsePermission": "Autoriser Taxi Fast à utiliser votre position pendant un trajet."
         }
       ],
       [

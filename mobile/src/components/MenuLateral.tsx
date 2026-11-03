@@ -166,10 +166,10 @@ export function MenuLateral() {
           <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
             <View style={styles.header}>
               <View style={styles.logo}>
-                <Text style={styles.logoText}>CT</Text>
+                <Text style={styles.logoText}>TF</Text>
               </View>
               <View style={styles.headerCopy}>
-                <Text style={styles.product}>Covoiturage Taxi</Text>
+                <Text style={styles.product}>Taxi Fast</Text>
                 <Text style={styles.role}>
                   {user?.role === "DRIVER"
                     ? "ESPACE CHAUFFEUR"
