@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip, type TripStatus } from "@/api";
-import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
+import { ApparitionListe, Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
@@ -99,7 +99,7 @@ export default function MesTrajets() {
       <FlatList
         data={trips}
         keyExtractor={(trip) => trip.id}
-        renderItem={({ item }) => <CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Itinéraire"} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Itinéraire"} /></ApparitionListe>}
         contentContainerStyle={[styles.liste, !trips.length && styles.listeVide]}
         ListHeaderComponent={<EntetePage title="Mes trajets" description="Où en est chacun de vos trajets." />}
         ListHeaderComponentStyle={styles.enteteListe}

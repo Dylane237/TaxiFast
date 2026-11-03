@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
+import { ApparitionListe, Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { buildTripTimeline, parseTripId, type StopTimelineItem } from "@/features/active-trip/active-trip";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
@@ -122,7 +122,9 @@ export default function ActiveTripDetailScreen() {
         data={timeline}
         keyExtractor={(item) => item.tripStop.id}
         renderItem={({ item, index }) => (
-          <StopCard item={item} index={index} nextStopName={timeline[index + 1]?.tripStop.stop.name} />
+          <ApparitionListe index={index}>
+            <StopCard item={item} index={index} nextStopName={timeline[index + 1]?.tripStop.stop.name} />
+          </ApparitionListe>
         )}
         ListHeaderComponent={
           <View style={styles.header}>

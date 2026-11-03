@@ -7,7 +7,6 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -15,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type BookingDetails } from "@/api";
-import { Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
@@ -29,7 +28,7 @@ const statusLabels = {
 
 function HistoryCard({ data }: { data: BookingDetails }) {
   return (
-    <Pressable
+    <PressionDouce
       onPress={() =>
         router.push({
           pathname: "/historique/[bookingId]",
@@ -71,7 +70,7 @@ function HistoryCard({ data }: { data: BookingDetails }) {
           <IconArrowRight color={couleurs.texteSecondaire} size={19} />
         </View>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -123,7 +122,7 @@ export default function HistoryScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.booking.id}
-        renderItem={({ item }) => <HistoryCard data={item} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><HistoryCard data={item} /></ApparitionListe>}
         ItemSeparatorComponent={() => (
           <View style={{ height: espacements.md }} />
         )}

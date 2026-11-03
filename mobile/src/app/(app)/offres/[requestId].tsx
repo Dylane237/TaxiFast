@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -16,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Booking, type MatchedTrip } from "@/api";
-import { Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatPrice, formatTime } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
@@ -35,7 +34,7 @@ function OfferCard({
 }) {
   if (item.kind === "offer") {
     return (
-      <Pressable
+      <PressionDouce
         onPress={() =>
           router.push({
             pathname: "/offre/[bookingId]",
@@ -64,12 +63,12 @@ function OfferCard({
             <IconChevronRight color={couleurs.texteSecondaire} size={19} />
           </View>
         </Carte>
-      </Pressable>
+      </PressionDouce>
     );
   }
   const model = item.trip.driver.vehicle?.model ?? "Véhicule non précisé";
   return (
-    <Pressable
+    <PressionDouce
       onPress={() =>
         router.push({
           pathname: "/trajet-compatible/[requestId]/[tripId]",
@@ -111,7 +110,7 @@ function OfferCard({
           <IconChevronRight color={couleurs.texteSecondaire} size={19} />
         </View>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -186,8 +185,10 @@ export default function OffersScreen() {
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <OfferCard item={item} requestId={requestId} />
+        renderItem={({ item, index }) => (
+          <ApparitionListe index={index}>
+            <OfferCard item={item} requestId={requestId} />
+          </ApparitionListe>
         )}
         ItemSeparatorComponent={() => (
           <View style={{ height: espacements.md }} />

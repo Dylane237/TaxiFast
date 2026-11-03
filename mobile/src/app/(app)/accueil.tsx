@@ -1,8 +1,8 @@
 import { IconArrowRight, IconClock, IconCurrentLocation, IconMapPin, IconRoute, IconSearch } from "@tabler/icons-react-native";
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Apparition, AvatarUtilisateur, Bouton, Carte } from "@/components";
+import { Apparition, AvatarUtilisateur, Bouton, Carte, PressionDouce } from "@/components";
 import { CityMapBackdrop } from "@/features/maps/CityMapBackdrop";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
@@ -26,15 +26,15 @@ function ClientHome({ firstName }: { firstName?: string }) {
         <Apparition delai={90} style={styles.clientSheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.clientHeading}><View><Text style={styles.clientEyebrow}>BONJOUR{firstName ? `, ${firstName.toUpperCase()}` : ""}</Text><Text style={styles.clientTitle}>Où allez-vous ?</Text></View><View style={styles.readyPill}><View style={styles.readyDot} /><Text style={styles.readyText}>Prêt</Text></View></View>
-          <Pressable onPress={() => router.push("/recherche")} style={({ pressed }) => [styles.destinationButton, pressed && styles.pressed]}>
+          <PressionDouce onPress={() => router.push("/recherche")} style={({ pressed }) => [styles.destinationButton, pressed && styles.pressed]}>
             <View style={styles.searchIcon}><IconSearch color={couleurs.texte} size={22} /></View><View style={styles.destinationCopy}><Text style={styles.destinationTitle}>Choisir ma destination</Text><Text style={styles.destinationHint}>On vous trouve un taxi qui passe par là</Text></View><View style={styles.destinationArrow}><IconArrowRight color={couleurs.surface} size={19} /></View>
-          </Pressable>
+          </PressionDouce>
           <Text style={styles.recentLabel}>VOS DERNIÈRES DESTINATIONS</Text>
           <View style={styles.recentList}>
             <QuickPlace icon={<IconMapPin color={couleurs.texte} size={19} />} name="Akwa Palace" detail="Akwa, boulevard de la Liberté" onPress={() => router.push("/recherche")} />
             <QuickPlace icon={<IconClock color={couleurs.texte} size={19} />} name="Bonabéri Centre" detail="Environ 24 min selon le trafic" onPress={() => router.push("/recherche")} last />
           </View>
-          <Pressable onPress={() => router.push("/mes-demandes")} style={({ pressed }) => [styles.requestsShortcut, pressed && styles.pressed]}><Text style={styles.requestsText}>Voir mes demandes</Text><IconArrowRight color={couleurs.texte} size={18} /></Pressable>
+          <PressionDouce onPress={() => router.push("/mes-demandes")} style={({ pressed }) => [styles.requestsShortcut, pressed && styles.pressed]}><Text style={styles.requestsText}>Voir mes demandes</Text><IconArrowRight color={couleurs.texte} size={18} /></PressionDouce>
         </Apparition>
       </SafeAreaView>
     </View>
@@ -42,7 +42,7 @@ function ClientHome({ firstName }: { firstName?: string }) {
 }
 
 function QuickPlace({ icon, name, detail, onPress, last = false }: { icon: React.ReactNode; name: string; detail: string; onPress: () => void; last?: boolean }) {
-  return <Pressable onPress={onPress} style={({ pressed }) => [styles.quickPlace, !last && styles.quickBorder, pressed && styles.pressed]}><View style={styles.quickIcon}>{icon}</View><View style={styles.quickCopy}><Text style={styles.quickName}>{name}</Text><Text numberOfLines={1} style={styles.quickDetail}>{detail}</Text></View><IconArrowRight color={couleurs.texteSecondaire} size={17} /></Pressable>;
+  return <PressionDouce onPress={onPress} style={({ pressed }) => [styles.quickPlace, !last && styles.quickBorder, pressed && styles.pressed]}><View style={styles.quickIcon}>{icon}</View><View style={styles.quickCopy}><Text style={styles.quickName}>{name}</Text><Text numberOfLines={1} style={styles.quickDetail}>{detail}</Text></View><IconArrowRight color={couleurs.texteSecondaire} size={17} /></PressionDouce>;
 }
 
 function DriverHome({ firstName }: { firstName?: string }) {
@@ -51,7 +51,7 @@ function DriverHome({ firstName }: { firstName?: string }) {
     <View style={styles.welcome}><Text style={styles.eyebrow}>ESPACE CHAUFFEUR</Text><Text style={styles.greeting}>Bonjour{firstName ? `, ${firstName}` : ""}</Text><Text style={styles.welcomeDescription}>Dites où vous allez, on vous envoie les clients qui sont sur votre route.</Text></View>
     <View style={styles.hero}><View style={styles.heroTop}><View style={styles.heroIcon}><IconRoute color={couleurs.texte} size={26} /></View><Text style={styles.heroKicker}>NOUVEAU DÉPART</Text></View><Text style={styles.heroTitle}>Vous prenez la route ?</Text><Text style={styles.heroDescription}>Itinéraire, arrêts, heure et prix, et les clients vous voient.</Text><Bouton variante="sombre" icone={<IconArrowRight color={couleurs.surface} size={19} />} onPress={() => router.push("/je-pars")}>Publier un trajet</Bouton></View>
     <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>À SUIVRE</Text><Text style={styles.sectionHint}>Le reste se trouve dans le menu</Text></View>
-    <Carte style={styles.focusCard}><View style={styles.focusIcon}><IconMapPin color={couleurs.texte} size={22} /></View><View style={styles.focusCopy}><Text style={styles.focusTitle}>Trajet en cours</Text><Text style={styles.focusDescription}>Vos clients et vos places libres</Text></View><Pressable onPress={() => router.push("/trajet-en-cours")} style={({ pressed }) => [styles.focusAction, pressed && styles.pressed]}><IconArrowRight color={couleurs.texte} size={19} /></Pressable></Carte>
+    <Carte style={styles.focusCard}><View style={styles.focusIcon}><IconMapPin color={couleurs.texte} size={22} /></View><View style={styles.focusCopy}><Text style={styles.focusTitle}>Trajet en cours</Text><Text style={styles.focusDescription}>Vos clients et vos places libres</Text></View><PressionDouce onPress={() => router.push("/trajet-en-cours")} style={({ pressed }) => [styles.focusAction, pressed && styles.pressed]}><IconArrowRight color={couleurs.texte} size={19} /></PressionDouce></Carte>
   </ScrollView></SafeAreaView>;
 }
 

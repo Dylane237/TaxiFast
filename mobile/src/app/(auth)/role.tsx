@@ -3,9 +3,9 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { api, type Role } from "@/api";
-import { AuthPage, Bouton, MessageEtat } from "@/components";
+import { AuthPage, Bouton, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -88,7 +88,7 @@ function RoleCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressionDouce
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       style={({ pressed }) => [styles.roleCard, selected && styles.roleCardSelected, pressed && styles.roleCardPressed]}
@@ -102,7 +102,7 @@ function RoleCard({
       <View style={[styles.check, selected && styles.checkSelected]}>
         {selected ? <IconCheck color={couleurs.encre} size={15} strokeWidth={3} /> : null}
       </View>
-    </Pressable>
+    </PressionDouce>
   );
 }
 

@@ -3,10 +3,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Stop } from "@/api";
-import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat } from "@/components";
+import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { CityMapBackdrop } from "@/features/maps/CityMapBackdrop";
@@ -15,6 +15,7 @@ import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { WizardProgress } from "@/features/route-composer/WizardProgress";
 import { buildAvailability, findRouteSelection, nearestStop } from "@/features/route-composer/route-composer";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 const labels = ["VOTRE TRAJET", "HORAIRE ET PRIX", "VÉRIFICATION"];
 const LOCATION_TIMEOUT_MS = 8_000;
@@ -60,7 +61,10 @@ export default function RechercheScreen() {
       windowEnd: availability.availableUntil,
       proposedPrice: parsedPrice,
     }),
-    onSuccess: (request) => router.replace({ pathname: "/demande/[requestId]", params: { requestId: request.id } }),
+    onSuccess: (request) => {
+      vibrerSucces();
+      router.replace({ pathname: "/demande/[requestId]", params: { requestId: request.id } });
+    },
   });
 
   const locate = async () => {
@@ -101,7 +105,7 @@ export default function RechercheScreen() {
   if (step === 0) return <View style={styles.mapPage}>
     <CityMapBackdrop route={Boolean(route)} destinationLabel={to?.name} />
     <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
-      <Pressable accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></Pressable>
+      <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
       <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "TRAJET TROUVÉ" : "VOTRE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.mapSheetWrap}>
         <View style={styles.mapSheet}>
@@ -156,10 +160,10 @@ export default function RechercheScreen() {
 }
 
 function Choice({ active, title, detail, icon, onPress }: { active: boolean; title: string; detail: string; icon: React.ReactNode; onPress: () => void }) {
-  return <Pressable onPress={onPress} style={[styles.choice, active && styles.choiceActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.check}><IconCheck color={couleurs.encre} size={14} /></View> : null}</Pressable>;
+  return <PressionDouce onPress={onPress} style={[styles.choice, active && styles.choiceActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.check}><IconCheck color={couleurs.encre} size={14} /></View> : null}</PressionDouce>;
 }
 function Options({ label, values, value, onChange }: { label: string; values: number[]; value: number; onChange: (value: number) => void }) {
-  return <View style={styles.options}><Text style={styles.eyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <Pressable key={item} onPress={() => onChange(item)} style={[styles.pill, item === value && styles.pillActive]}><Text style={styles.pillText}>{item < 60 ? `${item} min` : `${item / 60} h`}</Text></Pressable>)}</View></View>;
+  return <View style={styles.options}><Text style={styles.eyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <PressionDouce key={item} onPress={() => onChange(item)} style={[styles.pill, item === value && styles.pillActive]}><Text style={styles.pillText}>{item < 60 ? `${item} min` : `${item / 60} h`}</Text></PressionDouce>)}</View></View>;
 }
 function Summary({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return <View style={[styles.summaryRow, last && styles.summaryLast]}><Text style={styles.summaryLabel}>{label}</Text><Text style={styles.summaryValue}>{value}</Text></View>;

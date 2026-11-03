@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type WalletTransaction } from "@/api";
-import { EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
@@ -78,7 +78,7 @@ export default function WalletScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <TransactionRow item={item} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><TransactionRow item={item} /></ApparitionListe>}
         ListHeaderComponent={
           <View style={styles.header}>
             <EntetePage

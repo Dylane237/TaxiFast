@@ -9,6 +9,7 @@ import { Bouton, Carte, Champ, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { parseCounterPrice, selectDriverRequests } from "@/features/driver-requests/driver-requests";
 import { couleurs, espacements, polices, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 type Action = "accept" | "counter" | "refuse";
 
@@ -36,6 +37,7 @@ export default function DriverRequestDetailScreen() {
       return api.counterOfferBooking(bookingId, price);
     },
     onSuccess: async (_, variables) => {
+      if (variables.action === "accept") vibrerSucces();
       setCompletedAction(variables.action);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["driver-bookings"] }),

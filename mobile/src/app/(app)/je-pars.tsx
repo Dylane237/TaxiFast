@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Stop } from "@/api";
-import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat } from "@/components";
+import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce, Rebond } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
@@ -15,6 +15,7 @@ import { WizardProgress } from "@/features/route-composer/WizardProgress";
 import { buildAvailability, buildFareDrafts, findRouteSelection, nearestStop, type FareDraft } from "@/features/route-composer/route-composer";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 const labels = ["VOTRE ITINÉRAIRE", "ARRÊTS PROPOSÉS", "DISPONIBILITÉ", "PLACES ET TARIFS", "VÉRIFICATION"];
 const startOptions = [30, 60, 120];
@@ -56,6 +57,7 @@ export default function JePars() {
       fares,
     }),
     onSuccess: async () => {
+      vibrerSucces();
       await queryClient.invalidateQueries({ queryKey: ["driver-trips"] });
       setStep(5);
     },
@@ -134,10 +136,10 @@ export default function JePars() {
           <View style={styles.stopRail}>{route.stops.map((stop, index) => {
             const endpoint = index === 0 || index === route.stops.length - 1;
             const selected = selectedStopIds.includes(stop.id);
-            return <Pressable key={stop.id} onPress={() => toggleStop(stop)} style={[styles.stopOption, selected && styles.stopOptionSelected]}>
+            return <PressionDouce key={stop.id} onPress={() => toggleStop(stop)} style={[styles.stopOption, selected && styles.stopOptionSelected]}>
               <View style={[styles.stopDot, selected && styles.stopDotSelected]}>{selected ? <IconCheck color={endpoint ? couleurs.surface : couleurs.encre} size={15} /> : null}</View>
               <View style={styles.stopCopy}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopDetail}>{endpoint ? (index === 0 ? "Départ" : "Arrivée") : selected ? "Arrêt prévu" : "Pas d’arrêt"}</Text></View>
-            </Pressable>;
+            </PressionDouce>;
           })}</View>
         </View> : null}
 
@@ -157,13 +159,13 @@ export default function JePars() {
           <Text style={styles.hero}>Places et prix</Text>
           <Text style={styles.subtitle}>Combien de clients pouvez-vous prendre ? Ensuite, fixez le prix pour chaque portion du trajet.</Text>
           <Carte style={styles.capacityCard}><View style={styles.capacityHeading}><IconUsers color={couleurs.texte} size={22} /><Text style={styles.cardLabel}>Places libres</Text></View><View style={styles.counter}>
-            <Pressable disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={22} /></Pressable>
+            <PressionDouce disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={22} /></PressionDouce>
             <View style={styles.counterCopy}><Text style={styles.counterValue}>{capacity}</Text><Text style={styles.counterLabel}>sur {maxSeats}</Text></View>
-            <Pressable disabled={capacity >= maxSeats} onPress={() => setCapacity((value) => Math.min(maxSeats, value + 1))} style={[styles.counterButton, capacity >= maxSeats && styles.disabled]}><IconPlus color={couleurs.texte} size={22} /></Pressable>
+            <PressionDouce disabled={capacity >= maxSeats} onPress={() => setCapacity((value) => Math.min(maxSeats, value + 1))} style={[styles.counterButton, capacity >= maxSeats && styles.disabled]}><IconPlus color={couleurs.texte} size={22} /></PressionDouce>
           </View></Carte>
           <View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.sectionEyebrow}>TARIF {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={24} /></View>
           <Champ etiquette="Prix en FCFA" value={String(currentFare.price)} keyboardType="number-pad" onChangeText={(value) => setFares((current) => current.map((fare, index) => index === fareIndex ? { ...fare, price: Number(value.replace(/\s/g, "")) || 0 } : fare))} />
-          <View style={styles.fareNavigation}><Pressable disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={20} /><Text style={styles.navText}>Précédent</Text></Pressable><Pressable disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={20} /></Pressable></View>
+          <View style={styles.fareNavigation}><PressionDouce disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={20} /><Text style={styles.navText}>Précédent</Text></PressionDouce><PressionDouce disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={20} /></PressionDouce></View>
         </View> : null}
 
         {step === 4 && route ? <View style={styles.stage}>
@@ -180,16 +182,16 @@ export default function JePars() {
 }
 
 function ChoiceCard({ active, icon, title, detail, onPress }: { active: boolean; icon: React.ReactNode; title: string; detail: string; onPress: () => void }) {
-  return <Pressable onPress={onPress} style={[styles.choiceCard, active && styles.choiceCardActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.choiceCheck}><IconCheck color={couleurs.encre} size={15} /></View> : null}</Pressable>;
+  return <PressionDouce onPress={onPress} style={[styles.choiceCard, active && styles.choiceCardActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.choiceCheck}><IconCheck color={couleurs.encre} size={15} /></View> : null}</PressionDouce>;
 }
 function OptionGroup({ label, values, value, onChange, suffix }: { label: string; values: number[]; value: number; onChange: (value: number) => void; suffix: string }) {
-  return <View style={styles.optionGroup}><Text style={styles.sectionEyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <Pressable key={item} onPress={() => onChange(item)} style={[styles.pill, value === item && styles.pillActive]}><Text style={styles.pillText}>{item} {suffix}</Text></Pressable>)}</View></View>;
+  return <View style={styles.optionGroup}><Text style={styles.sectionEyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <PressionDouce key={item} onPress={() => onChange(item)} style={[styles.pill, value === item && styles.pillActive]}><Text style={styles.pillText}>{item} {suffix}</Text></PressionDouce>)}</View></View>;
 }
 function Summary({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return <View style={[styles.summaryRow, last && styles.summaryLast]}><Text style={styles.summaryLabel}>{label}</Text><Text style={styles.summaryValue}>{value}</Text></View>;
 }
 function Success({ onAgain }: { onAgain: () => void }) {
-  return <SafeAreaView style={styles.page}><View style={styles.success}><View style={styles.successIcon}><IconCheck color={couleurs.succes} size={38} /></View><Text style={styles.successTitle}>Votre taxi est en ligne</Text><Text style={styles.successCopy}>Les clients sur votre route peuvent maintenant vous faire une demande.</Text><Bouton variante="sombre" onPress={() => router.replace("/mes-trajets")}>Voir mes trajets</Bouton><Bouton variante="secondaire" onPress={onAgain}>Publier un autre trajet</Bouton></View></SafeAreaView>;
+  return <SafeAreaView style={styles.page}><View style={styles.success}><Rebond style={styles.successIcon}><IconCheck color={couleurs.succes} size={38} /></Rebond><Text style={styles.successTitle}>Votre taxi est en ligne</Text><Text style={styles.successCopy}>Les clients sur votre route peuvent maintenant vous faire une demande.</Text><Bouton variante="sombre" onPress={() => router.replace("/mes-trajets")}>Voir mes trajets</Bouton><Bouton variante="secondaire" onPress={onAgain}>Publier un autre trajet</Bouton></View></SafeAreaView>;
 }
 function State({ children }: { children: React.ReactNode }) {
   return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Publier un trajet" description="Dites aux clients où vous passez." />{children}</View></SafeAreaView>;

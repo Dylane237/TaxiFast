@@ -1,9 +1,10 @@
 import { IconCurrentLocation, IconMapPin, IconSearch, IconX } from "@tabler/icons-react-native";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import type { Corridor, Stop } from "@/api";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 import { searchStops } from "./route-composer";
+import { PressionDouce } from "@/components";
 
 type PlaceSearchProps = {
   corridors: Corridor[];
@@ -56,24 +57,24 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
       </View>
 
       {active === "from" && onCurrentLocation ? (
-        <Pressable onPress={onCurrentLocation} disabled={locating} style={({ pressed }) => [styles.locationAction, pressed && styles.pressed]}>
+        <PressionDouce onPress={onCurrentLocation} disabled={locating} style={({ pressed }) => [styles.locationAction, pressed && styles.pressed]}>
           <View style={styles.resultIcon}><IconCurrentLocation color={couleurs.texte} size={20} /></View>
           <View style={styles.resultCopy}>
             <Text style={styles.resultName}>{locating ? "Localisation en cours…" : "Utiliser ma position"}</Text>
             <Text style={styles.resultDetail}>On prend l’arrêt le plus proche de vous</Text>
           </View>
-        </Pressable>
+        </PressionDouce>
       ) : null}
 
       <View style={styles.results}>
         {results.map((stop) => (
-          <Pressable key={stop.id} onPress={() => choose(stop)} style={({ pressed }) => [styles.result, pressed && styles.pressed]}>
+          <PressionDouce key={stop.id} onPress={() => choose(stop)} style={({ pressed }) => [styles.result, pressed && styles.pressed]}>
             <View style={styles.resultIcon}><IconMapPin color={couleurs.texte} size={19} /></View>
             <View style={styles.resultCopy}>
               <Text style={styles.resultName}>{stop.name}</Text>
               <Text numberOfLines={2} style={styles.resultDetail}>{stop.meetingInstructions ?? "Point de rencontre"}</Text>
             </View>
-          </Pressable>
+          </PressionDouce>
         ))}
       </View>
     </View>
@@ -82,14 +83,14 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
 
 function PlaceField({ label, value, active, onPress, onClear }: { label: string; value: string; active: boolean; onPress: () => void; onClear: () => void }) {
   return (
-    <Pressable onPress={onPress} style={[styles.placeField, active && styles.placeFieldActive]}>
+    <PressionDouce onPress={onPress} style={[styles.placeField, active && styles.placeFieldActive]}>
       <View style={[styles.dot, label === "Destination" && styles.dotEnd]} />
       <View style={styles.placeCopy}>
         <Text style={styles.placeLabel}>{label}</Text>
         <Text numberOfLines={2} style={[styles.placeValue, !value && styles.placePlaceholder]}>{value || "À définir"}</Text>
       </View>
-      {value ? <Pressable accessibilityLabel={`Effacer ${label.toLowerCase()}`} hitSlop={10} onPress={onClear}><IconX color={couleurs.texteSecondaire} size={18} /></Pressable> : null}
-    </Pressable>
+      {value ? <PressionDouce accessibilityLabel={`Effacer ${label.toLowerCase()}`} hitSlop={10} onPress={onClear}><IconX color={couleurs.texteSecondaire} size={18} /></PressionDouce> : null}
+    </PressionDouce>
   );
 }
 

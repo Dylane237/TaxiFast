@@ -1,5 +1,6 @@
-import { StyleSheet, Text } from "react-native";
-import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { StyleSheet } from "react-native";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import { couleurs, espacements, mouvements, polices, rayons, taillesTexte } from "@/theme";
 
 type MessageEtatProps = {
   children: string;
@@ -7,8 +8,12 @@ type MessageEtatProps = {
 };
 
 export function MessageEtat({ children, type = "vide" }: MessageEtatProps) {
+  const mouvementReduit = useReducedMotion();
+  // Seuls les retours d'action (erreur, réussite) arrivent en glissant ; un message neutre s'affiche tel quel.
+  const anime = !mouvementReduit && type !== "vide";
   return (
-    <Text
+    <Animated.Text
+      entering={anime ? FadeInDown.duration(mouvements.standard) : undefined}
       accessibilityLiveRegion="polite"
       style={[
         styles.base,
@@ -17,7 +22,7 @@ export function MessageEtat({ children, type = "vide" }: MessageEtatProps) {
       ]}
     >
       {children}
-    </Text>
+    </Animated.Text>
   );
 }
 

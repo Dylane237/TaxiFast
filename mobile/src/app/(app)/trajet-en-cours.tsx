@@ -1,10 +1,10 @@
 import { IconArrowRight, IconMapPin, IconRoute } from "@tabler/icons-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip } from "@/api";
-import { Bouton, Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Bouton, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
@@ -22,7 +22,7 @@ function ActiveTripCard({ trip }: { trip: Trip }) {
   const first = trip.tripStops[0]?.stop.name ?? "Départ";
   const last = trip.tripStops.at(-1)?.stop.name ?? "Arrivée";
   return (
-    <Pressable
+    <PressionDouce
       accessibilityRole="button"
       accessibilityLabel={`Ouvrir le trajet de ${first} à ${last}`}
       onPress={() => router.push(`./trajet-en-cours/${trip.id}`)}
@@ -42,7 +42,7 @@ function ActiveTripCard({ trip }: { trip: Trip }) {
         </View>
         <Text style={styles.details}>{trip.tripStops.length} arrêts · {trip.capacity} place{trip.capacity > 1 ? "s" : ""}</Text>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -69,7 +69,7 @@ export default function ActiveTripsScreen() {
       <FlatList
         data={trips}
         keyExtractor={(trip) => trip.id}
-        renderItem={({ item }) => <ActiveTripCard trip={item} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><ActiveTripCard trip={item} /></ApparitionListe>}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={<EntetePage title="Trajet en cours" description="Qui monte, qui descend, et combien de places il reste." />}
         ListHeaderComponentStyle={styles.listHeader}

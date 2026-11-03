@@ -2,22 +2,16 @@ import { IconMapPin, IconStar, IconUser } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import {
-  Bouton,
-  Carte,
-  Champ,
-  EntetePage,
-  EtatContenu,
-  MessageEtat,
-} from "@/components";
+import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 export default function HistoryDetailScreen() {
   const params = useLocalSearchParams<{ bookingId?: string | string[] }>();
@@ -44,6 +38,7 @@ export default function HistoryDetailScreen() {
         comment: comment.trim() || undefined,
       }),
     onSuccess: async () => {
+      vibrerSucces();
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["booking-details", bookingId],
@@ -137,7 +132,7 @@ export default function HistoryDetailScreen() {
             </Text>
             <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((value) => (
-                <Pressable
+                <PressionDouce
                   key={value}
                   accessibilityLabel={`${value} étoile${value > 1 ? "s" : ""}`}
                   onPress={() => setScore(value)}
@@ -150,7 +145,7 @@ export default function HistoryDetailScreen() {
                     fill={value <= score ? couleurs.primaire : "transparent"}
                     size={31}
                   />
-                </Pressable>
+                </PressionDouce>
               ))}
             </View>
             <Champ

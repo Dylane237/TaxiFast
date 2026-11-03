@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { IconAlertCircle, IconInbox } from "@tabler/icons-react-native";
-import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import { couleurs, espacements, mouvements, polices, rayons, taillesTexte } from "@/theme";
 
 type EtatContenuProps = {
   type: "chargement" | "vide" | "erreur";
@@ -16,8 +17,13 @@ export function EtatContenu({
   description,
   action,
 }: EtatContenuProps) {
+  const mouvementReduit = useReducedMotion();
   return (
-    <View style={[styles.root, type === "chargement" && styles.loadingRoot]} accessibilityLiveRegion="polite">
+    <Animated.View
+      entering={mouvementReduit ? undefined : FadeIn.duration(mouvements.standard)}
+      style={[styles.root, type === "chargement" && styles.loadingRoot]}
+      accessibilityLiveRegion="polite"
+    >
       <View style={[styles.icon, type === "chargement" && styles.loadingIcon, type === "erreur" && styles.iconError]}>
         {type === "chargement" ? (
           <ActivityIndicator color={couleurs.texte} />
@@ -32,7 +38,7 @@ export function EtatContenu({
         <Text style={[styles.description, type === "chargement" && styles.loadingText]}>{description}</Text>
       </View>
       {action ? <View style={styles.action}>{action}</View> : null}
-    </View>
+    </Animated.View>
   );
 }
 

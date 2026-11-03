@@ -1,10 +1,10 @@
 import { IconArrowRight, IconMapPin, IconRoute } from "@tabler/icons-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import { Bouton, Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Bouton, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { selectDriverRequests, type DriverRequest } from "@/features/driver-requests/driver-requests";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
@@ -24,7 +24,7 @@ function formatDeparture(value: string): string {
 
 function RequestCard({ item }: { item: DriverRequest }) {
   return (
-    <Pressable
+    <PressionDouce
       accessibilityRole="button"
       accessibilityLabel={`Demande de ${item.pickupName} à ${item.dropoffName}`}
       onPress={() => router.push(`./demandes/${item.booking.id}`)}
@@ -44,7 +44,7 @@ function RequestCard({ item }: { item: DriverRequest }) {
         </View>
         <Text style={styles.price}>{formatPrice(item.booking.proposedPrice)}</Text>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -77,7 +77,7 @@ export default function DriverRequestsScreen() {
       <FlatList
         data={requests}
         keyExtractor={(item) => item.booking.id}
-        renderItem={({ item }) => <RequestCard item={item} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><RequestCard item={item} /></ApparitionListe>}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={<EntetePage title="Demandes reçues" description="Des clients sur votre chemin, avec le prix qu’ils proposent." />}
         ListHeaderComponentStyle={styles.listHeader}

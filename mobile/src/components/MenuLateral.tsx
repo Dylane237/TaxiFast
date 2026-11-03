@@ -29,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { PressionDouce } from "./PressionDouce";
 
 type MenuItem = {
   label: string;
@@ -192,7 +193,7 @@ export function MenuLateral() {
               {items.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Pressable
+                  <PressionDouce
                     accessibilityRole="button"
                     key={item.label}
                     onPress={() => navigate(item.href)}
@@ -218,7 +219,7 @@ export function MenuLateral() {
                       color={couleurs.texteSecondaire}
                       size={18}
                     />
-                  </Pressable>
+                  </PressionDouce>
                 );
               })}
             </ScrollView>

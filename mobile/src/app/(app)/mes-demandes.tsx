@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -16,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type TripRequest } from "@/api";
-import { Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
@@ -36,7 +35,7 @@ function RequestCard({
   stops: Map<string, string>;
 }) {
   return (
-    <Pressable
+    <PressionDouce
       onPress={() =>
         router.push({
           pathname: "/demande/[requestId]",
@@ -68,7 +67,7 @@ function RequestCard({
           <IconArrowRight color={couleurs.texteSecondaire} size={19} />
         </View>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -119,8 +118,10 @@ export default function ClientRequestsScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <RequestCard request={item} stops={stopNames} />
+        renderItem={({ item, index }) => (
+          <ApparitionListe index={index}>
+            <RequestCard request={item} stops={stopNames} />
+          </ApparitionListe>
         )}
         ItemSeparatorComponent={() => (
           <View style={{ height: espacements.md }} />
@@ -138,13 +139,13 @@ export default function ClientRequestsScreen() {
             title="Aucune demande en cours"
             description="Dites où vous allez et les chauffeurs vous feront des offres."
             action={
-              <Pressable
+              <PressionDouce
                 style={styles.emptyAction}
                 onPress={() => router.push("/recherche")}
               >
                 <IconSearch color={couleurs.texte} size={18} />
                 <Text style={styles.emptyActionText}>Trouver un taxi</Text>
-              </Pressable>
+              </PressionDouce>
             }
           />
         }

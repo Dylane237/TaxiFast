@@ -20,6 +20,7 @@ import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 export default function CompatibleTripScreen() {
   const params = useLocalSearchParams<{
@@ -50,6 +51,7 @@ export default function CompatibleTripScreen() {
         requestId: requestId!,
       }),
     onSuccess: async () => {
+      vibrerSucces();
       await queryClient.invalidateQueries({ queryKey: ["client-bookings"] });
     },
   });

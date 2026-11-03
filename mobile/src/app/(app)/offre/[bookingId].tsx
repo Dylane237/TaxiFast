@@ -24,6 +24,7 @@ import { formatDateTime, formatPrice } from "@/features/format";
 import { parseCounterPrice } from "@/features/driver-requests/driver-requests";
 import { parseRouteId } from "@/features/route-params";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 type Action = "accept" | "counter" | "refuse";
 
@@ -46,6 +47,7 @@ export default function OfferDetailScreen() {
           ? api.refuseBooking(bookingId!)
           : api.counterOfferBooking(bookingId!, price!),
     onSuccess: async (booking, variables) => {
+      if (variables.kind === "accept") vibrerSucces();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["client-bookings"] }),
         queryClient.invalidateQueries({
