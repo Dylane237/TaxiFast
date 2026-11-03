@@ -13,7 +13,7 @@
     "android": {
       "package": "com.covoituragetaxi.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#FFD43B",
+        "backgroundColor": "#F7F7F4",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -30,10 +30,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icon.png",
-          "imageWidth": 200,
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
           "resizeMode": "contain",
-          "backgroundColor": "#151712"
+          "backgroundColor": "#F7F7F4"
         }
       ],
       [
