@@ -1,14 +1,22 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { IntroTaxi } from "@/features/intro/IntroTaxi";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs } from "@/theme";
 
+// L'écran de lancement reste affiché jusqu'à ce que l'intro, qui reprend la même image, soit posée.
+void SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const [introVisible, setIntroVisible] = useState(true);
+  const terminerIntro = useCallback(() => setIntroVisible(false), []);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -39,6 +47,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(app)" options={{ headerShown: false }} />
           </Stack>
+          {introVisible && <IntroTaxi pret={hydrated} onTerminee={terminerIntro} />}
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
