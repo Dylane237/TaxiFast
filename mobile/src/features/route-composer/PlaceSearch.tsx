@@ -48,7 +48,7 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
         <TextInput
           onChangeText={setQuery}
           onFocus={() => setQuery("")}
-          placeholder={active === "from" ? "Rechercher le point de départ" : "Rechercher la destination"}
+          placeholder={active === "from" ? "Chercher le départ : quartier, carrefour…" : "Chercher l’arrivée : quartier, carrefour…"}
           placeholderTextColor={couleurs.texteSecondaire}
           style={styles.searchInput}
           value={query}
@@ -60,7 +60,7 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
           <View style={styles.resultIcon}><IconCurrentLocation color={couleurs.texte} size={20} /></View>
           <View style={styles.resultCopy}>
             <Text style={styles.resultName}>{locating ? "Localisation en cours…" : "Utiliser ma position"}</Text>
-            <Text style={styles.resultDetail}>L’arrêt connu le plus proche sera sélectionné</Text>
+            <Text style={styles.resultDetail}>On prend l’arrêt le plus proche de vous</Text>
           </View>
         </Pressable>
       ) : null}

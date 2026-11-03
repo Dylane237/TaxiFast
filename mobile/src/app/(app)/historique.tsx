@@ -103,8 +103,8 @@ export default function HistoryScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Chargement de l’historique"
-          description="Nous récupérons vos anciennes courses."
+          title="Chargement de vos courses"
+          description="On rassemble vos anciennes courses."
         />
       </State>
     );
@@ -113,7 +113,7 @@ export default function HistoryScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Historique indisponible"
+          title="Impossible d’afficher l’historique"
           description={messageErreur(error)}
         />
       </State>
@@ -130,15 +130,15 @@ export default function HistoryScreen() {
         ListHeaderComponent={
           <EntetePage
             title="Historique"
-            description="Courses terminées, annulées ou expirées."
+            description="Toutes vos courses passées, et comment elles se sont terminées."
           />
         }
         ListHeaderComponentStyle={styles.header}
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Historique vide"
-            description="Vos courses passées apparaîtront ici."
+            title="Rien pour l’instant"
+            description="Après votre première course, vous la retrouverez ici."
           />
         }
         contentContainerStyle={[styles.list, !data.length && styles.grow]}
@@ -157,7 +157,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Historique" description="Vos courses passées." />
+        <EntetePage title="Historique" description="Vos anciennes courses." />
         {children}
       </View>
     </SafeAreaView>

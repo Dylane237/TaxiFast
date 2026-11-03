@@ -53,13 +53,13 @@ export default function ActiveTripsScreen() {
     .sort((a, b) => a.departureAt.localeCompare(b.departureAt));
 
   if (tripsQuery.isPending) {
-    return <StatePage><EtatContenu type="chargement" title="Chargement des trajets" description="Nous préparons vos feuilles de route actives." /></StatePage>;
+    return <StatePage><EtatContenu type="chargement" title="Chargement de vos trajets" description="On prépare votre feuille de route." /></StatePage>;
   }
 
   if (tripsQuery.isError) {
     return (
       <StatePage>
-        <EtatContenu type="erreur" title="Trajets indisponibles" description={messageErreur(tripsQuery.error)} action={<Bouton onPress={() => void tripsQuery.refetch()}>Réessayer</Bouton>} />
+        <EtatContenu type="erreur" title="Impossible de charger vos trajets" description={messageErreur(tripsQuery.error)} action={<Bouton onPress={() => void tripsQuery.refetch()}>Réessayer</Bouton>} />
       </StatePage>
     );
   }
@@ -71,10 +71,10 @@ export default function ActiveTripsScreen() {
         keyExtractor={(trip) => trip.id}
         renderItem={({ item }) => <ActiveTripCard trip={item} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListHeaderComponent={<EntetePage title="Trajet en cours" description="Suivez les montées, les descentes et les places sur chaque tronçon." />}
+        ListHeaderComponent={<EntetePage title="Trajet en cours" description="Qui monte, qui descend, et combien de places il reste." />}
         ListHeaderComponentStyle={styles.listHeader}
         ListEmptyComponent={
-          <View style={styles.empty}><EtatContenu type="vide" title="Aucun trajet actif" description="Publiez un départ pour préparer votre feuille de route." /></View>
+          <View style={styles.empty}><EtatContenu type="vide" title="Aucun trajet en cours" description="Publiez un trajet et vos clients apparaîtront ici." /></View>
         }
         contentContainerStyle={[styles.list, !trips.length && styles.emptyList]}
         refreshControl={<RefreshControl refreshing={tripsQuery.isRefetching} onRefresh={() => void tripsQuery.refetch()} colors={[couleurs.primaire]} tintColor={couleurs.primaire} />}
@@ -87,7 +87,7 @@ function StatePage({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.stateContent}>
-        <EntetePage title="Trajet en cours" description="Suivez vos passagers arrêt par arrêt." />
+        <EntetePage title="Trajet en cours" description="Vos trajets du moment." />
         {children}
       </View>
     </SafeAreaView>

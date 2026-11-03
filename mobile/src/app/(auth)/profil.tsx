@@ -30,11 +30,11 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
 
   const enregistrer = () => {
     if (nom.trim().length < 2) {
-      setErreurSaisie("Le nom doit contenir au moins 2 caractères.");
+      setErreurSaisie("Écrivez au moins 2 lettres pour votre nom.");
       return;
     }
     if (chauffeur && (!plaque.trim() || !placesValides(places))) {
-      setErreurSaisie("Indiquez une plaque et un nombre de places entre 1 et 8.");
+      setErreurSaisie("Il nous faut la plaque et un nombre de places entre 1 et 8.");
       return;
     }
     setErreurSaisie(null);
@@ -52,23 +52,23 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
     <AuthPage
       icon={<IconId color={couleurs.primaire} size={25} />}
       title="Faisons connaissance."
-      description={chauffeur ? "Ajoutez vos informations et celles de votre véhicule." : "Indiquez le nom affiché aux chauffeurs."}
+      description={chauffeur ? "Votre nom et votre taxi : c’est ce que les clients verront avant de monter." : "Le nom que le chauffeur verra quand vous réservez."}
     >
       <View style={styles.formulaire}>
         <Text style={styles.section}>VOS INFORMATIONS</Text>
-        <Champ etiquette="Nom affiché" value={nom} onChangeText={setNom} placeholder="Votre nom" aide="Le nom que verront les autres utilisateurs." autoCapitalize="words" />
+        <Champ etiquette="Nom affiché" value={nom} onChangeText={setNom} placeholder="Ex. Christelle" aide="Votre prénom suffit, ou le nom par lequel on vous appelle." autoCapitalize="words" />
         {chauffeur ? (
           <>
             <Text style={styles.section}>VOTRE VÉHICULE</Text>
             <Champ etiquette="Plaque d’immatriculation" value={plaque} onChangeText={setPlaque} placeholder="LT 123 AB" autoCapitalize="characters" />
-            <Champ etiquette="Modèle du véhicule" value={modele} onChangeText={setModele} placeholder="Toyota Yaris" />
-            <Champ etiquette="Nombre de places disponibles" value={places} onChangeText={setPlaces} placeholder="4" aide="La capacité reste vérifiée séparément sur chaque tronçon." keyboardType="number-pad" />
+            <Champ etiquette="Modèle du véhicule" value={modele} onChangeText={setModele} placeholder="Toyota Corolla" />
+            <Champ etiquette="Nombre de places disponibles" value={places} onChangeText={setPlaces} placeholder="4" aide="Sans compter votre siège." keyboardType="number-pad" />
           </>
         ) : null}
         {erreurSaisie ? <MessageEtat type="erreur">{erreurSaisie}</MessageEtat> : null}
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
-        {mutation.isSuccess ? <MessageEtat type="succes">Profil enregistré.</MessageEtat> : null}
-        <Bouton chargement={mutation.isPending} onPress={enregistrer}>Enregistrer le profil</Bouton>
+        {mutation.isSuccess ? <MessageEtat type="succes">C’est enregistré.</MessageEtat> : null}
+        <Bouton chargement={mutation.isPending} onPress={enregistrer}>Enregistrer</Bouton>
       </View>
     </AuthPage>
   );
@@ -95,7 +95,7 @@ export default function Profil() {
   if (!profileQuery.data) {
     return (
       <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Aucune session active.">
-        <MessageEtat>Reconnectez-vous pour compléter votre profil.</MessageEtat>
+        <MessageEtat>Votre session s’est fermée. Reconnectez-vous pour finir votre profil.</MessageEtat>
         <Bouton onPress={() => router.replace("/connexion")}>Se connecter</Bouton>
       </AuthPage>
     );

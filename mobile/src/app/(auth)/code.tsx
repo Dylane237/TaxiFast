@@ -49,7 +49,7 @@ export default function CodeOtp() {
       return;
     }
     if (!codeOtpValide(code, otpLength)) {
-      setErreurSaisie(`Le code doit contenir ${otpLength} chiffres.`);
+      setErreurSaisie(`Le code compte ${otpLength} chiffres, il en manque.`);
       return;
     }
     setErreurSaisie(null);
@@ -62,18 +62,18 @@ export default function CodeOtp() {
   return (
     <AuthPage
       icon={<IconKey color={couleurs.primaire} size={25} strokeWidth={2} />}
-      title="Vérifiez votre numéro."
-      description={`Code envoyé au ${phone || "numéro indiqué"}.`}
+      title="Entrez le code reçu par SMS."
+      description={`Envoyé au ${phone || "numéro que vous avez donné"}. Il arrive en général en moins d’une minute.`}
     >
       <View style={styles.formulaire}>
         <Champ
-          etiquette="Code OTP"
+          etiquette="Code reçu"
           value={code}
           onChangeText={(value) =>
             setCode(value.replace(/\D/g, "").slice(0, otpLength))
           }
           placeholder={otpLength === 4 ? "1234" : "123456"}
-          aide={otpLength === 4 ? "Mode fictif : saisissez 1234." : "Le code expire après quelques minutes."}
+          aide={otpLength === 4 ? "Mode démo : tapez 1234." : "Le code reste valable quelques minutes."}
           keyboardType="number-pad"
           autoComplete="one-time-code"
           erreur={erreurSaisie ?? undefined}
@@ -86,7 +86,7 @@ export default function CodeOtp() {
           </MessageEtat>
         ) : null}
         {mutation.isSuccess ? (
-          <MessageEtat type="succes">Numéro vérifié.</MessageEtat>
+          <MessageEtat type="succes">C’est bon, votre numéro est vérifié.</MessageEtat>
         ) : null}
         <Bouton chargement={mutation.isPending} onPress={verifier}>
           Vérifier le code

@@ -60,14 +60,14 @@ function OfferCard({
           </Text>
           <View style={styles.meta}>
             <IconClock color={couleurs.texteSecondaire} size={17} />
-            <Text style={styles.metaText}>Expire bientôt</Text>
+            <Text style={styles.metaText}>Répondez vite</Text>
             <IconChevronRight color={couleurs.texteSecondaire} size={19} />
           </View>
         </Carte>
       </Pressable>
     );
   }
-  const model = item.trip.driver.vehicle?.model ?? "Véhicule renseigné";
+  const model = item.trip.driver.vehicle?.model ?? "Véhicule non précisé";
   return (
     <Pressable
       onPress={() =>
@@ -99,7 +99,7 @@ function OfferCard({
               size={16}
             />
             <Text style={styles.ratingText}>
-              {item.trip.driver.rating?.toFixed(1) ?? "—"}
+              {item.trip.driver.rating?.toFixed(1) ?? "Nouveau"}
             </Text>
           </View>
         </View>
@@ -156,8 +156,8 @@ export default function OffersScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Demande invalide"
-          description="Impossible d’identifier cette recherche."
+          title="Lien de demande incorrect"
+          description="Rouvrez-la depuis Mes demandes."
         />
       </State>
     );
@@ -166,8 +166,8 @@ export default function OffersScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Comparaison des trajets"
-          description="Nous classons les offres et les chauffeurs compatibles."
+          title="On compare les taxis"
+          description="On rassemble les offres des chauffeurs."
         />
       </State>
     );
@@ -176,7 +176,7 @@ export default function OffersScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Offres indisponibles"
+          title="Impossible de charger les offres"
           description={messageErreur(error)}
         />
       </State>
@@ -194,16 +194,16 @@ export default function OffersScreen() {
         )}
         ListHeaderComponent={
           <EntetePage
-            title="Offres et trajets"
-            description="Comparez l’heure, le véhicule et la note avant de choisir."
+            title="Les taxis pour vous"
+            description="Comparez l’heure, le véhicule et la note du chauffeur, puis choisissez."
           />
         }
         ListHeaderComponentStyle={styles.header}
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Aucune offre pour le moment"
-            description="Votre demande reste active. Revenez dans quelques minutes."
+            title="Pas encore d’offre"
+            description="Revenez dans quelques minutes, votre demande reste visible."
           />
         }
         contentContainerStyle={[styles.list, !items.length && styles.grow]}
@@ -224,7 +224,7 @@ function State({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="Offres"
-          description="Chauffeurs et trajets compatibles."
+          description="Les taxis qui passent par votre chemin."
         />
         {children}
       </View>

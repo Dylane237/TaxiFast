@@ -51,7 +51,7 @@ export function AuthPage({
             </View>
             <View style={styles.entete}>
               <View style={styles.icone}>{icon}</View>
-              <Text style={styles.surtitre}>MOBILITÉ PARTAGÉE</Text>
+              <Text style={styles.surtitre}>TAXI PARTAGÉ</Text>
               <Text style={styles.titre}>{title}</Text>
               <Text style={styles.description}>{description}</Text>
             </View>

@@ -28,7 +28,7 @@ function TransactionRow({ item }: { item: WalletTransaction }) {
       <View style={styles.transactionCopy}>
         <Text style={styles.transactionTitle}>
           {commission
-            ? "Commission plateforme"
+            ? "Commission Taxi Fast"
             : item.type === "PAYOUT"
               ? "Gain de course"
               : "Rechargement"}
@@ -56,7 +56,7 @@ export default function WalletScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement du portefeuille"
-          description="Calcul des gains et commissions."
+          description="On fait les comptes."
         />
       </State>
     );
@@ -65,7 +65,7 @@ export default function WalletScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Portefeuille indisponible"
+          title="Impossible d’ouvrir le portefeuille"
           description={messageErreur(wallet.error)}
         />
       </State>
@@ -83,7 +83,7 @@ export default function WalletScreen() {
           <View style={styles.header}>
             <EntetePage
               title="Portefeuille"
-              description="Vos gains nets et les commissions prélevées."
+              description="Ce que vous avez gagné, commission déduite."
             />
             <View style={styles.balance}>
               <View style={styles.balanceIcon}>
@@ -115,8 +115,8 @@ export default function WalletScreen() {
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Aucun mouvement"
-            description="Les gains de vos courses apparaîtront ici."
+            title="Pas encore de gains"
+            description="Chaque course terminée s’ajoute ici."
           />
         }
         contentContainerStyle={[styles.list, !data.length && styles.grow]}
@@ -135,7 +135,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Portefeuille" description="Gains et commissions." />
+        <EntetePage title="Portefeuille" description="Vos gains." />
         {children}
       </View>
     </SafeAreaView>

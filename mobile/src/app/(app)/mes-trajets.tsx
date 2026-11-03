@@ -11,7 +11,7 @@ import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
 const statuts: Record<TripStatus, string> = {
   OPEN: "Ouvert",
   FULL: "Complet",
-  CLOSED: "Clos",
+  CLOSED: "Fermé",
   COMPLETED: "Terminé",
   CANCELLED: "Annulé",
 };
@@ -76,7 +76,7 @@ export default function MesTrajets() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Mes trajets" description="Retrouvez les trajets que vous avez publiés." />
+          <EntetePage title="Mes trajets" description="Les trajets que vous avez publiés." />
           <MessageEtat>Chargement de vos trajets…</MessageEtat>
         </View>
       </SafeAreaView>
@@ -86,7 +86,7 @@ export default function MesTrajets() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Mes trajets" description="Retrouvez les trajets que vous avez publiés." />
+          <EntetePage title="Mes trajets" description="Les trajets que vous avez publiés." />
           <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat>
           <Bouton onPress={() => void refresh()}>Réessayer</Bouton>
         </View>
@@ -101,9 +101,9 @@ export default function MesTrajets() {
         keyExtractor={(trip) => trip.id}
         renderItem={({ item }) => <CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Itinéraire"} />}
         contentContainerStyle={[styles.liste, !trips.length && styles.listeVide]}
-        ListHeaderComponent={<EntetePage title="Mes trajets" description="Statut et itinéraire de chaque publication." />}
+        ListHeaderComponent={<EntetePage title="Mes trajets" description="Où en est chacun de vos trajets." />}
         ListHeaderComponentStyle={styles.enteteListe}
-        ListEmptyComponent={<View style={styles.vide}><IconRoute color={couleurs.texteSecondaire} size={40} /><MessageEtat>Vous n’avez encore publié aucun trajet.</MessageEtat></View>}
+        ListEmptyComponent={<View style={styles.vide}><IconRoute color={couleurs.texteSecondaire} size={40} /><MessageEtat>Aucun trajet publié pour l’instant. Publiez-en un depuis l’accueil.</MessageEtat></View>}
         ItemSeparatorComponent={() => <View style={styles.separateur} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={couleurs.primaire} colors={[couleurs.primaire]} />}
       />

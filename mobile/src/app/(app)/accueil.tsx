@@ -19,7 +19,7 @@ function ClientHome({ firstName }: { firstName?: string }) {
       <CityMapBackdrop />
       <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
         <Apparition style={styles.mapTopbar}>
-          <View style={styles.clientBrand}><View style={styles.brandMarkSmall}><Text style={styles.brandMarkText}>TF</Text></View><View><Text style={styles.clientBrandName}>Taxi Fast</Text><Text style={styles.online}>Douala · Service disponible</Text></View></View>
+          <View style={styles.clientBrand}><View style={styles.brandMarkSmall}><Text style={styles.brandMarkText}>TF</Text></View><View><Text style={styles.clientBrandName}>Taxi Fast</Text><Text style={styles.online}>Douala · En service</Text></View></View>
           <AvatarUtilisateur compact />
         </Apparition>
         <View style={styles.positionBadge}><IconCurrentLocation color={couleurs.texte} size={17} /><View><Text style={styles.positionLabel}>Votre position</Text><Text style={styles.positionValue}>Douala, Cameroun</Text></View></View>
@@ -27,9 +27,9 @@ function ClientHome({ firstName }: { firstName?: string }) {
           <View style={styles.sheetHandle} />
           <View style={styles.clientHeading}><View><Text style={styles.clientEyebrow}>BONJOUR{firstName ? `, ${firstName.toUpperCase()}` : ""}</Text><Text style={styles.clientTitle}>Où allez-vous ?</Text></View><View style={styles.readyPill}><View style={styles.readyDot} /><Text style={styles.readyText}>Prêt</Text></View></View>
           <Pressable onPress={() => router.push("/recherche")} style={({ pressed }) => [styles.destinationButton, pressed && styles.pressed]}>
-            <View style={styles.searchIcon}><IconSearch color={couleurs.texte} size={22} /></View><View style={styles.destinationCopy}><Text style={styles.destinationTitle}>Saisir une destination</Text><Text style={styles.destinationHint}>Départ, arrivée et point de rencontre</Text></View><View style={styles.destinationArrow}><IconArrowRight color={couleurs.surface} size={19} /></View>
+            <View style={styles.searchIcon}><IconSearch color={couleurs.texte} size={22} /></View><View style={styles.destinationCopy}><Text style={styles.destinationTitle}>Choisir ma destination</Text><Text style={styles.destinationHint}>On vous trouve un taxi qui passe par là</Text></View><View style={styles.destinationArrow}><IconArrowRight color={couleurs.surface} size={19} /></View>
           </Pressable>
-          <Text style={styles.recentLabel}>DESTINATIONS RÉCENTES</Text>
+          <Text style={styles.recentLabel}>VOS DERNIÈRES DESTINATIONS</Text>
           <View style={styles.recentList}>
             <QuickPlace icon={<IconMapPin color={couleurs.texte} size={19} />} name="Akwa Palace" detail="Akwa, boulevard de la Liberté" onPress={() => router.push("/recherche")} />
             <QuickPlace icon={<IconClock color={couleurs.texte} size={19} />} name="Bonabéri Centre" detail="Environ 24 min selon le trafic" onPress={() => router.push("/recherche")} last />
@@ -48,10 +48,10 @@ function QuickPlace({ icon, name, detail, onPress, last = false }: { icon: React
 function DriverHome({ firstName }: { firstName?: string }) {
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
     <View style={styles.topbar}><View style={styles.brand}><View style={styles.brandMark}><Text style={styles.brandMarkText}>TF</Text></View><View><Text style={styles.brandName}>Taxi Fast</Text><Text style={styles.location}>Douala, Cameroun</Text></View></View><AvatarUtilisateur /></View>
-    <View style={styles.welcome}><Text style={styles.eyebrow}>ESPACE CHAUFFEUR</Text><Text style={styles.greeting}>Bonjour{firstName ? `, ${firstName}` : ""}</Text><Text style={styles.welcomeDescription}>Publiez votre prochain départ et retrouvez les passagers sur votre itinéraire.</Text></View>
-    <View style={styles.hero}><View style={styles.heroTop}><View style={styles.heroIcon}><IconRoute color={couleurs.texte} size={26} /></View><Text style={styles.heroKicker}>NOUVEAU DÉPART</Text></View><Text style={styles.heroTitle}>Vous prenez la route ?</Text><Text style={styles.heroDescription}>Indiquez votre itinéraire, vos arrêts et l’heure de départ.</Text><Bouton variante="sombre" icone={<IconArrowRight color={couleurs.surface} size={19} />} onPress={() => router.push("/je-pars")}>Publier un trajet</Bouton></View>
-    <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>À SUIVRE</Text><Text style={styles.sectionHint}>Le reste est dans votre menu</Text></View>
-    <Carte style={styles.focusCard}><View style={styles.focusIcon}><IconMapPin color={couleurs.texte} size={22} /></View><View style={styles.focusCopy}><Text style={styles.focusTitle}>Trajet en cours</Text><Text style={styles.focusDescription}>Passagers, arrêts et occupation</Text></View><Pressable onPress={() => router.push("/trajet-en-cours")} style={({ pressed }) => [styles.focusAction, pressed && styles.pressed]}><IconArrowRight color={couleurs.texte} size={19} /></Pressable></Carte>
+    <View style={styles.welcome}><Text style={styles.eyebrow}>ESPACE CHAUFFEUR</Text><Text style={styles.greeting}>Bonjour{firstName ? `, ${firstName}` : ""}</Text><Text style={styles.welcomeDescription}>Dites où vous allez, on vous envoie les clients qui sont sur votre route.</Text></View>
+    <View style={styles.hero}><View style={styles.heroTop}><View style={styles.heroIcon}><IconRoute color={couleurs.texte} size={26} /></View><Text style={styles.heroKicker}>NOUVEAU DÉPART</Text></View><Text style={styles.heroTitle}>Vous prenez la route ?</Text><Text style={styles.heroDescription}>Itinéraire, arrêts, heure et prix, et les clients vous voient.</Text><Bouton variante="sombre" icone={<IconArrowRight color={couleurs.surface} size={19} />} onPress={() => router.push("/je-pars")}>Publier un trajet</Bouton></View>
+    <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>À SUIVRE</Text><Text style={styles.sectionHint}>Le reste se trouve dans le menu</Text></View>
+    <Carte style={styles.focusCard}><View style={styles.focusIcon}><IconMapPin color={couleurs.texte} size={22} /></View><View style={styles.focusCopy}><Text style={styles.focusTitle}>Trajet en cours</Text><Text style={styles.focusDescription}>Vos clients et vos places libres</Text></View><Pressable onPress={() => router.push("/trajet-en-cours")} style={({ pressed }) => [styles.focusAction, pressed && styles.pressed]}><IconArrowRight color={couleurs.texte} size={19} /></Pressable></Carte>
   </ScrollView></SafeAreaView>;
 }
 

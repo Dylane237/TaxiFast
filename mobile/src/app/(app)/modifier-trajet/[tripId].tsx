@@ -23,7 +23,7 @@ export default function EditTripScreen() {
   const error = trips.error ?? corridorsQuery.error;
 
   if (pending || error || !trip || !corridorsQuery.data) {
-    return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><View style={styles.state}><EntetePage title="Modifier le trajet" description="Tous les détails de votre publication, au même endroit." />{pending ? <MessageEtat>Chargement du trajet…</MessageEtat> : null}{error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}{!pending && !error && !trip ? <MessageEtat type="erreur">Trajet introuvable.</MessageEtat> : null}</View></SafeAreaView>;
+    return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><View style={styles.state}><EntetePage title="Modifier le trajet" description="Changez l’itinéraire, les arrêts, l’heure ou les prix." />{pending ? <MessageEtat>Chargement du trajet…</MessageEtat> : null}{error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}{!pending && !error && !trip ? <MessageEtat type="erreur">Trajet introuvable.</MessageEtat> : null}</View></SafeAreaView>;
   }
 
   return <EditTripForm key={trip.id} trip={trip} corridors={corridorsQuery.data} />;
@@ -104,36 +104,36 @@ function EditTripForm({ trip, corridors }: { trip: Trip; corridors: Corridor[] }
       router.replace("/mes-trajets");
     },
   });
-  const confirmCancel = () => Alert.alert("Annuler ce trajet ?", "Les propositions et réservations actives seront annulées. Cette action est définitive.", [
-    { text: "Conserver", style: "cancel" },
+  const confirmCancel = () => Alert.alert("Annuler ce trajet ?", "Toutes les demandes et réservations de ce trajet seront annulées. Impossible de revenir en arrière.", [
+    { text: "Garder le trajet", style: "cancel" },
     { text: "Annuler le trajet", style: "destructive", onPress: () => cancel.mutate() },
   ]);
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <EntetePage title="Modifier le trajet" description="Tous les détails de votre publication, au même endroit." />
+        <EntetePage title="Modifier le trajet" description="Changez l’itinéraire, les arrêts, l’heure ou les prix." />
         {corridor ? <>
           <RouteMiniMap stops={selectedStops} compact />
           <Section title="Itinéraire">
             <View style={styles.wrap}>{corridors.map((item) => <PuceChoix key={item.id} label={item.name} selected={item.id === corridorId} onPress={() => chooseCorridor(item.id)} />)}</View>
             <View style={styles.wrap}>{(["ALLER", "RETOUR"] as const).map((value) => <PuceChoix key={value} label={value === "ALLER" ? "Aller" : "Retour"} selected={sens === value} onPress={() => chooseSens(value)} />)}</View>
           </Section>
-          <Section title="Arrêts desservis" detail="Touchez un point pour l’ajouter ou le retirer.">
+          <Section title="Arrêts" detail="Touchez un arrêt pour l’ajouter ou l’enlever.">
             <Carte style={styles.stopList}>{[...corridor.stops].sort((a, b) => sens === "ALLER" ? a.position - b.position : b.position - a.position).map((stop, index, list) => {
               const sequence = orderedStopIds.indexOf(stop.id);
               const endpoint = sequence === 0 || sequence === orderedStopIds.length - 1;
-              return <Pressable key={stop.id} accessibilityRole="checkbox" accessibilityState={{ checked: sequence >= 0 }} onPress={() => toggleStop(stop.id)} style={[styles.stopRow, index === list.length - 1 && styles.lastRow]}><View style={[styles.number, sequence >= 0 && styles.numberSelected]}>{sequence >= 0 ? <IconCheck color={couleurs.texte} size={15} /> : null}</View><View style={styles.flex}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopMeta}>{endpoint ? (sequence === 0 ? "Départ" : "Destination") : sequence >= 0 ? `Arrêt ${sequence}` : "Non desservi"}</Text></View></Pressable>;
+              return <Pressable key={stop.id} accessibilityRole="checkbox" accessibilityState={{ checked: sequence >= 0 }} onPress={() => toggleStop(stop.id)} style={[styles.stopRow, index === list.length - 1 && styles.lastRow]}><View style={[styles.number, sequence >= 0 && styles.numberSelected]}>{sequence >= 0 ? <IconCheck color={couleurs.texte} size={15} /> : null}</View><View style={styles.flex}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopMeta}>{endpoint ? (sequence === 0 ? "Départ" : "Arrivée") : sequence >= 0 ? `Arrêt ${sequence}` : "Pas d’arrêt"}</Text></View></Pressable>;
             })}</Carte>
           </Section>
-          <Section title="Disponibilité">
-            <View style={styles.modeGrid}>{(["IMMEDIATE", "SCHEDULED"] as const).map((value) => <Pressable key={value} onPress={() => setMode(value)} style={[styles.mode, mode === value && styles.modeActive]}><Text style={styles.modeTitle}>{value === "IMMEDIATE" ? "Je pars maintenant" : "Je prévois"}</Text><Text style={styles.modeDetail}>{value === "IMMEDIATE" ? "Visible immédiatement" : "Départ planifié"}</Text></Pressable>)}</View>
+          <Section title="Départ">
+            <View style={styles.modeGrid}>{(["IMMEDIATE", "SCHEDULED"] as const).map((value) => <Pressable key={value} onPress={() => setMode(value)} style={[styles.mode, mode === value && styles.modeActive]}><Text style={styles.modeTitle}>{value === "IMMEDIATE" ? "Je pars maintenant" : "Je pars plus tard"}</Text><Text style={styles.modeDetail}>{value === "IMMEDIATE" ? "Visible tout de suite" : "Heure choisie"}</Text></Pressable>)}</View>
             <Carte style={styles.form}><Champ etiquette="Départ (AAAA-MM-JJ HH:mm)" value={departure} onChangeText={setDeparture} autoCapitalize="none" /><Champ etiquette="Disponible jusqu’au (facultatif)" value={availableUntil} onChangeText={setAvailableUntil} autoCapitalize="none" /></Carte>
           </Section>
-          <Section title="Places et tarifs" detail="La capacité est vérifiée séparément sur chaque tronçon.">
-            <Carte style={styles.capacityCard}><Text style={styles.capacityLabel}>Places proposées</Text><View style={styles.counter}><Pressable disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={20} /></Pressable><Text style={styles.counterValue}>{capacity}</Text><Pressable disabled={capacity >= maxCapacity} onPress={() => setCapacity((value) => Math.min(maxCapacity, value + 1))} style={[styles.counterButton, capacity >= maxCapacity && styles.disabled]}><IconPlus color={couleurs.texte} size={20} /></Pressable></View></Carte>
-            {currentFare ? <Carte style={styles.fareCard}><View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.eyebrow}>TARIF {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={21} /></View><Champ etiquette="Prix en FCFA" value={String(currentFare.price)} keyboardType="number-pad" onChangeText={(value) => setFares((current) => current.map((fare, index) => index === fareIndex ? { ...fare, price: Number(value.replace(/\s/g, "")) || 0 } : fare))} /><View style={styles.fareNav}><Pressable disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={18} /><Text style={styles.navText}>Précédent</Text></Pressable><Pressable disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={18} /></Pressable></View></Carte> : <MessageEtat type="erreur">Sélectionnez au moins deux arrêts pour configurer les tarifs.</MessageEtat>}
+          <Section title="Places et prix" detail="Les places se comptent portion par portion : un client qui descend libère sa place pour la suite.">
+            <Carte style={styles.capacityCard}><Text style={styles.capacityLabel}>Places libres</Text><View style={styles.counter}><Pressable disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={20} /></Pressable><Text style={styles.counterValue}>{capacity}</Text><Pressable disabled={capacity >= maxCapacity} onPress={() => setCapacity((value) => Math.min(maxCapacity, value + 1))} style={[styles.counterButton, capacity >= maxCapacity && styles.disabled]}><IconPlus color={couleurs.texte} size={20} /></Pressable></View></Carte>
+            {currentFare ? <Carte style={styles.fareCard}><View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.eyebrow}>PRIX {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={21} /></View><Champ etiquette="Prix en FCFA" value={String(currentFare.price)} keyboardType="number-pad" onChangeText={(value) => setFares((current) => current.map((fare, index) => index === fareIndex ? { ...fare, price: Number(value.replace(/\s/g, "")) || 0 } : fare))} /><View style={styles.fareNav}><Pressable disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={18} /><Text style={styles.navText}>Précédent</Text></Pressable><Pressable disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={18} /></Pressable></View></Carte> : <MessageEtat type="erreur">Choisissez au moins deux arrêts pour fixer les prix.</MessageEtat>}
           </Section>
-          <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Les arrêts d’une réservation confirmée doivent rester présents et dans le même sens.</Text></View>
+          <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Un client confirmé monte et descend à des arrêts précis : ces arrêts doivent rester, dans le même sens.</Text></View>
           {update.isError ? <MessageEtat type="erreur">{messageErreur(update.error)}</MessageEtat> : null}
           <Bouton variante="sombre" chargement={update.isPending} onPress={() => update.mutate()}>Enregistrer les modifications</Bouton>
           {cancel.isError ? <MessageEtat type="erreur">{messageErreur(cancel.error)}</MessageEtat> : null}

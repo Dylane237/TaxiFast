@@ -32,7 +32,7 @@ function StopCard({ item, index, nextStopName }: { item: StopTimelineItem; index
       <View style={styles.stopContent}>
         <Text style={styles.stopName}>{item.tripStop.stop.name}</Text>
         {!item.boarding.length && !item.leaving.length ? (
-          <Text style={styles.noMovement}>Aucun mouvement de passager</Text>
+          <Text style={styles.noMovement}>Personne ne monte ni ne descend ici</Text>
         ) : (
           <View style={styles.movements}>
             <PassengerNames names={item.boarding} direction="in" />
@@ -42,7 +42,7 @@ function StopCard({ item, index, nextStopName }: { item: StopTimelineItem; index
         {nextStopName && item.availableAfter !== null ? (
           <View style={styles.leg}>
             <View style={styles.legHeader}>
-              <Text style={styles.legLabel}>TRONÇON SUIVANT</Text>
+              <Text style={styles.legLabel}>JUSQU’AU PROCHAIN ARRÊT</Text>
               <Text style={styles.available}>{item.availableAfter} place{item.availableAfter > 1 ? "s" : ""} libre{item.availableAfter > 1 ? "s" : ""}</Text>
             </View>
             <Text style={styles.legRoute}>{item.tripStop.stop.name} → {nextStopName}</Text>
@@ -76,17 +76,17 @@ export default function ActiveTripDetailScreen() {
 
   const confirmClose = () => {
     Alert.alert(
-      "Clore ce trajet ?",
-      "Le trajet et ses réservations confirmées passeront dans l’historique.",
+      "Terminer ce trajet ?",
+      "Le trajet et ses clients passeront dans l’historique.",
       [
-        { text: "Annuler", style: "cancel" },
-        { text: "Clore le trajet", style: "destructive", onPress: () => closeMutation.mutate() },
+        { text: "Pas encore", style: "cancel" },
+        { text: "Terminer le trajet", style: "destructive", onPress: () => closeMutation.mutate() },
       ],
     );
   };
 
   if (!tripId) {
-    return <StatePage><MessageEtat type="erreur">Identifiant de trajet invalide.</MessageEtat></StatePage>;
+    return <StatePage><MessageEtat type="erreur">Ce lien de trajet est incorrect.</MessageEtat></StatePage>;
   }
 
   if (manifestQuery.isPending) {
@@ -105,7 +105,7 @@ export default function ActiveTripDetailScreen() {
   if (closeMutation.isSuccess) {
     return (
       <StatePage>
-        <MessageEtat type="succes">Trajet clôturé. Les réservations sont maintenant dans l’historique.</MessageEtat>
+        <MessageEtat type="succes">Trajet terminé, bonne route ! Tout est dans l’historique.</MessageEtat>
         <Bouton onPress={() => router.replace("../trajet-en-cours")}>Retour aux trajets</Bouton>
       </StatePage>
     );
@@ -126,7 +126,7 @@ export default function ActiveTripDetailScreen() {
         )}
         ListHeaderComponent={
           <View style={styles.header}>
-            <EntetePage title="Trajet en cours" description="Feuille de route et occupation réelle par tronçon." />
+            <EntetePage title="Trajet en cours" description="Votre feuille de route, arrêt par arrêt." />
             <Carte style={styles.summary}>
               <View style={styles.summaryIcon}><IconMapPin color={couleurs.texte} size={22} /></View>
               <View style={styles.summaryText}>
@@ -155,7 +155,7 @@ export default function ActiveTripDetailScreen() {
               chargement={closeMutation.isPending}
               onPress={confirmClose}
             >
-              Clore le trajet
+              Terminer le trajet
             </Bouton>
           </View>
         }
@@ -169,7 +169,7 @@ function StatePage({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.stateContent}>
-        <EntetePage title="Trajet en cours" description="Suivez vos passagers arrêt par arrêt." />
+        <EntetePage title="Trajet en cours" description="Votre trajet du moment." />
         {children}
       </View>
     </SafeAreaView>

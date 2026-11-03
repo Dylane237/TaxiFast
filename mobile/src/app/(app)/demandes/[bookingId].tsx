@@ -47,7 +47,7 @@ export default function DriverRequestDetailScreen() {
   const counter = () => {
     const price = parseCounterPrice(counterPrice);
     if (!price) {
-      setInputError("Saisissez un prix entier supérieur à 0 FCFA.");
+      setInputError("Entrez un prix en FCFA, sans virgule.");
       return;
     }
     setInputError(null);
@@ -65,10 +65,10 @@ export default function DriverRequestDetailScreen() {
 
   if (completedAction) {
     const copy = completedAction === "accept"
-      ? "La réservation est confirmée et la capacité du trajet a été recalculée."
+      ? "C’est confirmé : le client monte avec vous, sa place est réservée."
       : completedAction === "counter"
-        ? "Votre nouveau prix a été envoyé au client."
-        : "La demande a été refusée.";
+        ? "Votre prix est parti. Le client doit maintenant dire oui."
+        : "Demande refusée. Le client cherchera un autre taxi.";
     return (
       <StatePage>
         <MessageEtat type="succes">{copy}</MessageEtat>
@@ -80,7 +80,7 @@ export default function DriverRequestDetailScreen() {
   if (!request) {
     return (
       <StatePage>
-        <MessageEtat>Cette demande n’est plus disponible ou ne correspond plus à un trajet ouvert.</MessageEtat>
+        <MessageEtat>Cette demande n’est plus valable, ou votre trajet est fermé.</MessageEtat>
         <Bouton onPress={() => router.replace("../demandes")}>Retour aux demandes</Bouton>
       </StatePage>
     );
@@ -91,7 +91,7 @@ export default function DriverRequestDetailScreen() {
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <EntetePage title="Détail de la demande" description="Vérifiez le tronçon et le prix avant de répondre." />
+        <EntetePage title="Demande d’un client" description="Regardez où il monte, où il descend et le prix proposé." />
         <Carte style={styles.summary}>
           <Text style={styles.label}>PRIX PROPOSÉ</Text>
           <Text style={styles.price}>{formatPrice(request.booking.proposedPrice)}</Text>
@@ -112,14 +112,14 @@ export default function DriverRequestDetailScreen() {
             disabled={actionMutation.isPending}
             onPress={() => actionMutation.mutate({ action: "accept" })}
           >
-            Accepter la demande
+            Prendre ce client
           </Bouton>
 
           <Carte style={styles.counterCard}>
-            <Text style={styles.counterTitle}>Contre-proposer une fois</Text>
-            <Text style={styles.counterDescription}>Le client devra accepter ce nouveau prix pour confirmer.</Text>
+            <Text style={styles.counterTitle}>Proposer un autre prix</Text>
+            <Text style={styles.counterDescription}>Une seule fois. Le client devra l’accepter pour que la course soit confirmée.</Text>
             <Champ
-              etiquette="Nouveau prix en FCFA"
+              etiquette="Votre prix (FCFA)"
               value={counterPrice}
               onChangeText={setCounterPrice}
               placeholder="Ex. 1 800"
@@ -132,7 +132,7 @@ export default function DriverRequestDetailScreen() {
               disabled={actionMutation.isPending}
               onPress={counter}
             >
-              Envoyer la contre-proposition
+              Envoyer mon prix
             </Bouton>
           </Carte>
 
@@ -143,12 +143,12 @@ export default function DriverRequestDetailScreen() {
             disabled={actionMutation.isPending}
             onPress={() => actionMutation.mutate({ action: "refuse" })}
           >
-            Refuser la demande
+            Refuser
           </Bouton>
         </View>
 
         {capacityError ? (
-          <MessageEtat type="erreur">Le trajet est devenu complet sur ce tronçon. Cette demande ne peut plus être acceptée.</MessageEtat>
+          <MessageEtat type="erreur">Votre taxi est plein sur cette portion. Vous ne pouvez plus prendre ce client.</MessageEtat>
         ) : actionMutation.isError ? (
           <MessageEtat type="erreur">{messageErreur(actionMutation.error)}</MessageEtat>
         ) : null}
@@ -161,7 +161,7 @@ function StatePage({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.stateContent}>
-        <EntetePage title="Détail de la demande" description="Répondez à la proposition du client." />
+        <EntetePage title="Demande d’un client" description="Prenez le client, proposez un autre prix ou refusez." />
         {children}
       </View>
     </SafeAreaView>

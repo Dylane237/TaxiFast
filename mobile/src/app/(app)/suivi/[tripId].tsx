@@ -78,7 +78,7 @@ export default function TripTrackingScreen() {
   useEffect(() => () => subscription.current?.remove(), []);
 
   if (Platform.OS !== "android") {
-    return <State><MessageEtat type="erreur">Le suivi cartographique est actuellement disponible sur Android.</MessageEtat></State>;
+    return <State><MessageEtat type="erreur">Pour l’instant, le suivi sur carte marche uniquement sur Android.</MessageEtat></State>;
   }
 
   const location = isDriver ? localLocation : remote.data;
@@ -99,8 +99,8 @@ export default function TripTrackingScreen() {
       <State>
         <Carte style={styles.empty}>
           <IconMapPin color={couleurs.texteSecondaire} size={28} />
-          <Text style={styles.emptyTitle}>Itinéraire indisponible</Text>
-          <Text style={styles.emptyCopy}>Les coordonnées des arrêts ne sont pas encore renseignées.</Text>
+          <Text style={styles.emptyTitle}>Carte pas encore prête</Text>
+          <Text style={styles.emptyCopy}>Les arrêts de cet axe n’ont pas encore leur position GPS.</Text>
         </Carte>
       </State>
     );
@@ -196,7 +196,7 @@ export default function TripTrackingScreen() {
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
               <IconClock color={couleurs.texteSecondaire} size={18} />
-              <Text style={styles.metricText}>Hors trafic réel</Text>
+              <Text style={styles.metricText}>Sans compter les embouteillages</Text>
             </View>
           </View>
 
@@ -204,8 +204,8 @@ export default function TripTrackingScreen() {
             <View style={styles.notice}>
               <Text style={styles.noticeText}>
                 {isDriver
-                  ? "Partagez votre position pour permettre aux passagers de vous suivre."
-                  : "La position apparaîtra dès que le chauffeur commencera le partage."}
+                  ? "Partagez votre position : vos clients voient où vous êtes et sortent au bon moment."
+                  : "Vous verrez le taxi dès que le chauffeur partagera sa position."}
               </Text>
             </View>
           ) : null}
@@ -220,7 +220,7 @@ export default function TripTrackingScreen() {
                 : <IconPlayerPlay color={couleurs.surface} size={20} />}
               chargement={publish.isPending}
               onPress={() => sharing ? stopSharing() : void startSharing().catch((error: unknown) => {
-                setLocationError(error instanceof Error ? error.message : "Impossible d’activer la localisation.");
+                setLocationError(error instanceof Error ? error.message : "La localisation ne s’active pas. Vérifiez les autorisations du téléphone.");
               })}
             >
               {sharing ? "Arrêter le partage" : "Partager ma position"}
@@ -228,7 +228,7 @@ export default function TripTrackingScreen() {
           ) : null}
 
           <View style={styles.sectionHeading}>
-            <Text style={styles.sectionTitle}>Points de rencontre</Text>
+            <Text style={styles.sectionTitle}>Arrêts</Text>
             <Text style={styles.stopCount}>{stops.length} arrêts</Text>
           </View>
           <View style={styles.timeline}>
@@ -254,7 +254,7 @@ export default function TripTrackingScreen() {
                   </View>
                   <View style={styles.stopCopy}>
                     <Text style={styles.stopName}>{stop.name}</Text>
-                    <Text style={styles.stopInstruction}>{stop.meetingInstructions ?? "Consigne à confirmer"}</Text>
+                    <Text style={styles.stopInstruction}>{stop.meetingInstructions ?? "Pas de consigne pour cet arrêt"}</Text>
                   </View>
                 </View>
               );
@@ -270,7 +270,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.statePage}>
       <View style={styles.stateContent}>
-        <EntetePage title="Suivi du trajet" description="Position du véhicule pendant la course." />
+        <EntetePage title="Suivi du taxi" description="Où est le taxi en ce moment." />
         {children}
       </View>
     </SafeAreaView>

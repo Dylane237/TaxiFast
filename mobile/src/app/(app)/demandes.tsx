@@ -33,7 +33,7 @@ function RequestCard({ item }: { item: DriverRequest }) {
         <View style={styles.cardHeader}>
           <View style={styles.icon}><IconRoute color={couleurs.texte} size={20} /></View>
           <View style={styles.headerText}>
-            <Text style={styles.kicker}>DEMANDE CLIENT</Text>
+            <Text style={styles.kicker}>CLIENT SUR VOTRE ROUTE</Text>
             <Text style={styles.departure}>Départ {formatDeparture(item.trip.departureAt)}</Text>
           </View>
           <IconArrowRight color={couleurs.texteSecondaire} size={21} />
@@ -61,13 +61,13 @@ export default function DriverRequestsScreen() {
   };
 
   if (pending) {
-    return <StatePage><EtatContenu type="chargement" title="Chargement des demandes" description="Nous recherchons les propositions compatibles avec vos trajets." /></StatePage>;
+    return <StatePage><EtatContenu type="chargement" title="Chargement des demandes" description="On regarde qui veut monter sur vos trajets." /></StatePage>;
   }
 
   if (error) {
     return (
       <StatePage>
-        <EtatContenu type="erreur" title="Demandes indisponibles" description={messageErreur(error)} action={<Bouton onPress={() => void refresh()}>Réessayer</Bouton>} />
+        <EtatContenu type="erreur" title="Impossible de charger les demandes" description={messageErreur(error)} action={<Bouton onPress={() => void refresh()}>Réessayer</Bouton>} />
       </StatePage>
     );
   }
@@ -79,10 +79,10 @@ export default function DriverRequestsScreen() {
         keyExtractor={(item) => item.booking.id}
         renderItem={({ item }) => <RequestCard item={item} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListHeaderComponent={<EntetePage title="Demandes compatibles" description="Propositions compatibles avec votre itinéraire et vos places disponibles." />}
+        ListHeaderComponent={<EntetePage title="Demandes reçues" description="Des clients sur votre chemin, avec le prix qu’ils proposent." />}
         ListHeaderComponentStyle={styles.listHeader}
         ListEmptyComponent={
-          <View style={styles.empty}><EtatContenu type="vide" title="Aucune demande pour le moment" description="Les nouvelles propositions compatibles apparaîtront ici." /></View>
+          <View style={styles.empty}><EtatContenu type="vide" title="Pas encore de client" description="Dès qu’un client sur votre route fait une demande, elle s’affiche ici." /></View>
         }
         contentContainerStyle={[styles.list, !requests.length && styles.emptyList]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} colors={[couleurs.primaire]} tintColor={couleurs.primaire} />}
@@ -95,7 +95,7 @@ function StatePage({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.stateContent}>
-        <EntetePage title="Demandes compatibles" description="Propositions compatibles avec vos trajets ouverts." />
+        <EntetePage title="Demandes reçues" description="Les clients qui veulent monter avec vous." />
         {children}
       </View>
     </SafeAreaView>

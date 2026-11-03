@@ -34,10 +34,10 @@ export default function ChoixDuRole() {
     return (
       <AuthPage
         icon={<IconUser color={couleurs.primaire} size={25} strokeWidth={2} />}
-        title="Choisissez votre profil"
-        description="La vérification précédente n’est plus disponible."
+        title="On reprend depuis le début"
+        description="La vérification de votre numéro a expiré."
       >
-        <MessageEtat>Recommencez la connexion pour choisir votre rôle.</MessageEtat>
+        <MessageEtat>Entrez de nouveau votre numéro pour continuer.</MessageEtat>
         <Bouton onPress={() => router.replace("/connexion")}>Revenir à la connexion</Bouton>
       </AuthPage>
     );
@@ -46,8 +46,8 @@ export default function ChoixDuRole() {
   return (
     <AuthPage
       icon={<IconUser color={couleurs.primaire} size={25} strokeWidth={2} />}
-      title="Comment voyagez-vous ?"
-      description="Choisissez votre usage principal. Ce choix est demandé uniquement à la création du compte."
+      title="Vous êtes client ou chauffeur ?"
+      description="Choisissez bien : ce choix se fait une seule fois, à la création du compte."
     >
       <View style={styles.formulaire}>
         <View style={styles.choix}>
@@ -55,19 +55,19 @@ export default function ChoixDuRole() {
             selected={role === "CLIENT"}
             icon={<IconUser color={couleurs.texte} size={24} />}
             title="Client"
-            description="Je cherche une place sur un itinéraire."
+            description="Je cherche une place dans un taxi qui passe par mon chemin."
             onPress={() => setRole("CLIENT")}
           />
           <RoleCard
             selected={role === "DRIVER"}
             icon={<IconCar color={couleurs.texte} size={24} />}
             title="Chauffeur"
-            description="Je publie mes trajets et accepte des clients."
+            description="Je publie mes trajets et je prends des clients en route."
             onPress={() => setRole("DRIVER")}
           />
         </View>
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
-        {mutation.isSuccess ? <MessageEtat type="succes">Profil créé.</MessageEtat> : null}
+        {mutation.isSuccess ? <MessageEtat type="succes">Compte créé, bienvenue !</MessageEtat> : null}
         <Bouton disabled={!role} chargement={mutation.isPending} onPress={() => role && mutation.mutate(role)}>Continuer</Bouton>
       </View>
     </AuthPage>

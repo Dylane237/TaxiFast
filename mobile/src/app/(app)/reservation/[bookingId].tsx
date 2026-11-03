@@ -48,8 +48,8 @@ export default function ConfirmedBookingScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Réservation invalide"
-          description="Impossible d’identifier cette réservation."
+          title="Lien de réservation incorrect"
+          description="Retrouvez-la dans vos demandes ou votre historique."
         />
       </State>
     );
@@ -59,7 +59,7 @@ export default function ConfirmedBookingScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement de la réservation"
-          description="Nous récupérons les informations du trajet."
+          description="On récupère les infos du trajet."
         />
       </State>
     );
@@ -68,7 +68,7 @@ export default function ConfirmedBookingScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Réservation indisponible"
+          title="Impossible d’ouvrir la réservation"
           description={messageErreur(details.error)}
         />
       </State>
@@ -80,7 +80,7 @@ export default function ConfirmedBookingScreen() {
         <EtatContenu
           type="vide"
           title="Réservation annulée"
-          description="La place a été libérée sur les tronçons concernés."
+          description="Votre place est libérée pour quelqu’un d’autre."
           action={
             <Bouton onPress={() => router.replace("/accueil")}>
               Retour à l’accueil
@@ -94,7 +94,7 @@ export default function ConfirmedBookingScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <EntetePage
           title="Réservation confirmée"
-          description="Les informations utiles pour rejoindre votre chauffeur."
+          description="Tout ce qu’il faut pour retrouver votre chauffeur."
         />
         <View style={styles.successIcon}>
           <IconCircleCheck color={couleurs.succes} size={32} />
@@ -160,11 +160,11 @@ export default function ConfirmedBookingScreen() {
           onPress={() =>
             Alert.alert(
               "Annuler la réservation ?",
-              "Votre place sera immédiatement libérée.",
+              "Votre place sera libérée tout de suite.",
               [
-                { text: "Garder", style: "cancel" },
+                { text: "Garder ma place", style: "cancel" },
                 {
-                  text: "Annuler",
+                  text: "Oui, annuler",
                   style: "destructive",
                   onPress: () => cancel.mutate(),
                 },
@@ -182,7 +182,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Réservation" description="État de votre course." />
+        <EntetePage title="Réservation" description="Où en est votre course." />
         {children}
       </View>
     </SafeAreaView>

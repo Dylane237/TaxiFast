@@ -23,7 +23,7 @@ import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
 
 const labels = {
   OPEN: "En recherche",
-  MATCHED: "Associée",
+  MATCHED: "Taxi trouvé",
   EXPIRED: "Expirée",
   CANCELLED: "Annulée",
 } as const;
@@ -99,8 +99,8 @@ export default function ClientRequestsScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Chargement des demandes"
-          description="Nous récupérons vos recherches en cours."
+          title="Chargement de vos demandes"
+          description="On récupère vos recherches en cours."
         />
       </State>
     );
@@ -109,7 +109,7 @@ export default function ClientRequestsScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Demandes indisponibles"
+          title="Impossible de charger vos demandes"
           description={messageErreur(error)}
         />
       </State>
@@ -128,22 +128,22 @@ export default function ClientRequestsScreen() {
         ListHeaderComponent={
           <EntetePage
             title="Mes demandes"
-            description="Suivez vos recherches et les réponses des chauffeurs."
+            description="Vos recherches et les réponses des chauffeurs."
           />
         }
         ListHeaderComponentStyle={styles.header}
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Aucune demande"
-            description="Lancez une recherche pour recevoir des trajets compatibles."
+            title="Aucune demande en cours"
+            description="Dites où vous allez et les chauffeurs vous feront des offres."
             action={
               <Pressable
                 style={styles.emptyAction}
                 onPress={() => router.push("/recherche")}
               >
                 <IconSearch color={couleurs.texte} size={18} />
-                <Text style={styles.emptyActionText}>Rechercher un trajet</Text>
+                <Text style={styles.emptyActionText}>Trouver un taxi</Text>
               </Pressable>
             }
           />
@@ -167,7 +167,7 @@ function State({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="Mes demandes"
-          description="Recherches envoyées aux chauffeurs."
+          description="Ce que vous avez demandé aux chauffeurs."
         />
         {children}
       </View>

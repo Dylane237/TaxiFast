@@ -49,7 +49,7 @@ export async function enablePushNotifications(): Promise<void> {
   if (!Device.isDevice) {
     throw new ApiError(
       "INVALID_INPUT",
-      "Les notifications push doivent être activées sur un téléphone physique.",
+      "Les notifications ne marchent que sur un vrai téléphone, pas sur un émulateur.",
     );
   }
   await ensureAndroidChannel();
@@ -60,7 +60,7 @@ export async function enablePushNotifications(): Promise<void> {
   if (!permission.granted) {
     throw new ApiError(
       "FORBIDDEN",
-      "Autorisez les notifications dans les réglages du téléphone.",
+      "Autorisez Taxi Fast à envoyer des notifications dans les réglages du téléphone.",
     );
   }
   const token = (

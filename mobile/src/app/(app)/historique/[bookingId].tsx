@@ -57,8 +57,8 @@ export default function HistoryDetailScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Course invalide"
-          description="Impossible d’identifier cette course."
+          title="Lien de course incorrect"
+          description="Revenez à l’historique et rouvrez la course."
         />
       </State>
     );
@@ -68,7 +68,7 @@ export default function HistoryDetailScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement de la course"
-          description="Nous préparons son récapitulatif."
+          description="On prépare le récapitulatif."
         />
       </State>
     );
@@ -77,7 +77,7 @@ export default function HistoryDetailScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Course indisponible"
+          title="Impossible d’ouvrir cette course"
           description={messageErreur(details.error)}
         />
       </State>
@@ -87,7 +87,7 @@ export default function HistoryDetailScreen() {
     user?.role === "DRIVER" ? data.client.name : data.driver.name;
   const submit = () => {
     if (score < 1) {
-      setValidationError("Choisissez une note entre 1 et 5 étoiles.");
+      setValidationError("Touchez une étoile pour donner votre note.");
       return;
     }
     setValidationError(null);
@@ -157,7 +157,7 @@ export default function HistoryDetailScreen() {
               etiquette="Commentaire (facultatif)"
               value={comment}
               onChangeText={setComment}
-              placeholder="Ponctualité, conduite, courtoisie…"
+              placeholder="À l’heure ? Conduite prudente ? Sympa ?"
               multiline
               maxLength={500}
             />
@@ -170,16 +170,16 @@ export default function HistoryDetailScreen() {
               </MessageEtat>
             ) : null}
             <Bouton chargement={rating.isPending} onPress={submit}>
-              Publier mon avis
+              Envoyer mon avis
             </Bouton>
           </Carte>
         ) : (
           <MessageEtat type="succes">
             {rating.isSuccess
-              ? "Merci, votre avis a été enregistré."
+              ? "Merci ! Votre avis aide toute la communauté."
               : data.ratedByCurrentUser
                 ? "Vous avez déjà noté cette course."
-                : "Cette course ne peut pas être notée."}
+                : "Cette course ne peut plus être notée."}
           </MessageEtat>
         )}
       </ScrollView>
@@ -190,7 +190,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Course" description="Récapitulatif et notation." />
+        <EntetePage title="Course" description="Le récap et votre avis." />
         {children}
       </View>
     </SafeAreaView>

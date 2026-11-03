@@ -73,7 +73,7 @@ export default function JePars() {
       setFrom(closest);
       if (to?.corridorId !== closest.corridorId) setTo(null);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Localisation impossible.");
+      setError(caught instanceof Error ? caught.message : "On n’arrive pas à vous localiser. Choisissez le départ dans la liste.");
     } finally {
       setLocating(false);
     }
@@ -82,13 +82,13 @@ export default function JePars() {
   const next = () => {
     setError(null);
     if (step === 0) {
-      if (!route) return setError("Choisissez un départ et une destination sur le même itinéraire.");
+      if (!route) return setError("Ces deux points ne sont pas sur le même axe. Choisissez un départ et une arrivée sur la même route.");
       setSelectedStopIds(route.stops.map((stop) => stop.id));
       setStep(1);
       return;
     }
     if (step === 1) {
-      if (selectedStops.length < 2) return setError("Conservez au moins le départ et la destination.");
+      if (selectedStops.length < 2) return setError("Gardez au moins le départ et l’arrivée.");
       setFares(buildFareDrafts(selectedStops));
       setFareIndex(0);
       setStep(2);
@@ -96,7 +96,7 @@ export default function JePars() {
     }
     if (step === 2) return setStep(3);
     if (step === 3) {
-      if (fares.some((fare) => !Number.isInteger(fare.price) || fare.price <= 0)) return setError("Chaque tarif doit être un montant entier supérieur à 0 FCFA.");
+      if (fares.some((fare) => !Number.isInteger(fare.price) || fare.price <= 0)) return setError("Chaque prix doit être un nombre entier de FCFA, plus grand que 0.");
       setStep(4);
       return;
     }
@@ -108,55 +108,55 @@ export default function JePars() {
     setSelectedStopIds((current) => current.includes(stop.id) ? current.filter((id) => id !== stop.id) : [...current, stop.id]);
   };
 
-  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de la publication" description="Chargement des adresses et points de rencontre…" /></State>;
-  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Itinéraires indisponibles" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
-  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun itinéraire" description="Aucun point de rencontre n’est encore disponible." /></State>;
+  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation" description="On charge les axes et les points de montée…" /></State>;
+  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Impossible de charger les axes" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
+  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun axe pour le moment" description="Les axes desservis seront bientôt ajoutés." /></State>;
   if (!maxSeats) return <State><MessageEtat>Complétez les informations du véhicule avant de publier.</MessageEtat><Bouton onPress={() => router.push("/profil")}>Compléter mon profil</Bouton></State>;
   if (step === 5) return <Success onAgain={() => { setStep(0); setFrom(null); setTo(null); mutation.reset(); }} />;
 
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <EntetePage title="Publier un trajet" description="Construisez votre course étape par étape." />
+        <EntetePage title="Publier un trajet" description="Dites aux clients où vous passez." />
         <WizardProgress step={step} total={5} label={labels[step]!} />
 
         {step === 0 ? <View style={styles.stage}>
           <Text style={styles.hero}>D’où partez-vous ?</Text>
-          <Text style={styles.subtitle}>Recherchez un lieu ou partez de votre position actuelle.</Text>
+          <Text style={styles.subtitle}>Tapez un quartier, un carrefour, ou utilisez votre position.</Text>
           <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
           <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
         </View> : null}
 
         {step === 1 && route ? <View style={styles.stage}>
           <Text style={styles.hero}>Vos arrêts sur le chemin</Text>
-          <Text style={styles.subtitle}>Les points situés entre le départ et l’arrivée sont proposés automatiquement. Touchez un arrêt intermédiaire pour le retirer.</Text>
+          <Text style={styles.subtitle}>On a ajouté les arrêts entre votre départ et votre arrivée. Touchez-en un pour ne pas vous y arrêter.</Text>
           <RouteMiniMap stops={selectedStops} />
           <View style={styles.stopRail}>{route.stops.map((stop, index) => {
             const endpoint = index === 0 || index === route.stops.length - 1;
             const selected = selectedStopIds.includes(stop.id);
             return <Pressable key={stop.id} onPress={() => toggleStop(stop)} style={[styles.stopOption, selected && styles.stopOptionSelected]}>
               <View style={[styles.stopDot, selected && styles.stopDotSelected]}>{selected ? <IconCheck color={endpoint ? couleurs.surface : couleurs.encre} size={15} /> : null}</View>
-              <View style={styles.stopCopy}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopDetail}>{endpoint ? (index === 0 ? "Départ" : "Destination") : selected ? "Arrêt proposé" : "Non desservi"}</Text></View>
+              <View style={styles.stopCopy}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopDetail}>{endpoint ? (index === 0 ? "Départ" : "Arrivée") : selected ? "Arrêt prévu" : "Pas d’arrêt"}</Text></View>
             </Pressable>;
           })}</View>
         </View> : null}
 
         {step === 2 ? <View style={styles.stage}>
-          <Text style={styles.hero}>Quand serez-vous en circulation ?</Text>
-          <Text style={styles.subtitle}>Les clients verront la période pendant laquelle votre trajet est disponible.</Text>
+          <Text style={styles.hero}>Vous partez quand ?</Text>
+          <Text style={styles.subtitle}>Les clients voient à quelle heure vous passez.</Text>
           <View style={styles.modeGrid}>
-            <ChoiceCard active={mode === "IMMEDIATE"} icon={<IconRoute color={couleurs.texte} size={22} />} title="Je pars maintenant" detail="Disponible dans quelques minutes" onPress={() => setMode("IMMEDIATE")} />
-            <ChoiceCard active={mode === "SCHEDULED"} icon={<IconClock color={couleurs.texte} size={22} />} title="Je prévois" detail="Départ planifié plus tard" onPress={() => setMode("SCHEDULED")} />
+            <ChoiceCard active={mode === "IMMEDIATE"} icon={<IconRoute color={couleurs.texte} size={22} />} title="Je pars maintenant" detail="Je suis déjà en route ou presque" onPress={() => setMode("IMMEDIATE")} />
+            <ChoiceCard active={mode === "SCHEDULED"} icon={<IconClock color={couleurs.texte} size={22} />} title="Je pars plus tard" detail="Je choisis l’heure de départ" onPress={() => setMode("SCHEDULED")} />
           </View>
           {mode === "SCHEDULED" ? <OptionGroup label="DÉPART DANS" values={startOptions} value={startMinutes} onChange={setStartMinutes} suffix="min" /> : null}
           <OptionGroup label="DURÉE DE DISPONIBILITÉ" values={durationOptions} value={durationMinutes} onChange={setDurationMinutes} suffix="min" />
-          <Carte style={styles.availabilityCard}><IconClock color={couleurs.texte} size={22} /><View style={styles.flex}><Text style={styles.cardLabel}>Créneau proposé</Text><Text style={styles.cardValue}>{formatDateTime(availability.departureAt)} — {new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</Text></View></Carte>
+          <Carte style={styles.availabilityCard}><IconClock color={couleurs.texte} size={22} /><View style={styles.flex}><Text style={styles.cardLabel}>Vous passez</Text><Text style={styles.cardValue}>De {formatDateTime(availability.departureAt)} à {new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</Text></View></Carte>
         </View> : null}
 
         {step === 3 && currentFare ? <View style={styles.stage}>
-          <Text style={styles.hero}>Places et tarifs</Text>
-          <Text style={styles.subtitle}>La capacité reste vérifiée séparément sur chaque tronçon. Ajustez ensuite chaque combinaison de trajet.</Text>
-          <Carte style={styles.capacityCard}><View style={styles.capacityHeading}><IconUsers color={couleurs.texte} size={22} /><Text style={styles.cardLabel}>Places proposées</Text></View><View style={styles.counter}>
+          <Text style={styles.hero}>Places et prix</Text>
+          <Text style={styles.subtitle}>Combien de clients pouvez-vous prendre ? Ensuite, fixez le prix pour chaque portion du trajet.</Text>
+          <Carte style={styles.capacityCard}><View style={styles.capacityHeading}><IconUsers color={couleurs.texte} size={22} /><Text style={styles.cardLabel}>Places libres</Text></View><View style={styles.counter}>
             <Pressable disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={22} /></Pressable>
             <View style={styles.counterCopy}><Text style={styles.counterValue}>{capacity}</Text><Text style={styles.counterLabel}>sur {maxSeats}</Text></View>
             <Pressable disabled={capacity >= maxSeats} onPress={() => setCapacity((value) => Math.min(maxSeats, value + 1))} style={[styles.counterButton, capacity >= maxSeats && styles.disabled]}><IconPlus color={couleurs.texte} size={22} /></Pressable>
@@ -167,8 +167,8 @@ export default function JePars() {
         </View> : null}
 
         {step === 4 && route ? <View style={styles.stage}>
-          <Text style={styles.hero}>Tout est prêt</Text><Text style={styles.subtitle}>Vérifiez les informations avant de rendre le trajet visible.</Text><RouteMiniMap stops={selectedStops} />
-          <Carte style={styles.summaryCard}><Summary label="Itinéraire" value={`${from?.name} → ${to?.name}`} /><Summary label="Arrêts desservis" value={`${selectedStops.length} points de rencontre`} /><Summary label="Disponibilité" value={`${mode === "IMMEDIATE" ? "Maintenant" : formatDateTime(availability.departureAt)} · ${durationMinutes} min`} /><Summary label="Capacité" value={`${capacity} place${capacity > 1 ? "s" : ""} par tronçon`} /><Summary label="Fourchette" value={`${formatPrice(Math.min(...fares.map((fare) => fare.price)))} — ${formatPrice(Math.max(...fares.map((fare) => fare.price)))}`} last /></Carte>
+          <Text style={styles.hero}>Tout est prêt</Text><Text style={styles.subtitle}>Un dernier coup d’œil avant que les clients vous voient.</Text><RouteMiniMap stops={selectedStops} />
+          <Carte style={styles.summaryCard}><Summary label="Itinéraire" value={`${from?.name} → ${to?.name}`} /><Summary label="Arrêts" value={`${selectedStops.length} arrêts`} /><Summary label="Départ" value={`${mode === "IMMEDIATE" ? "Maintenant" : formatDateTime(availability.departureAt)} · ${durationMinutes} min`} /><Summary label="Places" value={`${capacity} place${capacity > 1 ? "s" : ""} libre${capacity > 1 ? "s" : ""}`} /><Summary label="Prix" value={`${formatPrice(Math.min(...fares.map((fare) => fare.price)))} à ${formatPrice(Math.max(...fares.map((fare) => fare.price)))}`} last /></Carte>
         </View> : null}
 
         {error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}
@@ -189,10 +189,10 @@ function Summary({ label, value, last }: { label: string; value: string; last?: 
   return <View style={[styles.summaryRow, last && styles.summaryLast]}><Text style={styles.summaryLabel}>{label}</Text><Text style={styles.summaryValue}>{value}</Text></View>;
 }
 function Success({ onAgain }: { onAgain: () => void }) {
-  return <SafeAreaView style={styles.page}><View style={styles.success}><View style={styles.successIcon}><IconCheck color={couleurs.succes} size={38} /></View><Text style={styles.successTitle}>Trajet publié</Text><Text style={styles.successCopy}>Votre itinéraire, votre créneau et vos tarifs sont maintenant visibles.</Text><Bouton variante="sombre" onPress={() => router.replace("/mes-trajets")}>Voir mes trajets</Bouton><Bouton variante="secondaire" onPress={onAgain}>Publier un autre trajet</Bouton></View></SafeAreaView>;
+  return <SafeAreaView style={styles.page}><View style={styles.success}><View style={styles.successIcon}><IconCheck color={couleurs.succes} size={38} /></View><Text style={styles.successTitle}>Votre taxi est en ligne</Text><Text style={styles.successCopy}>Les clients sur votre route peuvent maintenant vous faire une demande.</Text><Bouton variante="sombre" onPress={() => router.replace("/mes-trajets")}>Voir mes trajets</Bouton><Bouton variante="secondaire" onPress={onAgain}>Publier un autre trajet</Bouton></View></SafeAreaView>;
 }
 function State({ children }: { children: React.ReactNode }) {
-  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Publier un trajet" description="Construisez votre course étape par étape." />{children}</View></SafeAreaView>;
+  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Publier un trajet" description="Dites aux clients où vous passez." />{children}</View></SafeAreaView>;
 }
 
 const styles = StyleSheet.create({

@@ -46,7 +46,7 @@ const commonItems: MenuItem[] = [
   },
   {
     label: "Historique",
-    description: "Courses et évaluations",
+    description: "Vos courses et vos avis",
     href: "/historique",
     icon: IconHistory,
   },
@@ -54,14 +54,14 @@ const commonItems: MenuItem[] = [
 
 const clientItems: MenuItem[] = [
   {
-    label: "Trouver un trajet",
-    description: "Créer une demande",
+    label: "Trouver un taxi",
+    description: "Dites où vous allez",
     href: "/recherche",
     icon: IconSearch,
   },
   {
     label: "Mes demandes",
-    description: "Demandes et offres",
+    description: "Les offres des chauffeurs",
     href: "/mes-demandes",
     icon: IconClock,
   },
@@ -70,31 +70,31 @@ const clientItems: MenuItem[] = [
 const driverItems: MenuItem[] = [
   {
     label: "Publier un trajet",
-    description: "Choisir un itinéraire et des arrêts",
+    description: "Dites où vous passez",
     href: "/je-pars",
     icon: IconCar,
   },
   {
     label: "Demandes reçues",
-    description: "Propositions compatibles",
+    description: "Clients sur votre route",
     href: "/demandes",
     icon: IconInbox,
   },
   {
     label: "Mes trajets",
-    description: "Publications et statuts",
+    description: "Vos trajets publiés",
     href: "/mes-trajets",
     icon: IconMapPin,
   },
   {
     label: "Trajet en cours",
-    description: "Passagers et occupation",
+    description: "Qui monte, qui descend",
     href: "/trajet-en-cours",
     icon: IconClock,
   },
   {
     label: "Portefeuille",
-    description: "Gains et commissions",
+    description: "Vos gains",
     href: "/portefeuille",
     icon: IconWallet,
   },

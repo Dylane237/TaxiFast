@@ -26,7 +26,7 @@ async function currentPositionWithTimeout() {
       Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
       new Promise<never>((_, reject) => {
         timeoutId = setTimeout(
-          () => reject(new Error("Position indisponible. Choisissez un point de départ dans la liste.")),
+          () => reject(new Error("Impossible de vous localiser. Choisissez votre point de montée dans la liste.")),
           LOCATION_TIMEOUT_MS,
         );
       }),
@@ -75,7 +75,7 @@ export default function RechercheScreen() {
       setFrom(closest);
       if (to?.corridorId !== closest.corridorId) setTo(null);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Localisation impossible.");
+      setError(caught instanceof Error ? caught.message : "La localisation n’a pas marché.");
     } finally {
       setLocating(false);
     }
@@ -84,29 +84,29 @@ export default function RechercheScreen() {
   const next = () => {
     setError(null);
     if (step === 0) {
-      if (!route) return setError("Choisissez un départ et une destination sur le même itinéraire.");
+      if (!route) return setError("Aucun taxi ne relie ces deux points d’un coup. Choisissez une montée et une descente sur le même axe.");
       return setStep(1);
     }
     if (step === 1) {
-      if (!Number.isInteger(parsedPrice) || parsedPrice < 100) return setError("Proposez un prix entier d’au moins 100 FCFA.");
+      if (!Number.isInteger(parsedPrice) || parsedPrice < 100) return setError("Proposez au moins 100 FCFA, sans virgule.");
       return setStep(2);
     }
     mutation.mutate();
   };
 
-  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de votre recherche" description="Chargement des adresses et points de rencontre…" /></State>;
-  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Recherche indisponible" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
-  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun itinéraire disponible" description="Revenez lorsque des itinéraires auront été publiés." /></State>;
+  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de votre recherche" description="On charge les quartiers et les arrêts…" /></State>;
+  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Impossible de lancer la recherche" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
+  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun axe ouvert pour l’instant" description="Revenez un peu plus tard." /></State>;
 
   if (step === 0) return <View style={styles.mapPage}>
     <CityMapBackdrop route={Boolean(route)} destinationLabel={to?.name} />
     <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
       <Pressable accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></Pressable>
-      <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "ITINÉRAIRE TROUVÉ" : "RECHERCHE DE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
+      <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "TRAJET TROUVÉ" : "VOTRE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.mapSheetWrap}>
         <View style={styles.mapSheet}>
           <View style={styles.sheetHandle} />
-          <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez vos points de rencontre.</Text></View>
+          <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez où vous montez et où vous descendez.</Text></View>
           {error ? <View style={styles.mapFeedback}><MessageEtat type="erreur">{error}</MessageEtat></View> : null}
           <ScrollView contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
@@ -119,33 +119,33 @@ export default function RechercheScreen() {
 
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-      <EntetePage title="Où allez-vous ?" description="Trouvez votre trajet en quelques étapes." />
+      <EntetePage title="Où allez-vous ?" description="Trouvez un taxi qui passe par votre chemin." />
       <WizardProgress step={step} total={3} label={labels[step]!} />
 
       {step === 0 ? <View style={styles.stage}>
-        <Text style={styles.hero}>Choisissez votre trajet</Text>
-        <Text style={styles.subtitle}>Recherchez vos points de montée et de descente, ou partez de votre position.</Text>
+        <Text style={styles.hero}>D’où à où ?</Text>
+        <Text style={styles.subtitle}>Tapez un quartier ou un carrefour, ou partez de votre position.</Text>
         <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
         <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
       </View> : null}
 
       {step === 1 ? <View style={styles.stage}>
-        <Text style={styles.hero}>Quand souhaitez-vous partir ?</Text>
-        <Text style={styles.subtitle}>Indiquez votre fenêtre de disponibilité et le prix que vous proposez.</Text>
+        <Text style={styles.hero}>Quand voulez-vous partir ?</Text>
+        <Text style={styles.subtitle}>Dites quand vous êtes prêt, et combien vous proposez.</Text>
         <View style={styles.modeGrid}>
-          <Choice active={mode === "IMMEDIATE"} title="Maintenant" detail="Recherche immédiate" icon={<IconRoute color={couleurs.texte} size={22} />} onPress={() => setMode("IMMEDIATE")} />
-          <Choice active={mode === "SCHEDULED"} title="Plus tard" detail="Planifier le départ" icon={<IconClock color={couleurs.texte} size={22} />} onPress={() => setMode("SCHEDULED")} />
+          <Choice active={mode === "IMMEDIATE"} title="Maintenant" detail="Je suis prêt tout de suite" icon={<IconRoute color={couleurs.texte} size={22} />} onPress={() => setMode("IMMEDIATE")} />
+          <Choice active={mode === "SCHEDULED"} title="Plus tard" detail="Je choisis l’heure" icon={<IconClock color={couleurs.texte} size={22} />} onPress={() => setMode("SCHEDULED")} />
         </View>
         {mode === "SCHEDULED" ? <Options label="DÉPART DANS" values={[30, 60, 120]} value={startMinutes} onChange={setStartMinutes} /> : null}
         <Options label="JE SUIS FLEXIBLE PENDANT" values={[30, 60, 120]} value={durationMinutes} onChange={setDurationMinutes} />
-        <View style={styles.priceHeading}><IconWallet color={couleurs.texteSecondaire} size={22} /><View><Text style={styles.priceTitle}>Votre proposition</Text><Text style={styles.priceDetail}>Le chauffeur pourra l’accepter ou contre-proposer une fois.</Text></View></View>
+        <View style={styles.priceHeading}><IconWallet color={couleurs.texteSecondaire} size={22} /><View><Text style={styles.priceTitle}>Votre prix</Text><Text style={styles.priceDetail}>Le chauffeur peut accepter ou vous proposer un autre prix, une seule fois.</Text></View></View>
         <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPrice} keyboardType="number-pad" placeholder="1 500" />
       </View> : null}
 
       {step === 2 && route ? <View style={styles.stage}>
-        <Text style={styles.hero}>Confirmez votre demande</Text><Text style={styles.subtitle}>Votre demande sera signalée aux chauffeurs compatibles.</Text>
+        <Text style={styles.hero}>On envoie ?</Text><Text style={styles.subtitle}>Les chauffeurs qui passent par là verront votre demande.</Text>
         <RouteMiniMap stops={route.stops} />
-        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Fenêtre" value={`${formatDateTime(availability.departureAt)} — ${new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
+        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Quand" value={`Entre ${formatDateTime(availability.departureAt)} et ${new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
       </View> : null}
 
       {error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}
@@ -165,7 +165,7 @@ function Summary({ label, value, last }: { label: string; value: string; last?: 
   return <View style={[styles.summaryRow, last && styles.summaryLast]}><Text style={styles.summaryLabel}>{label}</Text><Text style={styles.summaryValue}>{value}</Text></View>;
 }
 function State({ children }: { children: React.ReactNode }) {
-  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Où allez-vous ?" description="Trouvez votre trajet en quelques étapes." />{children}</View></SafeAreaView>;
+  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Où allez-vous ?" description="Trouvez un taxi qui passe par votre chemin." />{children}</View></SafeAreaView>;
 }
 
 const styles = StyleSheet.create({

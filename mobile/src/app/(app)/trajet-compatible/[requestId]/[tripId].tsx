@@ -58,8 +58,8 @@ export default function CompatibleTripScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Trajet invalide"
-          description="Le lien ouvert n’est pas complet."
+          title="Lien incomplet"
+          description="Rouvrez le trajet depuis votre demande."
         />
       </State>
     );
@@ -69,7 +69,7 @@ export default function CompatibleTripScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement du trajet"
-          description="Nous vérifions sa disponibilité."
+          description="On vérifie qu’il reste de la place."
         />
       </State>
     );
@@ -79,7 +79,7 @@ export default function CompatibleTripScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Trajet indisponible"
+          title="Impossible d’ouvrir ce trajet"
           description={messageErreur(error)}
         />
       </State>
@@ -89,8 +89,8 @@ export default function CompatibleTripScreen() {
       <State>
         <EtatContenu
           type="vide"
-          title="Trajet plus disponible"
-          description="Il a peut-être été réservé ou fermé."
+          title="Ce taxi n’est plus disponible"
+          description="Il s’est peut-être rempli entre-temps."
         />
       </State>
     );
@@ -99,8 +99,8 @@ export default function CompatibleTripScreen() {
       <State>
         <EtatContenu
           type="vide"
-          title="Proposition envoyée"
-          description="Le chauffeur doit maintenant confirmer votre réservation."
+          title="Demande envoyée au chauffeur"
+          description="Dès qu’il accepte, votre place est réservée."
           action={
             <Bouton
               onPress={() =>
@@ -120,8 +120,8 @@ export default function CompatibleTripScreen() {
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content}>
         <EntetePage
-          title="Trajet compatible"
-          description="Vérifiez le chauffeur et l’horaire avant d’envoyer votre prix."
+          title="Un taxi sur votre chemin"
+          description="Regardez le chauffeur et l’heure, puis envoyez votre prix."
         />
         <Carte style={styles.driver}>
           <View style={styles.avatar}>
@@ -143,7 +143,7 @@ export default function CompatibleTripScreen() {
               size={17}
             />
             <Text style={styles.ratingText}>
-              {trip.driver.rating?.toFixed(1) ?? "—"}
+              {trip.driver.rating?.toFixed(1) ?? "Nouveau"}
             </Text>
           </View>
         </Carte>
@@ -170,7 +170,7 @@ export default function CompatibleTripScreen() {
             </Text>
           </View>
           <View style={styles.priceRow}>
-            <Text style={styles.meta}>Votre proposition</Text>
+            <Text style={styles.meta}>Votre prix</Text>
             <Text style={styles.price}>
               {formatPrice(request.proposedPrice)}
             </Text>
@@ -193,8 +193,8 @@ function State({ children }: { children: React.ReactNode }) {
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
         <EntetePage
-          title="Trajet compatible"
-          description="Détail du chauffeur."
+          title="Un taxi sur votre chemin"
+          description="Le chauffeur et son véhicule."
         />
         {children}
       </View>
