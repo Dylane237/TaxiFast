@@ -28,10 +28,9 @@ import type {
   UserProfile,
   Wallet,
 } from "./types";
+import { configApi } from "./config";
 
-const apiUrl = (
-  process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"
-).replace(/\/$/, "");
+const apiUrl = configApi.urlServeur;
 let accessToken: string | null = null;
 
 const errorCodeByServerCode: Record<string, ApiErrorCode> = {

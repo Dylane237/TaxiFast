@@ -21,7 +21,10 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_USE_MOCK": "false"
+      }
     }
   }
 }

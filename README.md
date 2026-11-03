@@ -61,7 +61,12 @@ qui utilise les identifiants FCM v1 configurés pour la build Android.
 
 ## 6. Brancher l'application au serveur local
 
-Le mode fictif reste activé par défaut. Pour utiliser PostgreSQL et l'API réelle :
+En développement, le mode fictif reste activé par défaut. Un build release, lui, n'est jamais en
+mode fictif sauf si `EXPO_PUBLIC_USE_MOCK=true` est demandé (profils `development` et `preview`) : le
+profil `production` exige `EXPO_PUBLIC_API_URL` en `https://`, à définir dans les variables EAS,
+sinon l'application refuse de démarrer.
+
+Pour utiliser PostgreSQL et l'API réelle :
 
 1. Copie `server/.env.example` vers `server/.env`, renseigne `DATABASE_URL`, puis lance
    `npx prisma migrate deploy`, `npm run db:seed` et `npm run dev` depuis `server/`.

@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { api, ApiError } from "@/api";
+import { api, ApiError, configApi } from "@/api";
 import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { codeOtpValide } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
@@ -12,7 +12,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, polices } from "@/theme";
 
 export default function CodeOtp() {
-  const otpLength = process.env.EXPO_PUBLIC_USE_MOCK === "false" ? 6 : 4;
+  const otpLength = configApi.modeDemo ? 4 : 6;
   const phone = useAuthFlowStore((state) => state.phone);
   const setFlowCode = useAuthFlowStore((state) => state.setCode);
   const resetFlow = useAuthFlowStore((state) => state.reset);
