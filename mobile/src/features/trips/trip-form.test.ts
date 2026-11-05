@@ -15,7 +15,7 @@ describe("formulaire de trajet chauffeur", () => {
   });
 
   it("limite la capacité au véhicule et exige deux arrêts", () => {
-    expect(erreurPublication(["a"], 1, 4)).toBe("Sélectionnez au moins deux arrêts.");
+    expect(erreurPublication(["a"], 1, 4)).toBe("Choisissez au moins deux arrêts.");
     expect(erreurPublication(["a", "b"], 5, 4)).toContain("1 et 4");
     expect(erreurPublication(["a", "b"], 4, 4)).toBeNull();
   });

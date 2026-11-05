@@ -8,7 +8,7 @@ import { api } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, MessageEtat, PuceChoix } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatLocalDateTime, parseLocalDateTime } from "@/features/date-time-input";
-import { couleurs, espacements, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, taillesTexte } from "@/theme";
 
 export default function EditRequestScreen() {
   const { requestId } = useLocalSearchParams<{ requestId?: string }>();
@@ -69,8 +69,8 @@ export default function EditRequestScreen() {
     setFromOverride("");
     setToOverride("");
   };
-  const confirmCancel = () => Alert.alert("Annuler cette demande ?", "Les offres encore en attente seront annulées.", [
-    { text: "Conserver", style: "cancel" },
+  const confirmCancel = () => Alert.alert("Annuler cette demande ?", "Les offres que vous n’avez pas encore acceptées seront perdues.", [
+    { text: "Garder ma demande", style: "cancel" },
     { text: "Annuler la demande", style: "destructive", onPress: () => cancel.mutate() },
   ]);
   const pending = requests.isPending || corridors.isPending;
@@ -79,10 +79,10 @@ export default function EditRequestScreen() {
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <EntetePage title="Modifier la demande" description="Itinéraire, arrêts, horaire et prix peuvent être ajustés." />
+        <EntetePage title="Modifier ma demande" description="Changez l’arrêt, l’heure ou le prix." />
         {pending ? <MessageEtat>Chargement de la demande…</MessageEtat> : null}
         {error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}
-        {!pending && !error && !request ? <MessageEtat type="erreur">Demande introuvable.</MessageEtat> : null}
+        {!pending && !error && !request ? <MessageEtat type="erreur">Cette demande n’existe plus.</MessageEtat> : null}
         {request && corridor ? (
           <>
             <View style={styles.section}>
@@ -98,11 +98,11 @@ export default function EditRequestScreen() {
               <View style={styles.wrap}>{corridor.stops.slice(1).map((stop) => <PuceChoix key={stop.id} label={stop.name} selected={stop.id === toStopId} disabled={fromPosition < 0 || stop.position <= fromPosition} onPress={() => setToOverride(stop.id)} />)}</View>
             </View>
             <Carte style={styles.form}>
-              <Champ etiquette="Début (AAAA-MM-JJ HH:mm)" value={windowStart} onChangeText={setStartOverride} autoCapitalize="none" />
+              <Champ etiquette="Départ au plus tôt (AAAA-MM-JJ HH:mm)" value={windowStart} onChangeText={setStartOverride} autoCapitalize="none" />
               <Champ etiquette="Fin (AAAA-MM-JJ HH:mm)" value={windowEnd} onChangeText={setEndOverride} autoCapitalize="none" />
               <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPriceOverride} keyboardType="number-pad" />
             </Carte>
-            <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Modifier la demande annule les offres encore en attente. Une réservation confirmée bloque la modification.</Text></View>
+            <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Si vous modifiez, les offres en attente sont annulées. Une fois une réservation confirmée, la demande ne se modifie plus.</Text></View>
             {update.isError ? <MessageEtat type="erreur">{messageErreur(update.error)}</MessageEtat> : null}
             <Bouton icone={<IconCheck color={couleurs.texte} size={19} />} chargement={update.isPending} onPress={() => update.mutate()}>Enregistrer les modifications</Bouton>
             {cancel.isError ? <MessageEtat type="erreur">{messageErreur(cancel.error)}</MessageEtat> : null}
@@ -118,9 +118,9 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond },
   content: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: espacements.lg },
   section: { gap: espacements.sm },
-  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 1.1 },
+  label: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 1.1, fontFamily: polices.texteGras },
   wrap: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
   form: { gap: espacements.md },
   notice: { flexDirection: "row", alignItems: "flex-start", gap: espacements.sm },
-  noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 20 },
+  noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 20, fontFamily: polices.texte },
 });

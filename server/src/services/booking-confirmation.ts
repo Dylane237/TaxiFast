@@ -119,13 +119,19 @@ export async function confirmBooking(prisma: PrismaClient, input: unknown) {
       throw new ConfirmBookingError("CAPACITY_EXCEEDED");
     }
 
-    const confirmedBooking = await tx.booking.update({
-      where: { id: booking.id },
+    // Le refus et la contre-proposition ne prennent pas le verrou du trajet : on ne confirme
+    // que si la réservation a toujours le statut lu plus haut.
+    const updated = await tx.booking.updateMany({
+      where: { id: booking.id, status: booking.status },
       data: {
         status: "CONFIRMED",
         agreedPrice: booking.counterPrice ?? booking.proposedPrice,
       },
     });
+    if (updated.count !== 1) {
+      throw new ConfirmBookingError("BOOKING_NOT_CONFIRMABLE");
+    }
+    const confirmedBooking = await tx.booking.findUniqueOrThrow({ where: { id: booking.id } });
     const allSegments = [...existingSegments, candidate];
     const status = tripIsFull(trip.capacity, trip.tripStops.length, allSegments)
       ? "FULL"

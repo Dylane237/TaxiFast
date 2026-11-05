@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
-import { couleurs, rayons, taillesTexte } from "@/theme";
+import { couleurs, polices, rayons, taillesTexte } from "@/theme";
 
 type CityMapBackdropProps = {
   route?: boolean;
@@ -49,9 +49,9 @@ const styles = StyleSheet.create({
   root: { position: "absolute", inset: 0, overflow: "hidden" },
   districtOne: { position: "absolute", left: 52, top: "28%" },
   districtTwo: { position: "absolute", right: 42, top: "47%" },
-  district: { color: "#969B91", fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 1.2 },
+  district: { color: "#969B91", fontSize: taillesTexte.micro, letterSpacing: 1.2, fontFamily: polices.texteGras },
   roadLabel: { position: "absolute", left: 118, top: "57%", transform: [{ rotate: "-26deg" }] },
-  road: { color: "#A6ABA1", fontSize: 10, fontWeight: "700" },
+  road: { color: "#A6ABA1", fontSize: 10, fontFamily: polices.texteDemiGras },
   destination: { position: "absolute", right: 28, top: "19%", maxWidth: 180, paddingHorizontal: 12, paddingVertical: 8, borderRadius: rayons.rond, backgroundColor: couleurs.surface },
-  destinationText: { color: couleurs.texte, fontSize: taillesTexte.micro, fontWeight: "900" },
+  destinationText: { color: couleurs.texte, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
 });

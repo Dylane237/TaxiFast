@@ -28,7 +28,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNavigationStore } from "@/stores/navigation-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { PressionDouce } from "./PressionDouce";
 
 type MenuItem = {
   label: string;
@@ -46,7 +47,7 @@ const commonItems: MenuItem[] = [
   },
   {
     label: "Historique",
-    description: "Courses et évaluations",
+    description: "Vos courses et vos avis",
     href: "/historique",
     icon: IconHistory,
   },
@@ -54,14 +55,14 @@ const commonItems: MenuItem[] = [
 
 const clientItems: MenuItem[] = [
   {
-    label: "Trouver un trajet",
-    description: "Créer une demande",
+    label: "Trouver un taxi",
+    description: "Dites où vous allez",
     href: "/recherche",
     icon: IconSearch,
   },
   {
     label: "Mes demandes",
-    description: "Demandes et offres",
+    description: "Les offres des chauffeurs",
     href: "/mes-demandes",
     icon: IconClock,
   },
@@ -70,31 +71,31 @@ const clientItems: MenuItem[] = [
 const driverItems: MenuItem[] = [
   {
     label: "Publier un trajet",
-    description: "Choisir un itinéraire et des arrêts",
+    description: "Dites où vous passez",
     href: "/je-pars",
     icon: IconCar,
   },
   {
     label: "Demandes reçues",
-    description: "Propositions compatibles",
+    description: "Clients sur votre route",
     href: "/demandes",
     icon: IconInbox,
   },
   {
     label: "Mes trajets",
-    description: "Publications et statuts",
+    description: "Vos trajets publiés",
     href: "/mes-trajets",
     icon: IconMapPin,
   },
   {
     label: "Trajet en cours",
-    description: "Passagers et occupation",
+    description: "Qui monte, qui descend",
     href: "/trajet-en-cours",
     icon: IconClock,
   },
   {
     label: "Portefeuille",
-    description: "Gains et commissions",
+    description: "Vos gains",
     href: "/portefeuille",
     icon: IconWallet,
   },
@@ -166,10 +167,10 @@ export function MenuLateral() {
           <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
             <View style={styles.header}>
               <View style={styles.logo}>
-                <Text style={styles.logoText}>CT</Text>
+                <Text style={styles.logoText}>TF</Text>
               </View>
               <View style={styles.headerCopy}>
-                <Text style={styles.product}>Covoiturage Taxi</Text>
+                <Text style={styles.product}>Taxi Fast</Text>
                 <Text style={styles.role}>
                   {user?.role === "DRIVER"
                     ? "ESPACE CHAUFFEUR"
@@ -192,7 +193,7 @@ export function MenuLateral() {
               {items.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Pressable
+                  <PressionDouce
                     accessibilityRole="button"
                     key={item.label}
                     onPress={() => navigate(item.href)}
@@ -218,7 +219,7 @@ export function MenuLateral() {
                       color={couleurs.texteSecondaire}
                       size={18}
                     />
-                  </Pressable>
+                  </PressionDouce>
                 );
               })}
             </ScrollView>
@@ -283,19 +284,19 @@ const styles = StyleSheet.create({
   logoText: {
     color: couleurs.primaire,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   headerCopy: { flex: 1, gap: 2 },
   product: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   role: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "800",
     letterSpacing: 0.8,
+    fontFamily: polices.texteGras,
   },
   closeButton: {
     width: 38,
@@ -330,11 +331,12 @@ const styles = StyleSheet.create({
   itemLabel: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   itemDescription: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   account: {
     margin: espacements.md,
@@ -356,6 +358,6 @@ const styles = StyleSheet.create({
   accountName: {
     color: couleurs.surface,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
 });

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs><clipPath id="sous-voiture"><rect x="0" y="0" width="1024" height="600"/></clipPath></defs><g transform="translate(0 0)"><g transform="translate(-34 60)">  <!-- Ombre portée -->
+  <path d="M190 690 C260 670 760 668 900 684 C760 704 260 708 190 690 Z" fill="#151712" opacity=".16"/>
+  <!-- Soleil -->
+  <g clip-path="url(#sous-voiture)">
+    <circle cx="568" cy="452" r="262" fill="#FFD43B"/>
+    <circle cx="568" cy="452" r="228" fill="none" stroke="#FFFFFF" stroke-width="12"/>
+  </g>
+  <!-- Traînées de vitesse -->
+  <g stroke="#151712" stroke-linecap="round">
+    <line x1="852" y1="540" x2="948" y2="540" stroke-width="14"/>
+    <line x1="852" y1="572" x2="914" y2="572" stroke-width="14" opacity=".6"/>
+    <line x1="852" y1="604" x2="886" y2="604" stroke-width="14" opacity=".3"/>
+  </g>
+  <!-- Carrosserie -->
+  <path d="M222 652 C204 646 196 620 200 598 C203 576 218 563 242 558 L400 530 C440 500 480 466 528 454 C570 446 615 446 650 452 C690 462 722 488 748 510 L806 518 C826 522 834 540 832 560 L828 626 C826 642 816 652 800 652 Z" fill="#151712"/>
+  <!-- Lumineux -->
+  <rect x="556" y="418" width="60" height="36" rx="9" fill="#151712"/>
+  <rect x="566" y="426" width="40" height="8" rx="4" fill="#FFD43B"/>
+  <!-- Vitres -->
+  <path d="M446 522 C474 500 503 484 536 477 L576 474 L576 522 Z" fill="#FFFFFF"/>
+  <path d="M596 474 L638 477 C668 484 694 502 714 520 L596 522 Z" fill="#FFFFFF"/>
+  <!-- Ligne de caisse, phare, feu -->
+  <line x1="254" y1="608" x2="818" y2="608" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+  <path d="M206 584 C220 571 248 566 274 570 C262 584 236 590 206 590 Z" fill="#FFFFFF"/>
+  <path d="M820 532 L834 538 L832 566 L818 563 Z" fill="#FFD43B"/>
+  <text x="586" y="584" text-anchor="middle" font-family="'Arial Black',system-ui" font-weight="900" font-size="48" letter-spacing="2" fill="#FFFFFF">TAXI</text>
+  <!-- Roues -->
+  <circle cx="332" cy="652" r="70" fill="#F7F7F4"/><circle cx="702" cy="652" r="70" fill="#F7F7F4"/>
+  <circle cx="332" cy="652" r="60" fill="#151712"/><circle cx="702" cy="652" r="60" fill="#151712"/>
+  <circle cx="332" cy="652" r="34" fill="#FFFFFF"/><circle cx="702" cy="652" r="34" fill="#FFFFFF"/>
+  <circle cx="332" cy="652" r="12" fill="#151712"/><circle cx="702" cy="652" r="12" fill="#151712"/>
+</g></g></svg>

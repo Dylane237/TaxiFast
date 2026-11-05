@@ -1,9 +1,10 @@
 import { IconCurrentLocation, IconMapPin, IconSearch, IconX } from "@tabler/icons-react-native";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import type { Corridor, Stop } from "@/api";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 import { searchStops } from "./route-composer";
+import { PressionDouce } from "@/components";
 
 type PlaceSearchProps = {
   corridors: Corridor[];
@@ -48,7 +49,7 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
         <TextInput
           onChangeText={setQuery}
           onFocus={() => setQuery("")}
-          placeholder={active === "from" ? "Rechercher le point de départ" : "Rechercher la destination"}
+          placeholder={active === "from" ? "Chercher le départ : quartier, carrefour…" : "Chercher l’arrivée : quartier, carrefour…"}
           placeholderTextColor={couleurs.texteSecondaire}
           style={styles.searchInput}
           value={query}
@@ -56,24 +57,24 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
       </View>
 
       {active === "from" && onCurrentLocation ? (
-        <Pressable onPress={onCurrentLocation} disabled={locating} style={({ pressed }) => [styles.locationAction, pressed && styles.pressed]}>
+        <PressionDouce onPress={onCurrentLocation} disabled={locating} style={({ pressed }) => [styles.locationAction, pressed && styles.pressed]}>
           <View style={styles.resultIcon}><IconCurrentLocation color={couleurs.texte} size={20} /></View>
           <View style={styles.resultCopy}>
             <Text style={styles.resultName}>{locating ? "Localisation en cours…" : "Utiliser ma position"}</Text>
-            <Text style={styles.resultDetail}>L’arrêt connu le plus proche sera sélectionné</Text>
+            <Text style={styles.resultDetail}>On prend l’arrêt le plus proche de vous</Text>
           </View>
-        </Pressable>
+        </PressionDouce>
       ) : null}
 
       <View style={styles.results}>
         {results.map((stop) => (
-          <Pressable key={stop.id} onPress={() => choose(stop)} style={({ pressed }) => [styles.result, pressed && styles.pressed]}>
+          <PressionDouce key={stop.id} onPress={() => choose(stop)} style={({ pressed }) => [styles.result, pressed && styles.pressed]}>
             <View style={styles.resultIcon}><IconMapPin color={couleurs.texte} size={19} /></View>
             <View style={styles.resultCopy}>
               <Text style={styles.resultName}>{stop.name}</Text>
               <Text numberOfLines={2} style={styles.resultDetail}>{stop.meetingInstructions ?? "Point de rencontre"}</Text>
             </View>
-          </Pressable>
+          </PressionDouce>
         ))}
       </View>
     </View>
@@ -82,14 +83,14 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, onCurrentLocati
 
 function PlaceField({ label, value, active, onPress, onClear }: { label: string; value: string; active: boolean; onPress: () => void; onClear: () => void }) {
   return (
-    <Pressable onPress={onPress} style={[styles.placeField, active && styles.placeFieldActive]}>
+    <PressionDouce onPress={onPress} style={[styles.placeField, active && styles.placeFieldActive]}>
       <View style={[styles.dot, label === "Destination" && styles.dotEnd]} />
       <View style={styles.placeCopy}>
         <Text style={styles.placeLabel}>{label}</Text>
         <Text numberOfLines={2} style={[styles.placeValue, !value && styles.placePlaceholder]}>{value || "À définir"}</Text>
       </View>
-      {value ? <Pressable accessibilityLabel={`Effacer ${label.toLowerCase()}`} hitSlop={10} onPress={onClear}><IconX color={couleurs.texteSecondaire} size={18} /></Pressable> : null}
-    </Pressable>
+      {value ? <PressionDouce accessibilityLabel={`Effacer ${label.toLowerCase()}`} hitSlop={10} onPress={onClear}><IconX color={couleurs.texteSecondaire} size={18} /></PressionDouce> : null}
+    </PressionDouce>
   );
 }
 
@@ -102,17 +103,17 @@ const styles = StyleSheet.create({
   dot: { width: 12, height: 12, borderRadius: rayons.rond, backgroundColor: couleurs.encre, zIndex: 1 },
   dotEnd: { backgroundColor: couleurs.primaire, borderColor: couleurs.encre, borderWidth: 2 },
   placeCopy: { flex: 1, gap: 2 },
-  placeLabel: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "800" },
-  placeValue: { color: couleurs.texte, fontSize: taillesTexte.normal, lineHeight: 20, fontWeight: "800" },
-  placePlaceholder: { color: couleurs.texteSecondaire, fontWeight: "700" },
+  placeLabel: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
+  placeValue: { color: couleurs.texte, fontSize: taillesTexte.normal, lineHeight: 20, fontFamily: polices.texteGras },
+  placePlaceholder: { color: couleurs.texteSecondaire, fontFamily: polices.texteDemiGras },
   searchBox: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: espacements.sm, paddingHorizontal: espacements.md, borderRadius: rayons.md, backgroundColor: couleurs.surfaceSecondaire },
-  searchInput: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.petit, paddingVertical: espacements.md },
+  searchInput: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.petit, paddingVertical: espacements.md, fontFamily: polices.texte },
   results: { gap: espacements.xs },
   result: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: espacements.md, paddingVertical: 6 },
   locationAction: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: espacements.md, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: couleurs.bordure },
   resultIcon: { width: 36, height: 36, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" },
   resultCopy: { flex: 1, gap: 2 },
-  resultName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
-  resultDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17 },
+  resultName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
+  resultDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte },
   pressed: { opacity: 0.72 },
 });

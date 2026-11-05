@@ -7,7 +7,7 @@ type FakeBooking = {
   tripId: string;
   pickupStopId: string;
   dropoffStopId: string;
-  status: "PROPOSED_BY_CLIENT" | "CONFIRMED";
+  status: "PROPOSED_BY_CLIENT" | "CONFIRMED" | "REFUSED";
   proposedPrice: number;
   counterPrice: number | null;
   expiresAt: Date | null;
@@ -67,12 +67,16 @@ function createConcurrentPrismaMock() {
             .map(({ pickupStopId, dropoffStopId }) => ({ pickupStopId, dropoffStopId })),
         ),
       ),
-      update: vi.fn(
-        ({ where, data }: { where: { id: string }; data: Partial<FakeBooking> }) => {
-          const updated = { ...bookings.get(where.id)!, ...data };
-          bookings.set(where.id, updated);
-          return Promise.resolve({ ...updated });
+      updateMany: vi.fn(
+        ({ where, data }: { where: { id: string; status: string }; data: Partial<FakeBooking> }) => {
+          const current = bookings.get(where.id);
+          if (!current || current.status !== where.status) return Promise.resolve({ count: 0 });
+          bookings.set(where.id, { ...current, ...data });
+          return Promise.resolve({ count: 1 });
         },
+      ),
+      findUniqueOrThrow: vi.fn(({ where }: { where: { id: string } }) =>
+        Promise.resolve({ ...bookings.get(where.id)! }),
       ),
     },
     trip: {
@@ -96,7 +100,7 @@ function createConcurrentPrismaMock() {
     }),
   } as unknown as PrismaClient;
 
-  return { prisma, bookings, trip, queryRaw: tx.$queryRaw };
+  return { prisma, bookings, trip, queryRaw: tx.$queryRaw, tx };
 }
 
 describe("confirmBooking", () => {
@@ -121,5 +125,19 @@ describe("confirmBooking", () => {
     expect(trip.status).toBe("FULL");
     expect(queryRaw).toHaveBeenCalledTimes(2);
     expect(String(queryRaw.mock.calls[0]?.[0])).toContain("FOR UPDATE");
+  });
+
+  it("ne confirme pas une réservation refusée entre la lecture et l'écriture", async () => {
+    const { prisma, bookings, tx } = createConcurrentPrismaMock();
+    // Le refus du client arrive pendant la confirmation, après la lecture du statut.
+    tx.booking.findMany.mockImplementationOnce(() => {
+      bookings.set("booking-1", { ...bookings.get("booking-1")!, status: "REFUSED" });
+      return Promise.resolve([]);
+    });
+
+    await expect(confirmBooking(prisma, { bookingId: "booking-1" })).rejects.toMatchObject({
+      code: "BOOKING_NOT_CONFIRMABLE",
+    });
+    expect(bookings.get("booking-1")!.status).toBe("REFUSED");
   });
 });

@@ -33,7 +33,7 @@ export function creerCreneaux(now: Date): CreneauDepart[] {
 }
 
 export function erreurPublication(stopIds: string[], capacity: number, maxSeats: number): string | null {
-  if (stopIds.length < 2) return "Sélectionnez au moins deux arrêts.";
+  if (stopIds.length < 2) return "Choisissez au moins deux arrêts.";
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > maxSeats) {
     return `Choisissez entre 1 et ${maxSeats} place${maxSeats > 1 ? "s" : ""}.`;
   }

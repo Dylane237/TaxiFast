@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import Fastify from "fastify";
+import Fastify, { type FastifyPluginAsync } from "fastify";
+import { enregistrerLimiteDebit, lireTrustProxy } from "./http/rate-limit.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerAccountRoutes } from "./routes/account.js";
 import {
@@ -34,7 +35,10 @@ type BuildAppOptions = {
 };
 
 export function buildApp(options: BuildAppOptions = {}) {
-  const app = Fastify({ logger: process.env.NODE_ENV !== "test" });
+  const app = Fastify({
+    logger: process.env.NODE_ENV !== "test",
+    trustProxy: lireTrustProxy(process.env.TRUST_PROXY),
+  });
   const prisma = options.prisma ?? new PrismaClient();
   const authentication =
     options.authentication ?? createDefaultAuthentication(prisma);
@@ -44,27 +48,32 @@ export function buildApp(options: BuildAppOptions = {}) {
       ? new NoopNotifier()
       : new ExpoPushNotifier(prisma));
 
-  app.get("/health", async () => ({ status: "ok" }));
-  registerAuthRoutes(app, authentication);
-  registerAccountRoutes(app, prisma, authentication);
-  registerCorridorRoutes(app, prisma, authentication);
-  registerDeviceRoutes(app, prisma, authentication);
-  registerLocationRoutes(app, prisma, authentication);
-  registerTripRoutes(app, prisma, authentication, notifier);
-  registerTripRequestRoutes(app, prisma, authentication, notifier);
-  registerBookingRoutes(
-    app,
-    prisma,
-    options.confirmBooking ?? confirmBooking,
-    authentication,
-    notifier,
-  );
-  registerMatchingRoutes(
-    app,
-    options.matching ?? new PrismaMatchingService(prisma),
-    authentication,
-  );
-  registerRatingAndWalletRoutes(app, prisma, authentication);
+  enregistrerLimiteDebit(app);
+  // Les routes sont déclarées une fois la limite de débit chargée, pour qu'elle s'applique à toutes.
+  const declarerRoutes: FastifyPluginAsync = async (routes) => {
+    routes.get("/health", async () => ({ status: "ok" }));
+    registerAuthRoutes(routes, authentication);
+    registerAccountRoutes(routes, prisma, authentication);
+    registerCorridorRoutes(routes, prisma, authentication);
+    registerDeviceRoutes(routes, prisma, authentication);
+    registerLocationRoutes(routes, prisma, authentication);
+    registerTripRoutes(routes, prisma, authentication, notifier);
+    registerTripRequestRoutes(routes, prisma, authentication, notifier);
+    registerBookingRoutes(
+      routes,
+      prisma,
+      options.confirmBooking ?? confirmBooking,
+      authentication,
+      notifier,
+    );
+    registerMatchingRoutes(
+      routes,
+      options.matching ?? new PrismaMatchingService(prisma),
+      authentication,
+    );
+    registerRatingAndWalletRoutes(routes, prisma, authentication);
+  };
+  app.register(declarerRoutes);
 
   if (!options.prisma) {
     app.addHook("onClose", async () => {

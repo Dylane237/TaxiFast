@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
+import { DEPART_PASSE_TOLERE_MS, placesSchema, prixSchema } from "../domain/limites.js";
 import { requireUser } from "../http/authorization.js";
 import type { Authentication } from "../services/authentication.js";
 import type { Notifier } from "../services/notifications.js";
@@ -8,13 +9,13 @@ import type { Notifier } from "../services/notifications.js";
 const fareSchema = z.object({
   fromStopId: z.string().trim().min(1),
   toStopId: z.string().trim().min(1),
-  price: z.number().int().positive(),
+  price: prixSchema,
 });
 
 const createTripSchema = z
   .object({
     corridorId: z.string().trim().min(1),
-    capacity: z.number().int().positive(),
+    capacity: placesSchema,
     departureAt: z.iso.datetime({ offset: true }),
     availableUntil: z.iso.datetime({ offset: true }).optional(),
     availabilityMode: z.enum(["IMMEDIATE", "SCHEDULED"]).default("SCHEDULED"),
@@ -35,13 +36,17 @@ const createTripSchema = z
   .refine(
     (input) => !input.availableUntil || new Date(input.departureAt) < new Date(input.availableUntil),
     { message: "La fin de disponibilité doit suivre le départ", path: ["availableUntil"] },
+  )
+  .refine(
+    (input) => new Date(input.departureAt).getTime() > Date.now() - DEPART_PASSE_TOLERE_MS,
+    { message: "Le départ est déjà passé", path: ["departureAt"] },
   );
 
 const tripParamsSchema = z.object({ tripId: z.string().trim().min(1) });
 const updateTripSchema = z
   .object({
     corridorId: z.string().trim().min(1).optional(),
-    capacity: z.number().int().positive().optional(),
+    capacity: placesSchema.optional(),
     departureAt: z.iso.datetime({ offset: true }).optional(),
     availableUntil: z.iso.datetime({ offset: true }).nullable().optional(),
     availabilityMode: z.enum(["IMMEDIATE", "SCHEDULED"]).optional(),
@@ -452,19 +457,20 @@ export function registerTripRoutes(
     const params = tripParamsSchema.safeParse(request.params);
     if (!params.success) return invalidInput(reply, params.error);
 
-    const current = await prisma.trip.findUnique({
-      where: { id: params.data.tripId },
-      select: { id: true, driverId: true, status: true },
-    });
-    if (!current) return reply.status(404).send({ error: "TRIP_NOT_FOUND" });
-    if (current.driverId !== principal.userId) {
-      return reply.status(403).send({ error: "TRIP_ACTION_FORBIDDEN" });
-    }
-    if (current.status !== "OPEN" && current.status !== "FULL") {
-      return reply.status(409).send({ error: "TRIP_NOT_OPEN" });
-    }
+    // Sous verrou, comme la confirmation : une réservation acceptée pendant la clôture
+    // ne peut plus rester « confirmée » sur un trajet terminé.
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Trip" WHERE "id" = ${params.data.tripId} FOR UPDATE`;
+      const current = await tx.trip.findUnique({
+        where: { id: params.data.tripId },
+        select: { id: true, driverId: true, status: true, departureAt: true },
+      });
+      if (!current) return { error: "TRIP_NOT_FOUND" as const };
+      if (current.driverId !== principal.userId) return { error: "TRIP_ACTION_FORBIDDEN" as const };
+      if (current.status !== "OPEN" && current.status !== "FULL") return { error: "TRIP_NOT_OPEN" as const };
+      // Clore avant le départ passerait des courses jamais faites en « terminées » (et notables).
+      if (current.departureAt > new Date()) return { error: "TRIP_NOT_STARTED" as const };
 
-    const trip = await prisma.$transaction(async (tx) => {
       await tx.booking.updateMany({
         where: {
           tripId: current.id,
@@ -477,12 +483,17 @@ export function registerTripRoutes(
         data: { status: "COMPLETED" },
       });
       await tx.tripLocation.deleteMany({ where: { tripId: current.id } });
-      return tx.trip.update({
+      const trip = await tx.trip.update({
         where: { id: current.id },
         data: { status: "COMPLETED" },
         include: tripInclude,
       });
+      return { trip };
     });
-    return reply.send(trip);
+    if ("error" in result) {
+      const status = result.error === "TRIP_NOT_FOUND" ? 404 : result.error === "TRIP_ACTION_FORBIDDEN" ? 403 : 409;
+      return reply.status(status).send({ error: result.error });
+    }
+    return reply.send(result.trip);
   });
 }

@@ -7,10 +7,10 @@ import { useQuery } from "@tanstack/react-query";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type WalletTransaction } from "@/api";
-import { EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, EntetePage, EtatContenu } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 function TransactionRow({ item }: { item: WalletTransaction }) {
   const commission = item.type === "COMMISSION";
@@ -28,7 +28,7 @@ function TransactionRow({ item }: { item: WalletTransaction }) {
       <View style={styles.transactionCopy}>
         <Text style={styles.transactionTitle}>
           {commission
-            ? "Commission plateforme"
+            ? "Commission Taxi Fast"
             : item.type === "PAYOUT"
               ? "Gain de course"
               : "Rechargement"}
@@ -56,7 +56,7 @@ export default function WalletScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement du portefeuille"
-          description="Calcul des gains et commissions."
+          description="On fait les comptes."
         />
       </State>
     );
@@ -65,7 +65,7 @@ export default function WalletScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Portefeuille indisponible"
+          title="Impossible d’ouvrir le portefeuille"
           description={messageErreur(wallet.error)}
         />
       </State>
@@ -78,12 +78,12 @@ export default function WalletScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <TransactionRow item={item} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><TransactionRow item={item} /></ApparitionListe>}
         ListHeaderComponent={
           <View style={styles.header}>
             <EntetePage
               title="Portefeuille"
-              description="Vos gains nets et les commissions prélevées."
+              description="Ce que vous avez gagné, commission déduite."
             />
             <View style={styles.balance}>
               <View style={styles.balanceIcon}>
@@ -115,8 +115,8 @@ export default function WalletScreen() {
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Aucun mouvement"
-            description="Les gains de vos courses apparaîtront ici."
+            title="Pas encore de gains"
+            description="Chaque course terminée s’ajoute ici."
           />
         }
         contentContainerStyle={[styles.list, !data.length && styles.grow]}
@@ -135,7 +135,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Portefeuille" description="Gains et commissions." />
+        <EntetePage title="Portefeuille" description="Vos gains." />
         {children}
       </View>
     </SafeAreaView>
@@ -165,21 +165,21 @@ const styles = StyleSheet.create({
   balanceLabel: {
     color: "#AEB4AC",
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1.1,
+    fontFamily: polices.texteGras,
   },
-  balanceValue: { color: couleurs.surface, fontSize: 32, fontWeight: "900" },
+  balanceValue: { color: couleurs.surface, fontSize: 32, fontFamily: polices.titre },
   stats: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: espacements.md,
   },
   stat: { flex: 1, gap: 2 },
-  statLabel: { color: "#AEB4AC", fontSize: taillesTexte.petit },
+  statLabel: { color: "#AEB4AC", fontSize: taillesTexte.petit, fontFamily: polices.texte },
   statValue: {
     color: couleurs.surface,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   statDivider: {
     width: 1,
@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1.1,
+    fontFamily: polices.texteGras,
   },
   transaction: {
     minHeight: 68,
@@ -214,16 +214,17 @@ const styles = StyleSheet.create({
   transactionTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   transactionDate: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
+    fontFamily: polices.texte,
   },
   amount: {
     color: couleurs.succes,
     fontSize: taillesTexte.petit,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   amountNegative: { color: couleurs.attention },
 });

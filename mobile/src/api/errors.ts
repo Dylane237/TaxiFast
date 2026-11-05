@@ -17,7 +17,13 @@ export type ApiErrorCode =
   | "NETWORK_ERROR"
   | "SESSION_EXPIRED"
   | "INVALID_RESPONSE"
-  | "NOT_IMPLEMENTED";
+  | "NOT_IMPLEMENTED"
+  | "RATE_LIMITED"
+  | "OTP_RATE_LIMITED"
+  | "TOO_MANY_OPEN_REQUESTS"
+  | "BOOKING_ALREADY_PENDING"
+  | "OTP_DELIVERY_FAILED"
+  | "TRIP_NOT_STARTED";
 
 export class ApiError extends Error {
   constructor(
@@ -27,4 +33,13 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+}
+
+/** Message à afficher quand le serveur freine un appareil qui envoie trop de requêtes. */
+export function messageLimiteDebit(secondesAvantNouvelEssai?: number): string {
+  if (!secondesAvantNouvelEssai || secondesAvantNouvelEssai <= 0) {
+    return "Doucement ! Trop de tentatives d’un coup. Patientez quelques minutes avant de réessayer.";
+  }
+  if (secondesAvantNouvelEssai < 60) return "Doucement ! Réessayez dans moins d’une minute.";
+  return `Doucement ! Réessayez dans ${Math.ceil(secondesAvantNouvelEssai / 60)} min.`;
 }

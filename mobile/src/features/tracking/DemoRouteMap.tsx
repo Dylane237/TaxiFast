@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type DemoRouteMapProps = {
   stopCount: number;
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   demoBadgeText: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 0.7,
+    fontFamily: polices.texteGras,
   },
 });

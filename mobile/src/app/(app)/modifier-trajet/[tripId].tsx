@@ -2,17 +2,17 @@ import { IconArrowLeft, IconArrowRight, IconCheck, IconInfoCircle, IconMinus, Ic
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Corridor, type Trip } from "@/api";
-import { Bouton, Carte, Champ, EntetePage, MessageEtat, PuceChoix } from "@/components";
+import { Bouton, Carte, Champ, EntetePage, MessageEtat, PressionDouce, PuceChoix } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatLocalDateTime, parseLocalDateTime } from "@/features/date-time-input";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { buildFareDrafts, type FareDraft } from "@/features/route-composer/route-composer";
 import { ordonnerArrets, type SensTrajet } from "@/features/trips/trip-form";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function EditTripScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -23,7 +23,7 @@ export default function EditTripScreen() {
   const error = trips.error ?? corridorsQuery.error;
 
   if (pending || error || !trip || !corridorsQuery.data) {
-    return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><View style={styles.state}><EntetePage title="Modifier le trajet" description="Tous les détails de votre publication, au même endroit." />{pending ? <MessageEtat>Chargement du trajet…</MessageEtat> : null}{error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}{!pending && !error && !trip ? <MessageEtat type="erreur">Trajet introuvable.</MessageEtat> : null}</View></SafeAreaView>;
+    return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><View style={styles.state}><EntetePage title="Modifier le trajet" description="Changez l’itinéraire, les arrêts, l’heure ou les prix." />{pending ? <MessageEtat>Chargement du trajet…</MessageEtat> : null}{error ? <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat> : null}{!pending && !error && !trip ? <MessageEtat type="erreur">Trajet introuvable.</MessageEtat> : null}</View></SafeAreaView>;
   }
 
   return <EditTripForm key={trip.id} trip={trip} corridors={corridorsQuery.data} />;
@@ -104,36 +104,36 @@ function EditTripForm({ trip, corridors }: { trip: Trip; corridors: Corridor[] }
       router.replace("/mes-trajets");
     },
   });
-  const confirmCancel = () => Alert.alert("Annuler ce trajet ?", "Les propositions et réservations actives seront annulées. Cette action est définitive.", [
-    { text: "Conserver", style: "cancel" },
+  const confirmCancel = () => Alert.alert("Annuler ce trajet ?", "Toutes les demandes et réservations de ce trajet seront annulées. Impossible de revenir en arrière.", [
+    { text: "Garder le trajet", style: "cancel" },
     { text: "Annuler le trajet", style: "destructive", onPress: () => cancel.mutate() },
   ]);
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <EntetePage title="Modifier le trajet" description="Tous les détails de votre publication, au même endroit." />
+        <EntetePage title="Modifier le trajet" description="Changez l’itinéraire, les arrêts, l’heure ou les prix." />
         {corridor ? <>
           <RouteMiniMap stops={selectedStops} compact />
           <Section title="Itinéraire">
             <View style={styles.wrap}>{corridors.map((item) => <PuceChoix key={item.id} label={item.name} selected={item.id === corridorId} onPress={() => chooseCorridor(item.id)} />)}</View>
             <View style={styles.wrap}>{(["ALLER", "RETOUR"] as const).map((value) => <PuceChoix key={value} label={value === "ALLER" ? "Aller" : "Retour"} selected={sens === value} onPress={() => chooseSens(value)} />)}</View>
           </Section>
-          <Section title="Arrêts desservis" detail="Touchez un point pour l’ajouter ou le retirer.">
+          <Section title="Arrêts" detail="Touchez un arrêt pour l’ajouter ou l’enlever.">
             <Carte style={styles.stopList}>{[...corridor.stops].sort((a, b) => sens === "ALLER" ? a.position - b.position : b.position - a.position).map((stop, index, list) => {
               const sequence = orderedStopIds.indexOf(stop.id);
               const endpoint = sequence === 0 || sequence === orderedStopIds.length - 1;
-              return <Pressable key={stop.id} accessibilityRole="checkbox" accessibilityState={{ checked: sequence >= 0 }} onPress={() => toggleStop(stop.id)} style={[styles.stopRow, index === list.length - 1 && styles.lastRow]}><View style={[styles.number, sequence >= 0 && styles.numberSelected]}>{sequence >= 0 ? <IconCheck color={couleurs.texte} size={15} /> : null}</View><View style={styles.flex}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopMeta}>{endpoint ? (sequence === 0 ? "Départ" : "Destination") : sequence >= 0 ? `Arrêt ${sequence}` : "Non desservi"}</Text></View></Pressable>;
+              return <PressionDouce key={stop.id} accessibilityRole="checkbox" accessibilityState={{ checked: sequence >= 0 }} onPress={() => toggleStop(stop.id)} style={[styles.stopRow, index === list.length - 1 && styles.lastRow]}><View style={[styles.number, sequence >= 0 && styles.numberSelected]}>{sequence >= 0 ? <IconCheck color={couleurs.texte} size={15} /> : null}</View><View style={styles.flex}><Text style={styles.stopName}>{stop.name}</Text><Text style={styles.stopMeta}>{endpoint ? (sequence === 0 ? "Départ" : "Arrivée") : sequence >= 0 ? `Arrêt ${sequence}` : "Pas d’arrêt"}</Text></View></PressionDouce>;
             })}</Carte>
           </Section>
-          <Section title="Disponibilité">
-            <View style={styles.modeGrid}>{(["IMMEDIATE", "SCHEDULED"] as const).map((value) => <Pressable key={value} onPress={() => setMode(value)} style={[styles.mode, mode === value && styles.modeActive]}><Text style={styles.modeTitle}>{value === "IMMEDIATE" ? "Je pars maintenant" : "Je prévois"}</Text><Text style={styles.modeDetail}>{value === "IMMEDIATE" ? "Visible immédiatement" : "Départ planifié"}</Text></Pressable>)}</View>
+          <Section title="Départ">
+            <View style={styles.modeGrid}>{(["IMMEDIATE", "SCHEDULED"] as const).map((value) => <PressionDouce key={value} onPress={() => setMode(value)} style={[styles.mode, mode === value && styles.modeActive]}><Text style={styles.modeTitle}>{value === "IMMEDIATE" ? "Je pars maintenant" : "Je pars plus tard"}</Text><Text style={styles.modeDetail}>{value === "IMMEDIATE" ? "Visible tout de suite" : "Heure choisie"}</Text></PressionDouce>)}</View>
             <Carte style={styles.form}><Champ etiquette="Départ (AAAA-MM-JJ HH:mm)" value={departure} onChangeText={setDeparture} autoCapitalize="none" /><Champ etiquette="Disponible jusqu’au (facultatif)" value={availableUntil} onChangeText={setAvailableUntil} autoCapitalize="none" /></Carte>
           </Section>
-          <Section title="Places et tarifs" detail="La capacité est vérifiée séparément sur chaque tronçon.">
-            <Carte style={styles.capacityCard}><Text style={styles.capacityLabel}>Places proposées</Text><View style={styles.counter}><Pressable disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={20} /></Pressable><Text style={styles.counterValue}>{capacity}</Text><Pressable disabled={capacity >= maxCapacity} onPress={() => setCapacity((value) => Math.min(maxCapacity, value + 1))} style={[styles.counterButton, capacity >= maxCapacity && styles.disabled]}><IconPlus color={couleurs.texte} size={20} /></Pressable></View></Carte>
-            {currentFare ? <Carte style={styles.fareCard}><View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.eyebrow}>TARIF {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={21} /></View><Champ etiquette="Prix en FCFA" value={String(currentFare.price)} keyboardType="number-pad" onChangeText={(value) => setFares((current) => current.map((fare, index) => index === fareIndex ? { ...fare, price: Number(value.replace(/\s/g, "")) || 0 } : fare))} /><View style={styles.fareNav}><Pressable disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={18} /><Text style={styles.navText}>Précédent</Text></Pressable><Pressable disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={18} /></Pressable></View></Carte> : <MessageEtat type="erreur">Sélectionnez au moins deux arrêts pour configurer les tarifs.</MessageEtat>}
+          <Section title="Places et prix" detail="Les places se comptent portion par portion : un client qui descend libère sa place pour la suite.">
+            <Carte style={styles.capacityCard}><Text style={styles.capacityLabel}>Places libres</Text><View style={styles.counter}><PressionDouce disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={20} /></PressionDouce><Text style={styles.counterValue}>{capacity}</Text><PressionDouce disabled={capacity >= maxCapacity} onPress={() => setCapacity((value) => Math.min(maxCapacity, value + 1))} style={[styles.counterButton, capacity >= maxCapacity && styles.disabled]}><IconPlus color={couleurs.texte} size={20} /></PressionDouce></View></Carte>
+            {currentFare ? <Carte style={styles.fareCard}><View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.eyebrow}>PRIX {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={21} /></View><Champ etiquette="Prix en FCFA" value={String(currentFare.price)} keyboardType="number-pad" onChangeText={(value) => setFares((current) => current.map((fare, index) => index === fareIndex ? { ...fare, price: Number(value.replace(/\s/g, "")) || 0 } : fare))} /><View style={styles.fareNav}><PressionDouce disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={18} /><Text style={styles.navText}>Précédent</Text></PressionDouce><PressionDouce disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={18} /></PressionDouce></View></Carte> : <MessageEtat type="erreur">Choisissez au moins deux arrêts pour fixer les prix.</MessageEtat>}
           </Section>
-          <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Les arrêts d’une réservation confirmée doivent rester présents et dans le même sens.</Text></View>
+          <View style={styles.notice}><IconInfoCircle color={couleurs.texteSecondaire} size={18} /><Text style={styles.noticeText}>Un client confirmé monte et descend à des arrêts précis : ces arrêts doivent rester, dans le même sens.</Text></View>
           {update.isError ? <MessageEtat type="erreur">{messageErreur(update.error)}</MessageEtat> : null}
           <Bouton variante="sombre" chargement={update.isPending} onPress={() => update.mutate()}>Enregistrer les modifications</Bouton>
           {cancel.isError ? <MessageEtat type="erreur">{messageErreur(cancel.error)}</MessageEtat> : null}
@@ -150,11 +150,11 @@ function Section({ title, detail, children }: { title: string; detail?: string; 
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, content: { padding: espacements.lg, paddingBottom: espacements.xxl, gap: 20 }, section: { gap: espacements.md },
-  sectionTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" }, sectionDetail: { marginTop: 2, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18 }, wrap: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
+  sectionTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteGras }, sectionDetail: { marginTop: 2, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texte }, wrap: { flexDirection: "row", flexWrap: "wrap", gap: espacements.sm },
   stopList: { paddingVertical: 0 }, stopRow: { minHeight: 52, flexDirection: "row", alignItems: "center", gap: espacements.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: couleurs.bordure }, lastRow: { borderBottomWidth: 0 },
-  number: { width: 28, height: 28, borderRadius: rayons.rond, alignItems: "center", justifyContent: "center", backgroundColor: couleurs.surfaceSecondaire, borderWidth: 1, borderColor: couleurs.bordure }, numberSelected: { backgroundColor: couleurs.primaire, borderColor: couleurs.primairePresse }, flex: { flex: 1, gap: 2 }, stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" }, stopMeta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro },
-  modeGrid: { flexDirection: "row", gap: espacements.sm }, mode: { flex: 1, minHeight: 76, justifyContent: "center", padding: espacements.md, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, modeActive: { backgroundColor: couleurs.primaireClaire, borderColor: couleurs.primairePresse }, modeTitle: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" }, modeDetail: { marginTop: 3, color: couleurs.texteSecondaire, fontSize: taillesTexte.micro }, form: { gap: espacements.md },
-  capacityCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, capacityLabel: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" }, counter: { flexDirection: "row", alignItems: "center", gap: espacements.md }, counterButton: { width: 40, height: 40, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, counterValue: { minWidth: 22, textAlign: "center", color: couleurs.texte, fontSize: 22, fontWeight: "800" }, disabled: { opacity: 0.3 },
-  fareCard: { gap: espacements.md }, fareHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "800", letterSpacing: 0.7 }, fareTitle: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 19, fontWeight: "800" }, fareNav: { flexDirection: "row", gap: espacements.sm }, navButton: { minHeight: 42, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire }, navText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "700" },
-  notice: { flexDirection: "row", alignItems: "flex-start", gap: espacements.sm }, noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18 },
+  number: { width: 28, height: 28, borderRadius: rayons.rond, alignItems: "center", justifyContent: "center", backgroundColor: couleurs.surfaceSecondaire, borderWidth: 1, borderColor: couleurs.bordure }, numberSelected: { backgroundColor: couleurs.primaire, borderColor: couleurs.primairePresse }, flex: { flex: 1, gap: 2 }, stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras }, stopMeta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texte },
+  modeGrid: { flexDirection: "row", gap: espacements.sm }, mode: { flex: 1, minHeight: 76, justifyContent: "center", padding: espacements.md, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, modeActive: { backgroundColor: couleurs.primaireClaire, borderColor: couleurs.primairePresse }, modeTitle: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras }, modeDetail: { marginTop: 3, color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texte }, form: { gap: espacements.md },
+  capacityCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, capacityLabel: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras }, counter: { flexDirection: "row", alignItems: "center", gap: espacements.md }, counterButton: { width: 40, height: 40, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, counterValue: { minWidth: 22, textAlign: "center", color: couleurs.texte, fontSize: 22, fontFamily: polices.titre }, disabled: { opacity: 0.3 },
+  fareCard: { gap: espacements.md }, fareHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 0.7, fontFamily: polices.texteGras }, fareTitle: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 19, fontFamily: polices.texteGras }, fareNav: { flexDirection: "row", gap: espacements.sm }, navButton: { minHeight: 42, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire }, navText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteDemiGras },
+  notice: { flexDirection: "row", alignItems: "flex-start", gap: espacements.sm }, noticeText: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texte },
 });

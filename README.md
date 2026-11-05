@@ -61,7 +61,12 @@ qui utilise les identifiants FCM v1 configurés pour la build Android.
 
 ## 6. Brancher l'application au serveur local
 
-Le mode fictif reste activé par défaut. Pour utiliser PostgreSQL et l'API réelle :
+En développement, le mode fictif reste activé par défaut. Un build release, lui, n'est jamais en
+mode fictif sauf si `EXPO_PUBLIC_USE_MOCK=true` est demandé (profils `development` et `preview`) : le
+profil `production` exige `EXPO_PUBLIC_API_URL` en `https://`, à définir dans les variables EAS,
+sinon l'application refuse de démarrer.
+
+Pour utiliser PostgreSQL et l'API réelle :
 
 1. Copie `server/.env.example` vers `server/.env`, renseigne `DATABASE_URL`, puis lance
    `npx prisma migrate deploy`, `npm run db:seed` et `npm run dev` depuis `server/`.
@@ -70,5 +75,9 @@ Le mode fictif reste activé par défaut. Pour utiliser PostgreSQL et l'API rée
    `http://192.168.1.20:3000`. Le téléphone et le PC doivent être sur le même réseau.
 4. Relance Expo après toute modification des variables `EXPO_PUBLIC_*`.
 
-En développement, `DEV_OTP_CODE=123456` fixe le code OTP. Cette variable est ignorée en
-production, où un fournisseur d'envoi OTP devra être configuré.
+`JWT_SECRET` est obligatoire partout : le serveur refuse de démarrer sans lui ou avec une valeur
+d'exemple. En développement, mettez `NODE_ENV=development` ; `DEV_OTP_CODE=123456` fixe alors le
+code OTP. Si `NODE_ENV` est absent ou vaut autre chose, le serveur se comporte comme en production :
+il refuse `DEV_OTP_CODE`, n'affiche aucun code dans les logs, et exige Twilio pour envoyer les codes
+par SMS (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, voir `server/.env.example`). Dans la
+console Twilio, autorisez le Cameroun dans les permissions géographiques des SMS.

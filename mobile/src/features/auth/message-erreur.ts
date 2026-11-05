@@ -1,23 +1,30 @@
 import { ApiError } from "@/api";
 
 const messages: Partial<Record<ApiError["code"], string>> = {
-  INVALID_INPUT: "Vérifiez les informations saisies.",
-  OTP_NOT_REQUESTED: "Demandez d’abord un nouveau code.",
-  OTP_INVALID: "Le code saisi est incorrect.",
-  UNAUTHENTICATED: "Votre session n’est plus valide.",
-  SESSION_EXPIRED: "Votre session a expiré. Reconnectez-vous.",
-  NETWORK_ERROR: "Le serveur est inaccessible. Vérifiez votre connexion.",
-  INVALID_RESPONSE: "Le serveur a renvoyé une réponse inattendue.",
-  NOT_IMPLEMENTED: "Le serveur n’est pas encore branché.",
-  CAPACITY_EXCEEDED: "Le trajet est devenu complet sur ce tronçon.",
-  BOOKING_EXPIRED: "Cette proposition a expiré.",
-  BOOKING_NOT_CONFIRMABLE: "Cette demande a déjà reçu une réponse.",
-  COUNTER_OFFER_ALREADY_USED: "La contre-proposition a déjà été utilisée.",
-  TRIP_NOT_OPEN: "Ce trajet n’est plus ouvert.",
+  INVALID_INPUT: "Quelque chose cloche dans ce que vous avez saisi. Relisez puis recommencez.",
+  OTP_NOT_REQUESTED: "Demandez d’abord un code, puis entrez-le ici.",
+  OTP_INVALID: "Ce n’est pas le bon code. Vérifiez le SMS.",
+  UNAUTHENTICATED: "Vous avez été déconnecté. Reconnectez-vous pour continuer.",
+  SESSION_EXPIRED: "Ça fait un moment ! Reconnectez-vous pour reprendre.",
+  NETWORK_ERROR: "Pas de connexion pour l’instant. Vérifiez vos données mobiles ou le Wi-Fi.",
+  INVALID_RESPONSE: "Le serveur a renvoyé une réponse bizarre. Patientez un peu puis recommencez.",
+  NOT_IMPLEMENTED: "Cette fonction arrive bientôt.",
+  CAPACITY_EXCEEDED: "Trop tard, le taxi vient de se remplir sur cette portion du trajet.",
+  BOOKING_EXPIRED: "Cette proposition a expiré, personne n’a répondu à temps.",
+  BOOKING_NOT_CONFIRMABLE: "Cette demande a déjà eu sa réponse.",
+  COUNTER_OFFER_ALREADY_USED: "Un autre prix a déjà été proposé une fois. C’est le maximum.",
+  TRIP_NOT_OPEN: "Ce taxi ne prend plus de clients sur ce trajet.",
+  OTP_RATE_LIMITED: "Un code vient de partir. Attendez une minute avant d’en redemander un.",
+  TRIP_NOT_STARTED: "Le trajet n’a pas encore commencé. Vous pourrez le terminer après l’heure de départ.",
+  OTP_DELIVERY_FAILED: "Le SMS n’a pas pu partir. Vérifiez votre numéro, puis réessayez dans un instant.",
+  TOO_MANY_OPEN_REQUESTS:
+    "Vous avez déjà trois demandes en cours. Annulez-en une ou attendez une réponse avant d’en lancer une autre.",
+  BOOKING_ALREADY_PENDING: "Vous avez déjà une proposition en attente pour ce taxi. Attendez la réponse du chauffeur.",
+  // RATE_LIMITED n'est pas ici : son message, calculé avec le temps d'attente, arrive dans l'erreur elle-même.
 };
 
 export function messageErreur(error: unknown): string {
   if (error instanceof ApiError) return messages[error.code] ?? error.message;
   if (error instanceof Error && error.message) return error.message;
-  return "Une erreur inattendue est survenue. Réessayez.";
+  return "Ça n’a pas marché. Réessayez dans un instant.";
 }

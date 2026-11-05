@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { StyleSheet, Text } from "react-native";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { PressionDouce } from "./PressionDouce";
 
 type PuceChoixProps = {
   label: string;
@@ -15,7 +16,7 @@ export function PuceChoix({
   disabled,
 }: PuceChoixProps) {
   return (
-    <Pressable
+    <PressionDouce
       accessibilityRole="radio"
       accessibilityState={{ checked: selected, disabled }}
       disabled={disabled}
@@ -30,7 +31,7 @@ export function PuceChoix({
       <Text style={[styles.label, selected && styles.selectedLabel]}>
         {label}
       </Text>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
   label: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   disabled: { opacity: 0.36 },
   pressed: { opacity: 0.7 },

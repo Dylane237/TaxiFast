@@ -2,22 +2,16 @@ import { IconMapPin, IconStar, IconUser } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "@/api";
-import {
-  Bouton,
-  Carte,
-  Champ,
-  EntetePage,
-  EtatContenu,
-  MessageEtat,
-} from "@/components";
+import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 export default function HistoryDetailScreen() {
   const params = useLocalSearchParams<{ bookingId?: string | string[] }>();
@@ -44,6 +38,7 @@ export default function HistoryDetailScreen() {
         comment: comment.trim() || undefined,
       }),
     onSuccess: async () => {
+      vibrerSucces();
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["booking-details", bookingId],
@@ -57,8 +52,8 @@ export default function HistoryDetailScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Course invalide"
-          description="Impossible d’identifier cette course."
+          title="Lien de course incorrect"
+          description="Revenez à l’historique et rouvrez la course."
         />
       </State>
     );
@@ -68,7 +63,7 @@ export default function HistoryDetailScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement de la course"
-          description="Nous préparons son récapitulatif."
+          description="On prépare le récapitulatif."
         />
       </State>
     );
@@ -77,7 +72,7 @@ export default function HistoryDetailScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Course indisponible"
+          title="Impossible d’ouvrir cette course"
           description={messageErreur(details.error)}
         />
       </State>
@@ -87,7 +82,7 @@ export default function HistoryDetailScreen() {
     user?.role === "DRIVER" ? data.client.name : data.driver.name;
   const submit = () => {
     if (score < 1) {
-      setValidationError("Choisissez une note entre 1 et 5 étoiles.");
+      setValidationError("Touchez une étoile pour donner votre note.");
       return;
     }
     setValidationError(null);
@@ -137,7 +132,7 @@ export default function HistoryDetailScreen() {
             </Text>
             <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((value) => (
-                <Pressable
+                <PressionDouce
                   key={value}
                   accessibilityLabel={`${value} étoile${value > 1 ? "s" : ""}`}
                   onPress={() => setScore(value)}
@@ -150,14 +145,14 @@ export default function HistoryDetailScreen() {
                     fill={value <= score ? couleurs.primaire : "transparent"}
                     size={31}
                   />
-                </Pressable>
+                </PressionDouce>
               ))}
             </View>
             <Champ
               etiquette="Commentaire (facultatif)"
               value={comment}
               onChangeText={setComment}
-              placeholder="Ponctualité, conduite, courtoisie…"
+              placeholder="À l’heure ? Conduite prudente ? Sympa ?"
               multiline
               maxLength={500}
             />
@@ -170,16 +165,16 @@ export default function HistoryDetailScreen() {
               </MessageEtat>
             ) : null}
             <Bouton chargement={rating.isPending} onPress={submit}>
-              Publier mon avis
+              Envoyer mon avis
             </Bouton>
           </Carte>
         ) : (
           <MessageEtat type="succes">
             {rating.isSuccess
-              ? "Merci, votre avis a été enregistré."
+              ? "Merci ! Votre avis aide toute la communauté."
               : data.ratedByCurrentUser
                 ? "Vous avez déjà noté cette course."
-                : "Cette course ne peut pas être notée."}
+                : "Cette course ne peut plus être notée."}
           </MessageEtat>
         )}
       </ScrollView>
@@ -190,7 +185,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Course" description="Récapitulatif et notation." />
+        <EntetePage title="Course" description="Le récap et votre avis." />
         {children}
       </View>
     </SafeAreaView>
@@ -210,12 +205,13 @@ const styles = StyleSheet.create({
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   meta: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   total: {
     flexDirection: "row",
@@ -225,13 +221,13 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
   ratingCard: { gap: espacements.md },
   ratingTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
     lineHeight: 22,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   stars: {
     flexDirection: "row",

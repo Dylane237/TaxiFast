@@ -10,7 +10,7 @@ const formSchema = z
     durationMinutes: z.number().int().min(30),
   })
   .refine((value) => value.fromStopId !== value.toStopId, {
-    message: "Choisissez deux arrêts différents.",
+    message: "Le départ et l’arrivée doivent être différents.",
   });
 
 export type ClientRequestForm = z.input<typeof formSchema>;

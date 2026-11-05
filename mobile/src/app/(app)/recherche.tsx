@@ -3,10 +3,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Stop } from "@/api";
-import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat } from "@/components";
+import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { CityMapBackdrop } from "@/features/maps/CityMapBackdrop";
@@ -14,7 +14,8 @@ import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { WizardProgress } from "@/features/route-composer/WizardProgress";
 import { buildAvailability, findRouteSelection, nearestStop } from "@/features/route-composer/route-composer";
-import { couleurs, espacements, ombres, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 const labels = ["VOTRE TRAJET", "HORAIRE ET PRIX", "VÉRIFICATION"];
 const LOCATION_TIMEOUT_MS = 8_000;
@@ -26,7 +27,7 @@ async function currentPositionWithTimeout() {
       Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
       new Promise<never>((_, reject) => {
         timeoutId = setTimeout(
-          () => reject(new Error("Position indisponible. Choisissez un point de départ dans la liste.")),
+          () => reject(new Error("Impossible de vous localiser. Choisissez votre point de montée dans la liste.")),
           LOCATION_TIMEOUT_MS,
         );
       }),
@@ -60,7 +61,10 @@ export default function RechercheScreen() {
       windowEnd: availability.availableUntil,
       proposedPrice: parsedPrice,
     }),
-    onSuccess: (request) => router.replace({ pathname: "/demande/[requestId]", params: { requestId: request.id } }),
+    onSuccess: (request) => {
+      vibrerSucces();
+      router.replace({ pathname: "/demande/[requestId]", params: { requestId: request.id } });
+    },
   });
 
   const locate = async () => {
@@ -75,7 +79,7 @@ export default function RechercheScreen() {
       setFrom(closest);
       if (to?.corridorId !== closest.corridorId) setTo(null);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Localisation impossible.");
+      setError(caught instanceof Error ? caught.message : "La localisation n’a pas marché.");
     } finally {
       setLocating(false);
     }
@@ -84,29 +88,29 @@ export default function RechercheScreen() {
   const next = () => {
     setError(null);
     if (step === 0) {
-      if (!route) return setError("Choisissez un départ et une destination sur le même itinéraire.");
+      if (!route) return setError("Aucun taxi ne relie ces deux points d’un coup. Choisissez une montée et une descente sur le même axe.");
       return setStep(1);
     }
     if (step === 1) {
-      if (!Number.isInteger(parsedPrice) || parsedPrice < 100) return setError("Proposez un prix entier d’au moins 100 FCFA.");
+      if (!Number.isInteger(parsedPrice) || parsedPrice < 100) return setError("Proposez au moins 100 FCFA, sans virgule.");
       return setStep(2);
     }
     mutation.mutate();
   };
 
-  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de votre recherche" description="Chargement des adresses et points de rencontre…" /></State>;
-  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Recherche indisponible" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
-  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun itinéraire disponible" description="Revenez lorsque des itinéraires auront été publiés." /></State>;
+  if (corridorsQuery.isPending) return <State><EtatContenu type="chargement" title="Préparation de votre recherche" description="On charge les quartiers et les arrêts…" /></State>;
+  if (corridorsQuery.isError) return <State><EtatContenu type="erreur" title="Impossible de lancer la recherche" description={messageErreur(corridorsQuery.error)} action={<Bouton onPress={() => void corridorsQuery.refetch()}>Réessayer</Bouton>} /></State>;
+  if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun axe ouvert pour l’instant" description="Revenez un peu plus tard." /></State>;
 
   if (step === 0) return <View style={styles.mapPage}>
     <CityMapBackdrop route={Boolean(route)} destinationLabel={to?.name} />
     <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
-      <Pressable accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></Pressable>
-      <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "ITINÉRAIRE TROUVÉ" : "RECHERCHE DE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
+      <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
+      <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "TRAJET TROUVÉ" : "VOTRE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.mapSheetWrap}>
         <View style={styles.mapSheet}>
           <View style={styles.sheetHandle} />
-          <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez vos points de rencontre.</Text></View>
+          <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez où vous montez et où vous descendez.</Text></View>
           {error ? <View style={styles.mapFeedback}><MessageEtat type="erreur">{error}</MessageEtat></View> : null}
           <ScrollView contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
@@ -119,33 +123,33 @@ export default function RechercheScreen() {
 
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-      <EntetePage title="Où allez-vous ?" description="Trouvez votre trajet en quelques étapes." />
+      <EntetePage title="Où allez-vous ?" description="Trouvez un taxi qui passe par votre chemin." />
       <WizardProgress step={step} total={3} label={labels[step]!} />
 
       {step === 0 ? <View style={styles.stage}>
-        <Text style={styles.hero}>Choisissez votre trajet</Text>
-        <Text style={styles.subtitle}>Recherchez vos points de montée et de descente, ou partez de votre position.</Text>
+        <Text style={styles.hero}>D’où à où ?</Text>
+        <Text style={styles.subtitle}>Tapez un quartier ou un carrefour, ou partez de votre position.</Text>
         <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
         <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
       </View> : null}
 
       {step === 1 ? <View style={styles.stage}>
-        <Text style={styles.hero}>Quand souhaitez-vous partir ?</Text>
-        <Text style={styles.subtitle}>Indiquez votre fenêtre de disponibilité et le prix que vous proposez.</Text>
+        <Text style={styles.hero}>Quand voulez-vous partir ?</Text>
+        <Text style={styles.subtitle}>Dites quand vous êtes prêt, et combien vous proposez.</Text>
         <View style={styles.modeGrid}>
-          <Choice active={mode === "IMMEDIATE"} title="Maintenant" detail="Recherche immédiate" icon={<IconRoute color={couleurs.texte} size={22} />} onPress={() => setMode("IMMEDIATE")} />
-          <Choice active={mode === "SCHEDULED"} title="Plus tard" detail="Planifier le départ" icon={<IconClock color={couleurs.texte} size={22} />} onPress={() => setMode("SCHEDULED")} />
+          <Choice active={mode === "IMMEDIATE"} title="Maintenant" detail="Je suis prêt tout de suite" icon={<IconRoute color={couleurs.texte} size={22} />} onPress={() => setMode("IMMEDIATE")} />
+          <Choice active={mode === "SCHEDULED"} title="Plus tard" detail="Je choisis l’heure" icon={<IconClock color={couleurs.texte} size={22} />} onPress={() => setMode("SCHEDULED")} />
         </View>
         {mode === "SCHEDULED" ? <Options label="DÉPART DANS" values={[30, 60, 120]} value={startMinutes} onChange={setStartMinutes} /> : null}
         <Options label="JE SUIS FLEXIBLE PENDANT" values={[30, 60, 120]} value={durationMinutes} onChange={setDurationMinutes} />
-        <View style={styles.priceHeading}><IconWallet color={couleurs.texteSecondaire} size={22} /><View><Text style={styles.priceTitle}>Votre proposition</Text><Text style={styles.priceDetail}>Le chauffeur pourra l’accepter ou contre-proposer une fois.</Text></View></View>
+        <View style={styles.priceHeading}><IconWallet color={couleurs.texteSecondaire} size={22} /><View><Text style={styles.priceTitle}>Votre prix</Text><Text style={styles.priceDetail}>Le chauffeur peut accepter ou vous proposer un autre prix, une seule fois.</Text></View></View>
         <Champ etiquette="Prix proposé (FCFA)" value={price} onChangeText={setPrice} keyboardType="number-pad" placeholder="1 500" />
       </View> : null}
 
       {step === 2 && route ? <View style={styles.stage}>
-        <Text style={styles.hero}>Confirmez votre demande</Text><Text style={styles.subtitle}>Votre demande sera signalée aux chauffeurs compatibles.</Text>
+        <Text style={styles.hero}>On envoie ?</Text><Text style={styles.subtitle}>Les chauffeurs qui passent par là verront votre demande.</Text>
         <RouteMiniMap stops={route.stops} />
-        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Fenêtre" value={`${formatDateTime(availability.departureAt)} — ${new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
+        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Quand" value={`Entre ${formatDateTime(availability.departureAt)} et ${new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
       </View> : null}
 
       {error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}
@@ -156,35 +160,35 @@ export default function RechercheScreen() {
 }
 
 function Choice({ active, title, detail, icon, onPress }: { active: boolean; title: string; detail: string; icon: React.ReactNode; onPress: () => void }) {
-  return <Pressable onPress={onPress} style={[styles.choice, active && styles.choiceActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.check}><IconCheck color={couleurs.encre} size={14} /></View> : null}</Pressable>;
+  return <PressionDouce onPress={onPress} style={[styles.choice, active && styles.choiceActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.check}><IconCheck color={couleurs.encre} size={14} /></View> : null}</PressionDouce>;
 }
 function Options({ label, values, value, onChange }: { label: string; values: number[]; value: number; onChange: (value: number) => void }) {
-  return <View style={styles.options}><Text style={styles.eyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <Pressable key={item} onPress={() => onChange(item)} style={[styles.pill, item === value && styles.pillActive]}><Text style={styles.pillText}>{item < 60 ? `${item} min` : `${item / 60} h`}</Text></Pressable>)}</View></View>;
+  return <View style={styles.options}><Text style={styles.eyebrow}>{label}</Text><View style={styles.pills}>{values.map((item) => <PressionDouce key={item} onPress={() => onChange(item)} style={[styles.pill, item === value && styles.pillActive]}><Text style={styles.pillText}>{item < 60 ? `${item} min` : `${item / 60} h`}</Text></PressionDouce>)}</View></View>;
 }
 function Summary({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return <View style={[styles.summaryRow, last && styles.summaryLast]}><Text style={styles.summaryLabel}>{label}</Text><Text style={styles.summaryValue}>{value}</Text></View>;
 }
 function State({ children }: { children: React.ReactNode }) {
-  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Où allez-vous ?" description="Trouvez votre trajet en quelques étapes." />{children}</View></SafeAreaView>;
+  return <SafeAreaView style={styles.page}><View style={styles.state}><EntetePage title="Où allez-vous ?" description="Trouvez un taxi qui passe par votre chemin." />{children}</View></SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
   mapPage: { flex: 1, backgroundColor: couleurs.fond },
   mapBack: { position: "absolute", left: espacements.lg, top: 46, width: 48, height: 48, zIndex: 2, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", alignItems: "center", justifyContent: "center", ...ombres.carte },
   mapStatus: { position: "absolute", left: 76, right: espacements.lg, top: 46, minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: espacements.md, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", ...ombres.carte },
-  mapStatusLabel: { color: couleurs.texteSecondaire, fontSize: 9, fontWeight: "900", letterSpacing: 0.8 }, mapStatusValue: { marginTop: 1, color: couleurs.texte, fontSize: taillesTexte.micro, fontWeight: "900" },
+  mapStatusLabel: { color: couleurs.texteSecondaire, fontSize: 9, letterSpacing: 0.8, fontFamily: polices.texteGras }, mapStatusValue: { marginTop: 1, color: couleurs.texte, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   mapSheetWrap: { position: "absolute", left: 0, right: 0, bottom: 0, height: "69%", justifyContent: "flex-end" },
   mapSheet: { flex: 1, overflow: "hidden", borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: couleurs.surface, ...ombres.feuille },
   sheetHandle: { width: 42, height: 4, alignSelf: "center", marginTop: espacements.sm, borderRadius: rayons.rond, backgroundColor: couleurs.bordure },
-  mapHeading: { paddingHorizontal: espacements.lg, paddingTop: espacements.md, paddingBottom: espacements.sm }, mapTitle: { color: couleurs.texte, fontSize: 24, lineHeight: 28, fontWeight: "900", letterSpacing: -0.7 }, mapSubtitle: { marginTop: 2, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  mapHeading: { paddingHorizontal: espacements.lg, paddingTop: espacements.md, paddingBottom: espacements.sm }, mapTitle: { color: couleurs.texte, fontSize: 24, lineHeight: 28, letterSpacing: -0.7, fontFamily: polices.titre }, mapSubtitle: { marginTop: 2, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   mapFeedback: { paddingHorizontal: espacements.lg, paddingBottom: espacements.sm },
   placeScroll: { paddingHorizontal: espacements.lg, paddingBottom: espacements.md },
   mapFooter: { paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: couleurs.bordure, backgroundColor: couleurs.surface },
-  page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 }, hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontWeight: "800" }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18 },
+  page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 }, hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontFamily: polices.titre }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texte },
   footer: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, back: { width: 98 }, next: { flex: 1 },
-  modeGrid: { flexDirection: "row", gap: espacements.sm }, choice: { flex: 1, minHeight: 122, padding: espacements.md, gap: 6, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, choiceActive: { borderColor: couleurs.primairePresse, backgroundColor: couleurs.primaireClaire }, choiceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" }, choiceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17 }, check: { position: "absolute", right: espacements.md, top: espacements.md, width: 23, height: 23, borderRadius: rayons.rond, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
-  options: { gap: espacements.sm }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900", letterSpacing: 0.8 }, pills: { flexDirection: "row", gap: espacements.sm }, pill: { flex: 1, minHeight: 46, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, pillActive: { backgroundColor: couleurs.primaire }, pillText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
-  priceHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, priceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" }, priceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, maxWidth: 280 },
-  summary: { paddingVertical: 0 }, summaryRow: { paddingVertical: espacements.md, gap: 3, borderBottomWidth: 1, borderBottomColor: couleurs.bordure }, summaryLast: { borderBottomWidth: 0 }, summaryLabel: { color: couleurs.texteSecondaire, fontSize: 12, fontWeight: "700" }, summaryValue: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 20, fontWeight: "900" },
+  modeGrid: { flexDirection: "row", gap: espacements.sm }, choice: { flex: 1, minHeight: 122, padding: espacements.md, gap: 6, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, choiceActive: { borderColor: couleurs.primairePresse, backgroundColor: couleurs.primaireClaire }, choiceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteGras }, choiceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte }, check: { position: "absolute", right: espacements.md, top: espacements.md, width: 23, height: 23, borderRadius: rayons.rond, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
+  options: { gap: espacements.sm }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 0.8, fontFamily: polices.texteGras }, pills: { flexDirection: "row", gap: espacements.sm }, pill: { flex: 1, minHeight: 46, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, pillActive: { backgroundColor: couleurs.primaire }, pillText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
+  priceHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, priceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.titre }, priceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, maxWidth: 280, fontFamily: polices.texte },
+  summary: { paddingVertical: 0 }, summaryRow: { paddingVertical: espacements.md, gap: 3, borderBottomWidth: 1, borderBottomColor: couleurs.bordure }, summaryLast: { borderBottomWidth: 0 }, summaryLabel: { color: couleurs.texteSecondaire, fontSize: 12, fontFamily: polices.texteDemiGras }, summaryValue: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 20, fontFamily: polices.texteExtraGras },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
 });

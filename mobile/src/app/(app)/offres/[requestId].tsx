@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -16,11 +15,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Booking, type MatchedTrip } from "@/api";
-import { Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatPrice, formatTime } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type OfferItem =
   | { kind: "offer"; id: string; booking: Booking }
@@ -35,7 +34,7 @@ function OfferCard({
 }) {
   if (item.kind === "offer") {
     return (
-      <Pressable
+      <PressionDouce
         onPress={() =>
           router.push({
             pathname: "/offre/[bookingId]",
@@ -60,16 +59,16 @@ function OfferCard({
           </Text>
           <View style={styles.meta}>
             <IconClock color={couleurs.texteSecondaire} size={17} />
-            <Text style={styles.metaText}>Expire bientôt</Text>
+            <Text style={styles.metaText}>Répondez vite</Text>
             <IconChevronRight color={couleurs.texteSecondaire} size={19} />
           </View>
         </Carte>
-      </Pressable>
+      </PressionDouce>
     );
   }
-  const model = item.trip.driver.vehicle?.model ?? "Véhicule renseigné";
+  const model = item.trip.driver.vehicle?.model ?? "Véhicule non précisé";
   return (
-    <Pressable
+    <PressionDouce
       onPress={() =>
         router.push({
           pathname: "/trajet-compatible/[requestId]/[tripId]",
@@ -99,7 +98,7 @@ function OfferCard({
               size={16}
             />
             <Text style={styles.ratingText}>
-              {item.trip.driver.rating?.toFixed(1) ?? "—"}
+              {item.trip.driver.rating?.toFixed(1) ?? "Nouveau"}
             </Text>
           </View>
         </View>
@@ -111,7 +110,7 @@ function OfferCard({
           <IconChevronRight color={couleurs.texteSecondaire} size={19} />
         </View>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -156,8 +155,8 @@ export default function OffersScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Demande invalide"
-          description="Impossible d’identifier cette recherche."
+          title="Lien de demande incorrect"
+          description="Rouvrez-la depuis Mes demandes."
         />
       </State>
     );
@@ -166,8 +165,8 @@ export default function OffersScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Comparaison des trajets"
-          description="Nous classons les offres et les chauffeurs compatibles."
+          title="On compare les taxis"
+          description="On rassemble les offres des chauffeurs."
         />
       </State>
     );
@@ -176,7 +175,7 @@ export default function OffersScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Offres indisponibles"
+          title="Impossible de charger les offres"
           description={messageErreur(error)}
         />
       </State>
@@ -186,24 +185,26 @@ export default function OffersScreen() {
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <OfferCard item={item} requestId={requestId} />
+        renderItem={({ item, index }) => (
+          <ApparitionListe index={index}>
+            <OfferCard item={item} requestId={requestId} />
+          </ApparitionListe>
         )}
         ItemSeparatorComponent={() => (
           <View style={{ height: espacements.md }} />
         )}
         ListHeaderComponent={
           <EntetePage
-            title="Offres et trajets"
-            description="Comparez l’heure, le véhicule et la note avant de choisir."
+            title="Les taxis pour vous"
+            description="Comparez l’heure, le véhicule et la note du chauffeur, puis choisissez."
           />
         }
         ListHeaderComponentStyle={styles.header}
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Aucune offre pour le moment"
-            description="Votre demande reste active. Revenez dans quelques minutes."
+            title="Pas encore d’offre"
+            description="Revenez dans quelques minutes, votre demande reste visible."
           />
         }
         contentContainerStyle={[styles.list, !items.length && styles.grow]}
@@ -224,7 +225,7 @@ function State({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="Offres"
-          description="Chauffeurs et trajets compatibles."
+          description="Les taxis qui passent par votre chemin."
         />
         {children}
       </View>
@@ -253,19 +254,20 @@ const styles = StyleSheet.create({
   offerBadgeText: {
     color: couleurs.texte,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
-  price: { color: couleurs.texte, fontSize: 19, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 19, fontFamily: polices.titre },
   cardTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   meta: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   metaText: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   driverRow: {
     flexDirection: "row",
@@ -285,6 +287,6 @@ const styles = StyleSheet.create({
   ratingText: {
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
 });

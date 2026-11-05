@@ -3,13 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { api, type Role } from "@/api";
-import { AuthPage, Bouton, MessageEtat } from "@/components";
+import { AuthPage, Bouton, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements } from "@/theme";
+import { couleurs, espacements, polices } from "@/theme";
 
 type ChoixRole = Extract<Role, "CLIENT" | "DRIVER">;
 
@@ -34,10 +34,10 @@ export default function ChoixDuRole() {
     return (
       <AuthPage
         icon={<IconUser color={couleurs.primaire} size={25} strokeWidth={2} />}
-        title="Choisissez votre profil"
-        description="La vérification précédente n’est plus disponible."
+        title="On reprend depuis le début"
+        description="La vérification de votre numéro a expiré."
       >
-        <MessageEtat>Recommencez la connexion pour choisir votre rôle.</MessageEtat>
+        <MessageEtat>Entrez de nouveau votre numéro pour continuer.</MessageEtat>
         <Bouton onPress={() => router.replace("/connexion")}>Revenir à la connexion</Bouton>
       </AuthPage>
     );
@@ -46,8 +46,8 @@ export default function ChoixDuRole() {
   return (
     <AuthPage
       icon={<IconUser color={couleurs.primaire} size={25} strokeWidth={2} />}
-      title="Comment voyagez-vous ?"
-      description="Choisissez votre usage principal. Ce choix est demandé uniquement à la création du compte."
+      title="Vous êtes client ou chauffeur ?"
+      description="Choisissez bien : ce choix se fait une seule fois, à la création du compte."
     >
       <View style={styles.formulaire}>
         <View style={styles.choix}>
@@ -55,19 +55,19 @@ export default function ChoixDuRole() {
             selected={role === "CLIENT"}
             icon={<IconUser color={couleurs.texte} size={24} />}
             title="Client"
-            description="Je cherche une place sur un itinéraire."
+            description="Je cherche une place dans un taxi qui passe par mon chemin."
             onPress={() => setRole("CLIENT")}
           />
           <RoleCard
             selected={role === "DRIVER"}
             icon={<IconCar color={couleurs.texte} size={24} />}
             title="Chauffeur"
-            description="Je publie mes trajets et accepte des clients."
+            description="Je publie mes trajets et je prends des clients en route."
             onPress={() => setRole("DRIVER")}
           />
         </View>
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
-        {mutation.isSuccess ? <MessageEtat type="succes">Profil créé.</MessageEtat> : null}
+        {mutation.isSuccess ? <MessageEtat type="succes">Compte créé, bienvenue !</MessageEtat> : null}
         <Bouton disabled={!role} chargement={mutation.isPending} onPress={() => role && mutation.mutate(role)}>Continuer</Bouton>
       </View>
     </AuthPage>
@@ -88,7 +88,7 @@ function RoleCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressionDouce
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       style={({ pressed }) => [styles.roleCard, selected && styles.roleCardSelected, pressed && styles.roleCardPressed]}
@@ -102,7 +102,7 @@ function RoleCard({
       <View style={[styles.check, selected && styles.checkSelected]}>
         {selected ? <IconCheck color={couleurs.encre} size={15} strokeWidth={3} /> : null}
       </View>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
   roleIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: couleurs.surface, alignItems: "center", justifyContent: "center" },
   roleIconSelected: { backgroundColor: couleurs.primaire },
   roleCopy: { flex: 1, gap: 3 },
-  roleTitle: { color: couleurs.texte, fontSize: 16, fontWeight: "900" },
-  roleDescription: { color: couleurs.texteSecondaire, fontSize: 13, lineHeight: 18 },
+  roleTitle: { color: couleurs.texte, fontSize: 16, fontFamily: polices.texteExtraGras },
+  roleDescription: { color: couleurs.texteSecondaire, fontSize: 13, lineHeight: 18, fontFamily: polices.texte },
   check: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: couleurs.bordure, alignItems: "center", justifyContent: "center" },
   checkSelected: { backgroundColor: couleurs.primaire, borderColor: couleurs.primairePresse },
 });

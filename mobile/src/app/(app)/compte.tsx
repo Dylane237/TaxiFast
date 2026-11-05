@@ -35,7 +35,7 @@ import {
   notificationsEnabled,
 } from "@/notifications/push-notifications";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function CompteScreen() {
   const queryClient = useQueryClient();
@@ -85,8 +85,8 @@ export default function CompteScreen() {
       <Page>
         <EtatContenu
           type="chargement"
-          title="Chargement du compte"
-          description="Nous récupérons vos informations."
+          title="Chargement de votre compte"
+          description="Ça ne prend que quelques secondes."
         />
       </Page>
     );
@@ -96,7 +96,7 @@ export default function CompteScreen() {
       <Page>
         <EtatContenu
           type="erreur"
-          title="Compte indisponible"
+          title="Impossible d’ouvrir votre compte"
           description={messageErreur(profile.error)}
           action={<Bouton onPress={() => profile.refetch()}>Réessayer</Bouton>}
         />
@@ -108,8 +108,8 @@ export default function CompteScreen() {
       <Page>
         <EtatContenu
           type="vide"
-          title="Aucun profil"
-          description="Reconnectez-vous pour retrouver votre compte."
+          title="Profil introuvable"
+          description="Reconnectez-vous avec votre numéro pour le retrouver."
         />
       </Page>
     );
@@ -126,7 +126,7 @@ export default function CompteScreen() {
       >
         <EntetePage
           title="Mon compte"
-          description="Profil, véhicule et préférences de l’application."
+          description="Vos infos, votre taxi et vos réglages."
         />
 
         <Carte style={styles.identity}>
@@ -144,12 +144,12 @@ export default function CompteScreen() {
         </Carte>
 
         <View style={styles.group}>
-          <Text style={styles.groupTitle}>INFORMATIONS</Text>
+          <Text style={styles.groupTitle}>VOS INFOS</Text>
           <Carte style={styles.list}>
             <LigneAction
               icon={<IconPhone color={couleurs.texte} size={20} />}
               title={user.phone}
-              description="Numéro de connexion vérifié"
+              description="Le numéro avec lequel vous vous connectez"
               onPress={() => undefined}
             />
             {driver ? (
@@ -159,7 +159,7 @@ export default function CompteScreen() {
                 description={
                   user.vehicle
                     ? `${user.vehicle.plate} · ${user.vehicle.seats} places`
-                    : "Ajoutez les informations du véhicule"
+                    : "Ajoutez la plaque et le modèle de votre taxi"
                 }
                 onPress={() => router.push("/profil")}
               />
@@ -167,14 +167,14 @@ export default function CompteScreen() {
             <LigneAction
               icon={<IconEdit color={couleurs.texte} size={20} />}
               title="Modifier le profil"
-              description="Nom et informations personnelles"
+              description="Nom affiché et véhicule"
               onPress={() => router.push("/profil")}
             />
           </Carte>
         </View>
 
         <View style={styles.group}>
-          <Text style={styles.groupTitle}>PRÉFÉRENCES</Text>
+          <Text style={styles.groupTitle}>RÉGLAGES</Text>
           <Carte style={styles.list}>
             <View style={styles.settingRow}>
               <View style={styles.settingIcon}>
@@ -183,7 +183,7 @@ export default function CompteScreen() {
               <View style={styles.identityCopy}>
                 <Text style={styles.settingTitle}>Notifications</Text>
                 <Text style={styles.settingDescription}>
-                  Offres, réservations et changements
+                  Quand on vous répond ou qu’une course change
                 </Text>
               </View>
               {notificationState.isPending ||
@@ -245,7 +245,7 @@ function Page({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="Mon compte"
-          description="Vos informations et préférences."
+          description="Tout ce qui vous concerne."
         />
         {children}
       </View>
@@ -276,11 +276,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   identityCopy: { flex: 1, gap: 3 },
-  name: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  name: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
   role: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   verified: {
     flexDirection: "row",
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
   verifiedText: {
     color: couleurs.succes,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
   group: { gap: espacements.sm },
   groupTitle: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: polices.texteGras,
   },
   list: { paddingHorizontal: espacements.md, paddingVertical: 0 },
   settingRow: {
@@ -321,10 +321,11 @@ const styles = StyleSheet.create({
   settingTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   settingDescription: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
 });

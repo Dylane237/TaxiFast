@@ -113,20 +113,20 @@ describe("contrat HTTP de l'application mobile", () => {
       tripStops: [],
     };
     const transaction = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       booking: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) },
       tripLocation: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
-      trip: { update: vi.fn().mockResolvedValue(completedTrip) },
+      trip: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "trip-1",
+          driverId: "driver-1",
+          status: "OPEN",
+          departureAt: new Date(Date.now() - 60 * 60_000),
+        }),
+        update: vi.fn().mockResolvedValue(completedTrip),
+      },
     };
     const prisma = {
-      trip: {
-        findUnique: vi
-          .fn()
-          .mockResolvedValue({
-            id: "trip-1",
-            driverId: "driver-1",
-            status: "OPEN",
-          }),
-      },
       $transaction: vi.fn(
         async (operation: (tx: typeof transaction) => unknown) =>
           operation(transaction),

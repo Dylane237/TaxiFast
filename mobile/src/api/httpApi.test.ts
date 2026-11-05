@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError } from "./errors";
+import { ApiError, messageLimiteDebit } from "./errors";
 import { httpApi } from "./httpApi";
 
 function jsonResponse(value: unknown, status = 200): Response {
@@ -60,5 +60,37 @@ describe("httpApi", () => {
       name: "ApiError",
       code: "INVALID_RESPONSE",
     } satisfies Partial<ApiError>);
+  });
+
+  it("annonce le temps d'attente quand le serveur freine les requêtes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ error: "RATE_LIMITED", retryAfterSeconds: 540 }, 429)),
+    );
+
+    await expect(httpApi.listCorridors()).rejects.toMatchObject({
+      code: "RATE_LIMITED",
+      message: "Doucement ! Réessayez dans 9 min.",
+    });
+  });
+
+  it.each([
+    ["OTP_RATE_LIMITED", 429],
+    ["OTP_DELIVERY_FAILED", 503],
+    ["TRIP_NOT_STARTED", 409],
+    ["TOO_MANY_OPEN_REQUESTS", 409],
+    ["BOOKING_ALREADY_PENDING", 409],
+  ])("garde le code serveur %s au lieu d'une erreur générique", async (erreur, statut) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: erreur }, statut)));
+
+    await expect(httpApi.listCorridors()).rejects.toMatchObject({ code: erreur });
+  });
+});
+
+describe("message de limite de débit", () => {
+  it("s'adapte au temps d'attente", () => {
+    expect(messageLimiteDebit(undefined)).toMatch(/quelques minutes/);
+    expect(messageLimiteDebit(20)).toBe("Doucement ! Réessayez dans moins d’une minute.");
+    expect(messageLimiteDebit(61)).toBe("Doucement ! Réessayez dans 2 min.");
   });
 });

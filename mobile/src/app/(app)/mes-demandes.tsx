@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -16,14 +15,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type TripRequest } from "@/api";
-import { Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const labels = {
   OPEN: "En recherche",
-  MATCHED: "Associée",
+  MATCHED: "Taxi trouvé",
   EXPIRED: "Expirée",
   CANCELLED: "Annulée",
 } as const;
@@ -36,7 +35,7 @@ function RequestCard({
   stops: Map<string, string>;
 }) {
   return (
-    <Pressable
+    <PressionDouce
       onPress={() =>
         router.push({
           pathname: "/demande/[requestId]",
@@ -68,7 +67,7 @@ function RequestCard({
           <IconArrowRight color={couleurs.texteSecondaire} size={19} />
         </View>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -99,8 +98,8 @@ export default function ClientRequestsScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Chargement des demandes"
-          description="Nous récupérons vos recherches en cours."
+          title="Chargement de vos demandes"
+          description="On récupère vos recherches en cours."
         />
       </State>
     );
@@ -109,7 +108,7 @@ export default function ClientRequestsScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Demandes indisponibles"
+          title="Impossible de charger vos demandes"
           description={messageErreur(error)}
         />
       </State>
@@ -119,8 +118,10 @@ export default function ClientRequestsScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <RequestCard request={item} stops={stopNames} />
+        renderItem={({ item, index }) => (
+          <ApparitionListe index={index}>
+            <RequestCard request={item} stops={stopNames} />
+          </ApparitionListe>
         )}
         ItemSeparatorComponent={() => (
           <View style={{ height: espacements.md }} />
@@ -128,23 +129,23 @@ export default function ClientRequestsScreen() {
         ListHeaderComponent={
           <EntetePage
             title="Mes demandes"
-            description="Suivez vos recherches et les réponses des chauffeurs."
+            description="Vos recherches et les réponses des chauffeurs."
           />
         }
         ListHeaderComponentStyle={styles.header}
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Aucune demande"
-            description="Lancez une recherche pour recevoir des trajets compatibles."
+            title="Aucune demande en cours"
+            description="Dites où vous allez et les chauffeurs vous feront des offres."
             action={
-              <Pressable
+              <PressionDouce
                 style={styles.emptyAction}
                 onPress={() => router.push("/recherche")}
               >
                 <IconSearch color={couleurs.texte} size={18} />
-                <Text style={styles.emptyActionText}>Rechercher un trajet</Text>
-              </Pressable>
+                <Text style={styles.emptyActionText}>Trouver un taxi</Text>
+              </PressionDouce>
             }
           />
         }
@@ -167,7 +168,7 @@ function State({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="Mes demandes"
-          description="Recherches envoyées aux chauffeurs."
+          description="Ce que vous avez demandé aux chauffeurs."
         />
         {children}
       </View>
@@ -196,21 +197,22 @@ const styles = StyleSheet.create({
   statusText: {
     color: couleurs.texte,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
-  price: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 18, fontFamily: polices.titre },
   route: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   routeText: {
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   meta: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   metaText: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   emptyAction: {
     minHeight: 48,
@@ -221,5 +223,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: espacements.sm,
   },
-  emptyActionText: { color: couleurs.texte, fontWeight: "800" },
+  emptyActionText: { color: couleurs.texte, fontFamily: polices.texteGras },
 });

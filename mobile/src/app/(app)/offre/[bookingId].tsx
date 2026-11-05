@@ -23,7 +23,8 @@ import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseCounterPrice } from "@/features/driver-requests/driver-requests";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { vibrerSucces } from "@/features/animations";
 
 type Action = "accept" | "counter" | "refuse";
 
@@ -46,6 +47,7 @@ export default function OfferDetailScreen() {
           ? api.refuseBooking(bookingId!)
           : api.counterOfferBooking(bookingId!, price!),
     onSuccess: async (booking, variables) => {
+      if (variables.kind === "accept") vibrerSucces();
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["client-bookings"] }),
         queryClient.invalidateQueries({
@@ -64,8 +66,8 @@ export default function OfferDetailScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Offre invalide"
-          description="Impossible d’identifier cette proposition."
+          title="Lien d’offre incorrect"
+          description="Rouvrez l’offre depuis votre demande."
         />
       </State>
     );
@@ -75,7 +77,7 @@ export default function OfferDetailScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement de l’offre"
-          description="Nous vérifions sa disponibilité."
+          description="On vérifie qu’elle tient toujours."
         />
       </State>
     );
@@ -84,7 +86,7 @@ export default function OfferDetailScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Offre indisponible"
+          title="Impossible d’ouvrir l’offre"
           description={messageErreur(details.error)}
         />
       </State>
@@ -100,8 +102,8 @@ export default function OfferDetailScreen() {
       <State>
         <EtatContenu
           type="vide"
-          title="Réservation confirmée"
-          description="Cette offre a déjà été acceptée."
+          title="Déjà réservé"
+          description="Vous avez déjà accepté cette offre."
           action={
             <Bouton
               onPress={() =>
@@ -122,11 +124,11 @@ export default function OfferDetailScreen() {
       <State>
         <EtatContenu
           type="vide"
-          title={expired ? "Offre expirée" : "Offre traitée"}
+          title={expired ? "Offre expirée" : "Offre déjà réglée"}
           description={
             expired
-              ? "Le délai de réponse est dépassé. Consultez les autres trajets disponibles."
-              : "Cette proposition ne peut plus recevoir de réponse."
+              ? "Le temps pour répondre est passé. Regardez les autres taxis sur votre chemin."
+              : "On ne peut plus y répondre."
           }
         />
       </State>
@@ -134,7 +136,7 @@ export default function OfferDetailScreen() {
   const submitCounter = () => {
     const price = parseCounterPrice(counterPrice);
     if (!price) {
-      setValidationError("Saisissez un prix entier supérieur à 0 FCFA.");
+      setValidationError("Le prix doit être un nombre entier de FCFA.");
       return;
     }
     setValidationError(null);
@@ -152,8 +154,8 @@ export default function OfferDetailScreen() {
           }
           description={
             action.variables.kind === "counter"
-              ? "Le chauffeur doit accepter votre unique contre-proposition."
-              : "Cette offre a été retirée de votre liste."
+              ? "Le chauffeur doit maintenant accepter votre prix. Vous ne pourrez pas en proposer un autre."
+              : "Elle n’apparaît plus dans vos offres."
           }
           action={
             <Bouton
@@ -177,8 +179,8 @@ export default function OfferDetailScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <EntetePage
-          title="Offre du chauffeur"
-          description="Une réponse confirme, négocie ou refuse cette proposition."
+          title="Offre d’un chauffeur"
+          description="Acceptez, proposez votre prix ou refusez."
         />
         <Carte style={styles.hero}>
           <View style={styles.driverTop}>
@@ -195,7 +197,7 @@ export default function OfferDetailScreen() {
                 size={17}
               />
               <Text style={styles.ratingText}>
-                {data.driver.rating?.toFixed(1) ?? "—"}
+                {data.driver.rating?.toFixed(1) ?? "Nouveau"}
               </Text>
             </View>
           </View>
@@ -236,7 +238,7 @@ export default function OfferDetailScreen() {
         </Bouton>
         {data.booking.counterPrice === null ? (
           <Carte style={styles.counter}>
-            <Text style={styles.counterTitle}>Contre-proposer une fois</Text>
+            <Text style={styles.counterTitle}>Proposer mon prix</Text>
             <Champ
               etiquette="Votre prix (FCFA)"
               value={counterPrice}
@@ -257,7 +259,7 @@ export default function OfferDetailScreen() {
             </Bouton>
           </Carte>
         ) : (
-          <MessageEtat>La contre-proposition a déjà été utilisée.</MessageEtat>
+          <MessageEtat>Vous avez déjà proposé votre prix une fois.</MessageEtat>
         )}
         <Bouton
           variante="fantome"
@@ -275,7 +277,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Offre" description="Détail de la proposition." />
+        <EntetePage title="Offre" description="Ce que le chauffeur vous propose." />
         {children}
       </View>
     </SafeAreaView>
@@ -298,10 +300,10 @@ const styles = StyleSheet.create({
   kicker: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: polices.texteGras,
   },
-  driverName: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  driverName: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
   rating: {
     flexDirection: "row",
     alignItems: "center",
@@ -311,13 +313,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5,
   },
-  ratingText: { color: couleurs.texte, fontWeight: "900" },
-  vehicle: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  ratingText: { color: couleurs.texte, fontFamily: polices.texteExtraGras },
+  vehicle: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   price: {
     color: couleurs.texte,
     fontSize: 28,
-    fontWeight: "900",
     marginTop: espacements.sm,
+    fontFamily: polices.titre,
   },
   details: { gap: espacements.md },
   row: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
@@ -325,12 +327,12 @@ const styles = StyleSheet.create({
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.petit,
-    fontWeight: "700",
+    fontFamily: polices.texteDemiGras,
   },
   counter: { gap: espacements.md },
   counterTitle: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
 });

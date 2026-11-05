@@ -24,7 +24,7 @@ import {
   routeDistanceKm,
 } from "@/features/tracking/route-metrics";
 import { DemoRouteMap } from "@/features/tracking/DemoRouteMap";
-import { couleurs, espacements, ombres, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
 
 export default function TripTrackingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -78,7 +78,7 @@ export default function TripTrackingScreen() {
   useEffect(() => () => subscription.current?.remove(), []);
 
   if (Platform.OS !== "android") {
-    return <State><MessageEtat type="erreur">Le suivi cartographique est actuellement disponible sur Android.</MessageEtat></State>;
+    return <State><MessageEtat type="erreur">Pour l’instant, le suivi sur carte marche uniquement sur Android.</MessageEtat></State>;
   }
 
   const location = isDriver ? localLocation : remote.data;
@@ -99,8 +99,8 @@ export default function TripTrackingScreen() {
       <State>
         <Carte style={styles.empty}>
           <IconMapPin color={couleurs.texteSecondaire} size={28} />
-          <Text style={styles.emptyTitle}>Itinéraire indisponible</Text>
-          <Text style={styles.emptyCopy}>Les coordonnées des arrêts ne sont pas encore renseignées.</Text>
+          <Text style={styles.emptyTitle}>Carte pas encore prête</Text>
+          <Text style={styles.emptyCopy}>Les arrêts de cet axe n’ont pas encore leur position GPS.</Text>
         </Carte>
       </State>
     );
@@ -196,7 +196,7 @@ export default function TripTrackingScreen() {
             <View style={styles.metricDivider} />
             <View style={styles.metric}>
               <IconClock color={couleurs.texteSecondaire} size={18} />
-              <Text style={styles.metricText}>Hors trafic réel</Text>
+              <Text style={styles.metricText}>Sans compter les embouteillages</Text>
             </View>
           </View>
 
@@ -204,8 +204,8 @@ export default function TripTrackingScreen() {
             <View style={styles.notice}>
               <Text style={styles.noticeText}>
                 {isDriver
-                  ? "Partagez votre position pour permettre aux passagers de vous suivre."
-                  : "La position apparaîtra dès que le chauffeur commencera le partage."}
+                  ? "Partagez votre position : vos clients voient où vous êtes et sortent au bon moment."
+                  : "Vous verrez le taxi dès que le chauffeur partagera sa position."}
               </Text>
             </View>
           ) : null}
@@ -220,7 +220,7 @@ export default function TripTrackingScreen() {
                 : <IconPlayerPlay color={couleurs.surface} size={20} />}
               chargement={publish.isPending}
               onPress={() => sharing ? stopSharing() : void startSharing().catch((error: unknown) => {
-                setLocationError(error instanceof Error ? error.message : "Impossible d’activer la localisation.");
+                setLocationError(error instanceof Error ? error.message : "La localisation ne s’active pas. Vérifiez les autorisations du téléphone.");
               })}
             >
               {sharing ? "Arrêter le partage" : "Partager ma position"}
@@ -228,7 +228,7 @@ export default function TripTrackingScreen() {
           ) : null}
 
           <View style={styles.sectionHeading}>
-            <Text style={styles.sectionTitle}>Points de rencontre</Text>
+            <Text style={styles.sectionTitle}>Arrêts</Text>
             <Text style={styles.stopCount}>{stops.length} arrêts</Text>
           </View>
           <View style={styles.timeline}>
@@ -254,7 +254,7 @@ export default function TripTrackingScreen() {
                   </View>
                   <View style={styles.stopCopy}>
                     <Text style={styles.stopName}>{stop.name}</Text>
-                    <Text style={styles.stopInstruction}>{stop.meetingInstructions ?? "Consigne à confirmer"}</Text>
+                    <Text style={styles.stopInstruction}>{stop.meetingInstructions ?? "Pas de consigne pour cet arrêt"}</Text>
                   </View>
                 </View>
               );
@@ -270,7 +270,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.statePage}>
       <View style={styles.stateContent}>
-        <EntetePage title="Suivi du trajet" description="Position du véhicule pendant la course." />
+        <EntetePage title="Suivi du taxi" description="Où est le taxi en ce moment." />
         {children}
       </View>
     </SafeAreaView>
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   liveDot: { width: 8, height: 8, borderRadius: rayons.rond, backgroundColor: couleurs.desactive },
   liveDotActive: { backgroundColor: couleurs.succes },
-  liveText: { flexShrink: 1, color: couleurs.texte, fontSize: 12, fontWeight: "800" },
+  liveText: { flexShrink: 1, color: couleurs.texte, fontSize: 12, fontFamily: polices.texteGras },
   sheetBackground: {
     backgroundColor: couleurs.surface, borderTopLeftRadius: rayons.xl,
     borderTopRightRadius: rayons.xl, ...ombres.feuille,
@@ -312,16 +312,17 @@ const styles = StyleSheet.create({
   sheetHeadingCopy: { flex: 1, gap: espacements.xs },
   eyebrow: {
     color: couleurs.texteSecondaire, fontSize: taillesTexte.micro,
-    fontWeight: "900", letterSpacing: 0.8,
+    letterSpacing: 0.8,
+    fontFamily: polices.texteGras,
   },
-  title: { color: couleurs.texte, fontSize: 22, lineHeight: 27, fontWeight: "900" },
+  title: { color: couleurs.texte, fontSize: 22, lineHeight: 27, fontFamily: polices.titre },
   etaBadge: {
     minWidth: 64, minHeight: 64, paddingHorizontal: espacements.sm,
     borderRadius: rayons.lg, backgroundColor: couleurs.primaire,
     alignItems: "center", justifyContent: "center",
   },
-  etaValue: { color: couleurs.encre, fontSize: taillesTexte.normal, fontWeight: "900" },
-  etaUnit: { color: couleurs.encreDouce, fontSize: taillesTexte.micro, fontWeight: "800" },
+  etaValue: { color: couleurs.encre, fontSize: taillesTexte.normal, fontFamily: polices.titre },
+  etaUnit: { color: couleurs.encreDouce, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   metrics: {
     minHeight: 48, borderRadius: rayons.md, backgroundColor: couleurs.surfaceSecondaire,
     paddingHorizontal: espacements.md, flexDirection: "row", alignItems: "center",
@@ -329,13 +330,13 @@ const styles = StyleSheet.create({
   metric: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: espacements.sm,
   },
-  metricText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
+  metricText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
   metricDivider: { width: 1, height: 22, backgroundColor: couleurs.bordure },
   notice: { borderRadius: rayons.md, padding: espacements.md, backgroundColor: couleurs.primaireClaire },
-  noticeText: { color: couleurs.encreDouce, fontSize: taillesTexte.petit, lineHeight: 19, fontWeight: "700" },
+  noticeText: { color: couleurs.encreDouce, fontSize: taillesTexte.petit, lineHeight: 19, fontFamily: polices.texteDemiGras },
   sectionHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
-  stopCount: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontWeight: "700" },
+  sectionTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteExtraGras },
+  stopCount: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texteDemiGras },
   timeline: { paddingBottom: espacements.sm },
   stopRow: { minHeight: 68, flexDirection: "row", gap: espacements.md },
   timelineRail: { width: 28, alignItems: "center" },
@@ -348,13 +349,13 @@ const styles = StyleSheet.create({
   },
   stopMarkerEndpoint: { backgroundColor: couleurs.encre, borderColor: couleurs.encre },
   stopMarkerLast: { backgroundColor: couleurs.primaire, borderColor: couleurs.primaire },
-  stopMarkerText: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontWeight: "900" },
+  stopMarkerText: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
   stopMarkerTextEndpoint: { color: couleurs.surface },
   stopMarkerTextLast: { color: couleurs.encre },
   stopCopy: { flex: 1, paddingTop: espacements.sm, paddingBottom: espacements.md, gap: 3 },
-  stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "900" },
-  stopInstruction: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17 },
+  stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteExtraGras },
+  stopInstruction: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte },
   empty: { alignItems: "center", gap: espacements.sm, paddingVertical: espacements.xl },
-  emptyTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "900" },
-  emptyCopy: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19, textAlign: "center" },
+  emptyTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteExtraGras },
+  emptyCopy: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 19, textAlign: "center", fontFamily: polices.texte },
 });

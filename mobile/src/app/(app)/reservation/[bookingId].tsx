@@ -21,7 +21,7 @@ import {
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function ConfirmedBookingScreen() {
   const params = useLocalSearchParams<{ bookingId?: string | string[] }>();
@@ -48,8 +48,8 @@ export default function ConfirmedBookingScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Réservation invalide"
-          description="Impossible d’identifier cette réservation."
+          title="Lien de réservation incorrect"
+          description="Retrouvez-la dans vos demandes ou votre historique."
         />
       </State>
     );
@@ -59,7 +59,7 @@ export default function ConfirmedBookingScreen() {
         <EtatContenu
           type="chargement"
           title="Chargement de la réservation"
-          description="Nous récupérons les informations du trajet."
+          description="On récupère les infos du trajet."
         />
       </State>
     );
@@ -68,7 +68,7 @@ export default function ConfirmedBookingScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Réservation indisponible"
+          title="Impossible d’ouvrir la réservation"
           description={messageErreur(details.error)}
         />
       </State>
@@ -80,7 +80,7 @@ export default function ConfirmedBookingScreen() {
         <EtatContenu
           type="vide"
           title="Réservation annulée"
-          description="La place a été libérée sur les tronçons concernés."
+          description="Votre place est libérée pour quelqu’un d’autre."
           action={
             <Bouton onPress={() => router.replace("/accueil")}>
               Retour à l’accueil
@@ -94,7 +94,7 @@ export default function ConfirmedBookingScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <EntetePage
           title="Réservation confirmée"
-          description="Les informations utiles pour rejoindre votre chauffeur."
+          description="Tout ce qu’il faut pour retrouver votre chauffeur."
         />
         <View style={styles.successIcon}>
           <IconCircleCheck color={couleurs.succes} size={32} />
@@ -160,11 +160,11 @@ export default function ConfirmedBookingScreen() {
           onPress={() =>
             Alert.alert(
               "Annuler la réservation ?",
-              "Votre place sera immédiatement libérée.",
+              "Votre place sera libérée tout de suite.",
               [
-                { text: "Garder", style: "cancel" },
+                { text: "Garder ma place", style: "cancel" },
                 {
-                  text: "Annuler",
+                  text: "Oui, annuler",
                   style: "destructive",
                   onPress: () => cancel.mutate(),
                 },
@@ -182,7 +182,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Réservation" description="État de votre course." />
+        <EntetePage title="Réservation" description="Où en est votre course." />
         {children}
       </View>
     </SafeAreaView>
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
   title: {
     color: couleurs.texte,
     fontSize: 22,
-    fontWeight: "900",
     textAlign: "center",
+    fontFamily: polices.titre,
   },
   card: { gap: espacements.md },
   row: { flexDirection: "row", gap: espacements.md, alignItems: "flex-start" },
@@ -213,15 +213,15 @@ const styles = StyleSheet.create({
   label: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
     letterSpacing: 1,
+    fontFamily: polices.texteGras,
   },
   value: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
-  meta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  meta: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   total: {
     flexDirection: "row",
     alignItems: "center",
@@ -230,5 +230,5 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 20, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 20, fontFamily: polices.titre },
 });

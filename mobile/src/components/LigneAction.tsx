@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { IconChevronRight } from "@tabler/icons-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { StyleSheet, Text, View } from "react-native";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { PressionDouce } from "./PressionDouce";
 
 type LigneActionProps = {
   icon: ReactNode;
@@ -19,7 +20,7 @@ export function LigneAction({
   onPress,
 }: LigneActionProps) {
   return (
-    <Pressable
+    <PressionDouce
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.root, pressed && styles.pressed]}
@@ -35,7 +36,7 @@ export function LigneAction({
       </View>
       {badge ? <Text style={styles.badge}>{badge}</Text> : null}
       <IconChevronRight color={couleurs.texteSecondaire} size={19} />
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -62,12 +63,13 @@ const styles = StyleSheet.create({
   title: {
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   description: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
     lineHeight: 19,
+    fontFamily: polices.texte,
   },
   badge: {
     color: couleurs.texte,
@@ -76,6 +78,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: rayons.rond,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
 });

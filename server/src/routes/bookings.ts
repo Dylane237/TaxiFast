@@ -2,7 +2,9 @@ import type { PrismaClient } from "@prisma/client";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { canBook, isValidSegment } from "../domain/capacity.js";
+import { DELAI_REPONSE_MS, prixSchema } from "../domain/limites.js";
 import { requireUser } from "../http/authorization.js";
+import { LIMITES, limiteRoute } from "../http/rate-limit.js";
 import type { Authentication } from "../services/authentication.js";
 import { ConfirmBookingError } from "../services/booking-confirmation.js";
 import type { Notifier } from "../services/notifications.js";
@@ -17,14 +19,14 @@ const bookingIdParamsSchema = z.object({
 });
 
 const counterOfferSchema = z.object({
-  counterPrice: z.number().int().positive(),
+  counterPrice: prixSchema,
 });
 
 const proposalSchema = z.object({
   tripId: z.string().trim().min(1),
   pickupStopId: z.string().trim().min(1),
   dropoffStopId: z.string().trim().min(1),
-  proposedPrice: z.number().int().positive(),
+  proposedPrice: prixSchema,
   requestId: z.string().trim().min(1).optional(),
 });
 
@@ -72,7 +74,7 @@ export function registerBookingRoutes(
   authentication: Authentication,
   notifier: Notifier,
 ): void {
-  app.post("/bookings", async (request, reply) => {
+  app.post("/bookings", limiteRoute(LIMITES.proposition), async (request, reply) => {
     const principal = await requireUser(request, reply, authentication, [
       "CLIENT",
     ]);
@@ -90,12 +92,14 @@ export function registerBookingRoutes(
         corridorId: true,
         driverId: true,
         status: true,
+        availableUntil: true,
         tripStops: { select: { stopId: true, sequence: true } },
       },
     });
 
     if (!trip) return reply.status(404).send({ error: "TRIP_NOT_FOUND" });
-    if (trip.status !== "OPEN")
+    // Un trajet peut prendre des clients en route après le départ, mais plus après sa fin de disponibilité.
+    if (trip.status !== "OPEN" || (trip.availableUntil && trip.availableUntil <= new Date()))
       return reply.status(409).send({ error: "TRIP_NOT_OPEN" });
 
     const sequenceByStopId = new Map(
@@ -128,6 +132,19 @@ export function registerBookingRoutes(
       }
     }
 
+    // Une seule proposition en attente par client et par trajet : sinon, chaque essai notifie le chauffeur.
+    const propositionsEnAttente = await prisma.booking.count({
+      where: {
+        tripId,
+        clientId: principal.userId,
+        status: { in: ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"] },
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (propositionsEnAttente > 0) {
+      return reply.status(409).send({ error: "BOOKING_ALREADY_PENDING" });
+    }
+
     const booking = await prisma.booking.create({
       data: {
         tripId,
@@ -138,7 +155,7 @@ export function registerBookingRoutes(
         status: "PROPOSED_BY_CLIENT",
         proposedPrice,
         ...(requestId ? { requestId } : {}),
-        expiresAt: new Date(Date.now() + 30 * 60_000),
+        expiresAt: new Date(Date.now() + DELAI_REPONSE_MS),
       },
     });
 
@@ -390,6 +407,7 @@ export function registerBookingRoutes(
         clientId: true,
         status: true,
         counterPrice: true,
+        expiresAt: true,
         trip: { select: { driverId: true } },
       },
     });
@@ -403,6 +421,9 @@ export function registerBookingRoutes(
     ) {
       return reply.status(409).send({ error: "COUNTER_OFFER_NOT_ALLOWED" });
     }
+    if (booking.expiresAt && booking.expiresAt <= new Date()) {
+      return reply.status(409).send({ error: "BOOKING_EXPIRED" });
+    }
 
     const result = await prisma.booking.updateMany({
       where: {
@@ -413,6 +434,8 @@ export function registerBookingRoutes(
       data: {
         counterPrice: body.data.counterPrice,
         status: "PROPOSED_BY_DRIVER",
+        // Le client reçoit le même délai pour répondre que le chauffeur en avait.
+        expiresAt: new Date(Date.now() + DELAI_REPONSE_MS),
       },
     });
     if (result.count !== 1) {

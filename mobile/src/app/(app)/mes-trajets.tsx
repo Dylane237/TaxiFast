@@ -4,14 +4,14 @@ import { router } from "expo-router";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Trip, type TripStatus } from "@/api";
-import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
+import { ApparitionListe, Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const statuts: Record<TripStatus, string> = {
   OPEN: "Ouvert",
   FULL: "Complet",
-  CLOSED: "Clos",
+  CLOSED: "Fermé",
   COMPLETED: "Terminé",
   CANCELLED: "Annulé",
 };
@@ -76,7 +76,7 @@ export default function MesTrajets() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Mes trajets" description="Retrouvez les trajets que vous avez publiés." />
+          <EntetePage title="Mes trajets" description="Les trajets que vous avez publiés." />
           <MessageEtat>Chargement de vos trajets…</MessageEtat>
         </View>
       </SafeAreaView>
@@ -86,7 +86,7 @@ export default function MesTrajets() {
     return (
       <SafeAreaView style={styles.page}>
         <View style={styles.contenuEtat}>
-          <EntetePage title="Mes trajets" description="Retrouvez les trajets que vous avez publiés." />
+          <EntetePage title="Mes trajets" description="Les trajets que vous avez publiés." />
           <MessageEtat type="erreur">{messageErreur(error)}</MessageEtat>
           <Bouton onPress={() => void refresh()}>Réessayer</Bouton>
         </View>
@@ -99,11 +99,11 @@ export default function MesTrajets() {
       <FlatList
         data={trips}
         keyExtractor={(trip) => trip.id}
-        renderItem={({ item }) => <CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Itinéraire"} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><CarteTrajet trip={item} corridorName={corridorsById.get(item.corridorId) ?? "Itinéraire"} /></ApparitionListe>}
         contentContainerStyle={[styles.liste, !trips.length && styles.listeVide]}
-        ListHeaderComponent={<EntetePage title="Mes trajets" description="Statut et itinéraire de chaque publication." />}
+        ListHeaderComponent={<EntetePage title="Mes trajets" description="Où en est chacun de vos trajets." />}
         ListHeaderComponentStyle={styles.enteteListe}
-        ListEmptyComponent={<View style={styles.vide}><IconRoute color={couleurs.texteSecondaire} size={40} /><MessageEtat>Vous n’avez encore publié aucun trajet.</MessageEtat></View>}
+        ListEmptyComponent={<View style={styles.vide}><IconRoute color={couleurs.texteSecondaire} size={40} /><MessageEtat>Aucun trajet publié pour l’instant. Publiez-en un depuis l’accueil.</MessageEtat></View>}
         ItemSeparatorComponent={() => <View style={styles.separateur} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={couleurs.primaire} colors={[couleurs.primaire]} />}
       />
@@ -123,15 +123,15 @@ const styles = StyleSheet.create({
   carteEntete: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: espacements.md },
   itineraire: { flex: 1, flexDirection: "row", alignItems: "center", gap: espacements.sm },
   itineraireIcone: { width: 36, height: 36, borderRadius: rayons.sm, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
-  itineraireNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "800" },
+  itineraireNom: { flex: 1, color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteGras },
   statut: { paddingHorizontal: espacements.sm, paddingVertical: espacements.xs, borderRadius: rayons.rond, backgroundColor: couleurs.primaireClaire },
   statutAttention: { backgroundColor: couleurs.attentionClaire },
   statutNeutre: { backgroundColor: couleurs.fond },
-  statutTexte: { color: couleurs.texte, fontSize: taillesTexte.petit, fontWeight: "800" },
+  statutTexte: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
   statutTexteAttention: { color: couleurs.attention },
   statutTexteNeutre: { color: couleurs.texteSecondaire },
-  depart: { color: couleurs.texte, fontSize: taillesTexte.normal, fontWeight: "700", textTransform: "capitalize" },
+  depart: { color: couleurs.texte, fontSize: taillesTexte.normal, textTransform: "capitalize", fontFamily: polices.texteDemiGras },
   troncon: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
-  tronconTexte: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal },
-  details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit },
+  tronconTexte: { flex: 1, color: couleurs.texteSecondaire, fontSize: taillesTexte.normal, fontFamily: polices.texte },
+  details: { color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
 });

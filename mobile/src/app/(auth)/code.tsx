@@ -3,16 +3,16 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { api, ApiError } from "@/api";
+import { api, ApiError, configApi } from "@/api";
 import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { codeOtpValide } from "@/features/auth/auth-validation";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements } from "@/theme";
+import { couleurs, espacements, polices } from "@/theme";
 
 export default function CodeOtp() {
-  const otpLength = process.env.EXPO_PUBLIC_USE_MOCK === "false" ? 6 : 4;
+  const otpLength = configApi.modeDemo ? 4 : 6;
   const phone = useAuthFlowStore((state) => state.phone);
   const setFlowCode = useAuthFlowStore((state) => state.setCode);
   const resetFlow = useAuthFlowStore((state) => state.reset);
@@ -49,7 +49,7 @@ export default function CodeOtp() {
       return;
     }
     if (!codeOtpValide(code, otpLength)) {
-      setErreurSaisie(`Le code doit contenir ${otpLength} chiffres.`);
+      setErreurSaisie(`Le code compte ${otpLength} chiffres, il en manque.`);
       return;
     }
     setErreurSaisie(null);
@@ -62,18 +62,18 @@ export default function CodeOtp() {
   return (
     <AuthPage
       icon={<IconKey color={couleurs.primaire} size={25} strokeWidth={2} />}
-      title="Vérifiez votre numéro."
-      description={`Code envoyé au ${phone || "numéro indiqué"}.`}
+      title="Entrez le code reçu par SMS."
+      description={`Envoyé au ${phone || "numéro que vous avez donné"}. Il arrive en général en moins d’une minute.`}
     >
       <View style={styles.formulaire}>
         <Champ
-          etiquette="Code OTP"
+          etiquette="Code reçu"
           value={code}
           onChangeText={(value) =>
             setCode(value.replace(/\D/g, "").slice(0, otpLength))
           }
           placeholder={otpLength === 4 ? "1234" : "123456"}
-          aide={otpLength === 4 ? "Mode fictif : saisissez 1234." : "Le code expire après quelques minutes."}
+          aide={otpLength === 4 ? "Mode démo : tapez 1234." : "Le code reste valable quelques minutes."}
           keyboardType="number-pad"
           autoComplete="one-time-code"
           erreur={erreurSaisie ?? undefined}
@@ -86,7 +86,7 @@ export default function CodeOtp() {
           </MessageEtat>
         ) : null}
         {mutation.isSuccess ? (
-          <MessageEtat type="succes">Numéro vérifié.</MessageEtat>
+          <MessageEtat type="succes">C’est bon, votre numéro est vérifié.</MessageEtat>
         ) : null}
         <Bouton chargement={mutation.isPending} onPress={verifier}>
           Vérifier le code
@@ -105,5 +105,5 @@ export default function CodeOtp() {
 
 const styles = StyleSheet.create({
   formulaire: { gap: espacements.md },
-  code: { textAlign: "center", letterSpacing: 10, fontSize: 22, fontWeight: "800" },
+  code: { textAlign: "center", letterSpacing: 10, fontSize: 22, fontFamily: polices.titre },
 });

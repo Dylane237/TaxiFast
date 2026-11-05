@@ -19,7 +19,7 @@ import {
 } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function WaitingRequestScreen() {
   const { requestId } = useLocalSearchParams<{ requestId?: string }>();
@@ -68,8 +68,8 @@ export default function WaitingRequestScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Recherche des chauffeurs"
-          description="Nous comparons les trajets sur votre itinéraire."
+          title="On cherche votre taxi"
+          description="On regarde quels chauffeurs passent par votre chemin."
         />
       </State>
     );
@@ -78,7 +78,7 @@ export default function WaitingRequestScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Recherche indisponible"
+          title="Recherche impossible pour l’instant"
           description={messageErreur(error)}
         />
       </State>
@@ -88,8 +88,8 @@ export default function WaitingRequestScreen() {
       <State>
         <EtatContenu
           type="vide"
-          title="Demande introuvable"
-          description="Elle a peut-être été supprimée ou n’est plus disponible."
+          title="Cette demande n’existe plus"
+          description="Elle a peut-être été annulée entre-temps."
         />
       </State>
     );
@@ -108,7 +108,7 @@ export default function WaitingRequestScreen() {
       >
         <EntetePage
           title="En attente"
-          description="Votre demande est visible par les chauffeurs compatibles."
+          description="Les chauffeurs qui passent par votre chemin voient votre demande."
         />
         <View style={styles.pulse}>
           <View style={styles.pulseInner}>
@@ -120,8 +120,8 @@ export default function WaitingRequestScreen() {
         </Text>
         <Text style={styles.centerCopy}>
           {inactive
-            ? "Cette demande ne recevra plus de nouvelles offres."
-            : "Vous pouvez quitter cet écran. Les offres resteront accessibles depuis l’accueil."}
+            ? "Plus aucun chauffeur ne pourra vous faire d’offre sur cette demande."
+            : "Vous pouvez quitter cet écran, les offres vous attendront à l’accueil."}
         </Text>
         <Carte style={styles.summary}>
           <View style={styles.row}>
@@ -138,7 +138,7 @@ export default function WaitingRequestScreen() {
             </Text>
           </View>
           <View style={styles.priceRow}>
-            <Text style={styles.meta}>Votre proposition</Text>
+            <Text style={styles.meta}>Le prix que vous proposez</Text>
             <Text style={styles.price}>
               {formatPrice(request.proposedPrice)}
             </Text>
@@ -164,7 +164,7 @@ export default function WaitingRequestScreen() {
           >
             {offers.length
               ? `Voir ${offers.length} offre${offers.length > 1 ? "s" : ""}`
-              : `Voir ${matches.data?.length ?? 0} trajet${(matches.data?.length ?? 0) > 1 ? "s" : ""} compatible${(matches.data?.length ?? 0) > 1 ? "s" : ""}`}
+              : `Voir ${matches.data?.length ?? 0} taxi${(matches.data?.length ?? 0) > 1 ? "s" : ""} sur votre chemin`}
           </Bouton>
         ) : null}
         {cancel.isError ? (
@@ -198,7 +198,7 @@ function State({ children }: { children: React.ReactNode }) {
       <View style={styles.state}>
         <EntetePage
           title="En attente"
-          description="Recherche de chauffeurs compatibles."
+          description="Suivi de votre demande."
         />
         {children}
       </View>
@@ -234,8 +234,8 @@ const styles = StyleSheet.create({
   centerTitle: {
     color: couleurs.texte,
     fontSize: 22,
-    fontWeight: "900",
     textAlign: "center",
+    fontFamily: polices.titre,
   },
   centerCopy: {
     color: couleurs.texteSecondaire,
@@ -243,6 +243,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: "center",
     paddingHorizontal: espacements.lg,
+    fontFamily: polices.texte,
   },
   summary: { gap: espacements.md, marginVertical: espacements.sm },
   row: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
@@ -250,12 +251,13 @@ const styles = StyleSheet.create({
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "900",
+    fontFamily: polices.texteExtraGras,
   },
   meta: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   priceRow: {
     flexDirection: "row",
@@ -264,5 +266,5 @@ const styles = StyleSheet.create({
     borderTopColor: couleurs.bordure,
     paddingTop: espacements.md,
   },
-  price: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 18, fontFamily: polices.titre },
 });

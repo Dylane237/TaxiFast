@@ -7,6 +7,7 @@ function createPrismaMock() {
   return {
     trip: { findUnique: vi.fn() },
     booking: {
+      count: vi.fn().mockResolvedValue(0),
       create: vi.fn(),
       findUnique: vi.fn(),
       updateMany: vi.fn(),

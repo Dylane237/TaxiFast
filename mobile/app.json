@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Covoiturage Taxi",
+    "name": "Taxi Fast",
     "slug": "covoiturage-taxi",
     "scheme": "covoiturage-taxi",
     "version": "1.0.0",
@@ -13,7 +13,7 @@
     "android": {
       "package": "com.covoituragetaxi.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#FFD43B",
+        "backgroundColor": "#F7F7F4",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -30,23 +30,23 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icon.png",
-          "imageWidth": 200,
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
           "resizeMode": "contain",
-          "backgroundColor": "#151712"
+          "backgroundColor": "#F7F7F4"
         }
       ],
       [
         "expo-maps",
         {
           "requestLocationPermission": true,
-          "locationPermission": "Autoriser Covoiturage Taxi à utiliser votre position pendant un trajet."
+          "locationPermission": "Autoriser Taxi Fast à utiliser votre position pendant un trajet."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Autoriser Covoiturage Taxi à utiliser votre position pendant un trajet."
+          "locationAlwaysAndWhenInUsePermission": "Autoriser Taxi Fast à utiliser votre position pendant un trajet."
         }
       ],
       [

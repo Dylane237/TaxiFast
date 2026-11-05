@@ -7,7 +7,6 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -15,10 +14,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type BookingDetails } from "@/api";
-import { Carte, EntetePage, EtatContenu } from "@/components";
+import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { formatDateTime, formatPrice } from "@/features/format";
-import { couleurs, espacements, rayons, taillesTexte } from "@/theme";
+import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const statusLabels = {
   COMPLETED: "Terminée",
@@ -29,7 +28,7 @@ const statusLabels = {
 
 function HistoryCard({ data }: { data: BookingDetails }) {
   return (
-    <Pressable
+    <PressionDouce
       onPress={() =>
         router.push({
           pathname: "/historique/[bookingId]",
@@ -71,7 +70,7 @@ function HistoryCard({ data }: { data: BookingDetails }) {
           <IconArrowRight color={couleurs.texteSecondaire} size={19} />
         </View>
       </Carte>
-    </Pressable>
+    </PressionDouce>
   );
 }
 
@@ -103,8 +102,8 @@ export default function HistoryScreen() {
       <State>
         <EtatContenu
           type="chargement"
-          title="Chargement de l’historique"
-          description="Nous récupérons vos anciennes courses."
+          title="Chargement de vos courses"
+          description="On rassemble vos anciennes courses."
         />
       </State>
     );
@@ -113,7 +112,7 @@ export default function HistoryScreen() {
       <State>
         <EtatContenu
           type="erreur"
-          title="Historique indisponible"
+          title="Impossible d’afficher l’historique"
           description={messageErreur(error)}
         />
       </State>
@@ -123,22 +122,22 @@ export default function HistoryScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.booking.id}
-        renderItem={({ item }) => <HistoryCard data={item} />}
+        renderItem={({ item, index }) => <ApparitionListe index={index}><HistoryCard data={item} /></ApparitionListe>}
         ItemSeparatorComponent={() => (
           <View style={{ height: espacements.md }} />
         )}
         ListHeaderComponent={
           <EntetePage
             title="Historique"
-            description="Courses terminées, annulées ou expirées."
+            description="Toutes vos courses passées, et comment elles se sont terminées."
           />
         }
         ListHeaderComponentStyle={styles.header}
         ListEmptyComponent={
           <EtatContenu
             type="vide"
-            title="Historique vide"
-            description="Vos courses passées apparaîtront ici."
+            title="Rien pour l’instant"
+            description="Après votre première course, vous la retrouverez ici."
           />
         }
         contentContainerStyle={[styles.list, !data.length && styles.grow]}
@@ -157,7 +156,7 @@ function State({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.state}>
-        <EntetePage title="Historique" description="Vos courses passées." />
+        <EntetePage title="Historique" description="Vos anciennes courses." />
         {children}
       </View>
     </SafeAreaView>
@@ -185,26 +184,27 @@ const styles = StyleSheet.create({
   statusText: {
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.micro,
-    fontWeight: "900",
+    fontFamily: polices.texteGras,
   },
-  price: { color: couleurs.texte, fontSize: 18, fontWeight: "900" },
+  price: { color: couleurs.texte, fontSize: 18, fontFamily: polices.titre },
   route: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   routeText: {
     flex: 1,
     color: couleurs.texte,
     fontSize: taillesTexte.normal,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
   meta: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   metaText: {
     flex: 1,
     color: couleurs.texteSecondaire,
     fontSize: taillesTexte.petit,
+    fontFamily: polices.texte,
   },
   rateBadge: { flexDirection: "row", alignItems: "center", gap: 3 },
   rateText: {
     color: couleurs.attention,
     fontSize: taillesTexte.petit,
-    fontWeight: "800",
+    fontFamily: polices.texteGras,
   },
 });

@@ -25,7 +25,7 @@ export default function Connexion() {
   const envoyer = () => {
     const phone = normaliserTelephone(telephone);
     if (!phone) {
-      setErreurSaisie("Saisissez un numéro camerounais valide commençant par 6.");
+      setErreurSaisie("Il faut un numéro mobile camerounais : 9 chiffres, en commençant par 6.");
       return;
     }
     setErreurSaisie(null);
@@ -35,8 +35,8 @@ export default function Connexion() {
   return (
     <AuthPage
       icon={<IconPhone color={couleurs.primaire} size={25} strokeWidth={2} />}
-      title="Bougez simplement."
-      description="Connectez-vous avec votre numéro camerounais pour trouver ou publier un trajet."
+      title="Votre taxi, sans attendre au bord de la route."
+      description="Entrez votre numéro pour trouver une place ou publier votre trajet."
     >
       <View style={styles.formulaire}>
         <Champ
@@ -45,7 +45,7 @@ export default function Connexion() {
           value={telephone}
           onChangeText={setTelephone}
           placeholder="6XX XXX XXX"
-          aide="Un code de vérification vous sera envoyé."
+          aide="On vous envoie un code par SMS pour vérifier que c’est bien vous."
           keyboardType="phone-pad"
           autoComplete="tel"
           erreur={erreurSaisie ?? undefined}
@@ -53,7 +53,7 @@ export default function Connexion() {
           returnKeyType="send"
         />
         {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
-        {mutation.isSuccess ? <MessageEtat type="succes">Code envoyé.</MessageEtat> : null}
+        {mutation.isSuccess ? <MessageEtat type="succes">Code envoyé, regardez vos SMS.</MessageEtat> : null}
         <Bouton
           icone={<IconArrowRight color={couleurs.texte} size={19} />}
           chargement={mutation.isPending}
