@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { canBook, isValidSegment } from "../domain/capacity.js";
 import { requireUser } from "../http/authorization.js";
+import { LIMITES, limiteRoute } from "../http/rate-limit.js";
 import type { Authentication } from "../services/authentication.js";
 import { ConfirmBookingError } from "../services/booking-confirmation.js";
 import type { Notifier } from "../services/notifications.js";
@@ -72,7 +73,7 @@ export function registerBookingRoutes(
   authentication: Authentication,
   notifier: Notifier,
 ): void {
-  app.post("/bookings", async (request, reply) => {
+  app.post("/bookings", limiteRoute(LIMITES.proposition), async (request, reply) => {
     const principal = await requireUser(request, reply, authentication, [
       "CLIENT",
     ]);
@@ -126,6 +127,19 @@ export function registerBookingRoutes(
       ) {
         return reply.status(409).send({ error: "REQUEST_NOT_BOOKABLE" });
       }
+    }
+
+    // Une seule proposition en attente par client et par trajet : sinon, chaque essai notifie le chauffeur.
+    const propositionsEnAttente = await prisma.booking.count({
+      where: {
+        tripId,
+        clientId: principal.userId,
+        status: { in: ["PROPOSED_BY_CLIENT", "PROPOSED_BY_DRIVER"] },
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (propositionsEnAttente > 0) {
+      return reply.status(409).send({ error: "BOOKING_ALREADY_PENDING" });
     }
 
     const booking = await prisma.booking.create({

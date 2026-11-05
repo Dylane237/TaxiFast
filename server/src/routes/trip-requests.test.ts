@@ -20,6 +20,7 @@ describe("POST /trip-requests", () => {
         ]),
       },
       tripRequest: {
+        count: vi.fn().mockResolvedValue(0),
         create: vi.fn().mockResolvedValue({ id: "request-1", status: "OPEN" }),
       },
     };

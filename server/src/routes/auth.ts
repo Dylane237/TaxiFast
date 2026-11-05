@@ -4,6 +4,7 @@ import {
   AuthenticationError,
   type Authentication,
 } from "../services/authentication.js";
+import { LIMITES, limiteRoute } from "../http/rate-limit.js";
 
 const phoneSchema = z.string().trim().regex(/^\+[1-9]\d{7,14}$/, {
   message: "Le téléphone doit être au format international E.164",
@@ -37,7 +38,7 @@ function authenticationError(reply: FastifyReply, error: AuthenticationError) {
 }
 
 export function registerAuthRoutes(app: FastifyInstance, authentication: Authentication): void {
-  app.post("/auth/otp/request", async (request, reply) => {
+  app.post("/auth/otp/request", limiteRoute(LIMITES.demandeOtp), async (request, reply) => {
     const parsed = requestOtpSchema.safeParse(request.body);
     if (!parsed.success) return invalidInput(reply, parsed.error);
 
@@ -50,7 +51,7 @@ export function registerAuthRoutes(app: FastifyInstance, authentication: Authent
     }
   });
 
-  app.post("/auth/otp/verify", async (request, reply) => {
+  app.post("/auth/otp/verify", limiteRoute(LIMITES.verificationOtp), async (request, reply) => {
     const parsed = verifyOtpSchema.safeParse(request.body);
     if (!parsed.success) return invalidInput(reply, parsed.error);
 

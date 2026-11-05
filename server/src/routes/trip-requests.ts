@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { requireUser } from "../http/authorization.js";
+import { LIMITES, limiteRoute } from "../http/rate-limit.js";
 import type { Authentication } from "../services/authentication.js";
 import type { Notifier } from "../services/notifications.js";
 
@@ -37,6 +38,9 @@ const updateTripRequestSchema = z
     message: "Indiquez au moins une modification",
   });
 
+/** Au-delà, un client peut inonder les chauffeurs d'un axe de notifications. */
+export const MAX_DEMANDES_OUVERTES = 3;
+
 function invalidInput(reply: FastifyReply, error: z.ZodError) {
   return reply
     .status(400)
@@ -49,7 +53,7 @@ export function registerTripRequestRoutes(
   authentication: Authentication,
   notifier: Notifier,
 ): void {
-  app.post("/trip-requests", async (request, reply) => {
+  app.post("/trip-requests", limiteRoute(LIMITES.demandeTrajet), async (request, reply) => {
     const principal = await requireUser(request, reply, authentication, [
       "CLIENT",
     ]);
@@ -86,6 +90,12 @@ export function registerTripRequestRoutes(
       return reply.status(404).send({ error: "CORRIDOR_NOT_FOUND" });
     if (stops.length !== 2)
       return reply.status(400).send({ error: "INVALID_REQUEST_STOPS" });
+    const demandesOuvertes = await prisma.tripRequest.count({
+      where: { clientId: principal.userId, status: "OPEN" },
+    });
+    if (demandesOuvertes >= MAX_DEMANDES_OUVERTES) {
+      return reply.status(409).send({ error: "TOO_MANY_OPEN_REQUESTS" });
+    }
     const tripRequest = await prisma.tripRequest.create({
       data: {
         clientId: principal.userId,
