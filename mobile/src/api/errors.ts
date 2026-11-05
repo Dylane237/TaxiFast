@@ -21,7 +21,8 @@ export type ApiErrorCode =
   | "RATE_LIMITED"
   | "OTP_RATE_LIMITED"
   | "TOO_MANY_OPEN_REQUESTS"
-  | "BOOKING_ALREADY_PENDING";
+  | "BOOKING_ALREADY_PENDING"
+  | "OTP_DELIVERY_FAILED";
 
 export class ApiError extends Error {
   constructor(

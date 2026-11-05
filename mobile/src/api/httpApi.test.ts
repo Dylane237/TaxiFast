@@ -76,6 +76,7 @@ describe("httpApi", () => {
 
   it.each([
     ["OTP_RATE_LIMITED", 429],
+    ["OTP_DELIVERY_FAILED", 503],
     ["TOO_MANY_OPEN_REQUESTS", 409],
     ["BOOKING_ALREADY_PENDING", 409],
   ])("garde le code serveur %s au lieu d'une erreur générique", async (erreur, statut) => {

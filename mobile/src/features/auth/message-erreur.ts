@@ -15,6 +15,7 @@ const messages: Partial<Record<ApiError["code"], string>> = {
   COUNTER_OFFER_ALREADY_USED: "Un autre prix a déjà été proposé une fois. C’est le maximum.",
   TRIP_NOT_OPEN: "Ce taxi ne prend plus de clients sur ce trajet.",
   OTP_RATE_LIMITED: "Un code vient de partir. Attendez une minute avant d’en redemander un.",
+  OTP_DELIVERY_FAILED: "Le SMS n’a pas pu partir. Vérifiez votre numéro, puis réessayez dans un instant.",
   TOO_MANY_OPEN_REQUESTS:
     "Vous avez déjà trois demandes en cours. Annulez-en une ou attendez une réponse avant d’en lancer une autre.",
   BOOKING_ALREADY_PENDING: "Vous avez déjà une proposition en attente pour ce taxi. Attendez la réponse du chauffeur.",
