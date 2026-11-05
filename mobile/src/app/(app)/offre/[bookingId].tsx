@@ -20,7 +20,7 @@ import {
   MessageEtat,
 } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatDateTime, formatPrice } from "@/features/format";
+import { formatDateTime, formatNote, formatPrice } from "@/features/format";
 import { parseCounterPrice } from "@/features/driver-requests/driver-requests";
 import { parseRouteId } from "@/features/route-params";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
@@ -197,7 +197,7 @@ export default function OfferDetailScreen() {
                 size={17}
               />
               <Text style={styles.ratingText}>
-                {data.driver.rating?.toFixed(1) ?? "Nouveau"}
+                {(data.driver.rating != null ? formatNote(data.driver.rating) : "Nouveau")}
               </Text>
             </View>
           </View>

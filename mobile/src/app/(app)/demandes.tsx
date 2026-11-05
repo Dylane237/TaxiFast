@@ -8,18 +8,10 @@ import { ApparitionListe, Bouton, Carte, EntetePage, EtatContenu, PressionDouce 
 import { messageErreur } from "@/features/auth/message-erreur";
 import { selectDriverRequests, type DriverRequest } from "@/features/driver-requests/driver-requests";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { formatDateTime } from "@/features/format";
 
 function formatPrice(value: number): string {
   return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
-}
-
-function formatDeparture(value: string): string {
-  return new Date(value).toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function RequestCard({ item }: { item: DriverRequest }) {
@@ -34,7 +26,7 @@ function RequestCard({ item }: { item: DriverRequest }) {
           <View style={styles.icon}><IconRoute color={couleurs.texte} size={20} /></View>
           <View style={styles.headerText}>
             <Text style={styles.kicker}>CLIENT SUR VOTRE ROUTE</Text>
-            <Text style={styles.departure}>Départ {formatDeparture(item.trip.departureAt)}</Text>
+            <Text style={styles.departure}>Départ {formatDateTime(item.trip.departureAt)}</Text>
           </View>
           <IconArrowRight color={couleurs.texteSecondaire} size={21} />
         </View>

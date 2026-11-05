@@ -7,6 +7,7 @@ import { api, type Trip, type TripStatus } from "@/api";
 import { ApparitionListe, Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { capitaliser, formatDateTime } from "@/features/format";
 
 const statuts: Record<TripStatus, string> = {
   OPEN: "Ouvert",
@@ -15,16 +16,6 @@ const statuts: Record<TripStatus, string> = {
   COMPLETED: "Terminé",
   CANCELLED: "Annulé",
 };
-
-function formaterDepart(value: string): string {
-  return new Date(value).toLocaleString("fr-FR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function CarteTrajet({ trip, corridorName }: { trip: Trip; corridorName: string }) {
   const first = trip.tripStops[0]?.stop.name ?? "Départ";
@@ -40,7 +31,7 @@ function CarteTrajet({ trip, corridorName }: { trip: Trip; corridorName: string 
           <Text style={[styles.statutTexte, trip.status === "FULL" && styles.statutTexteAttention, ["CLOSED", "COMPLETED", "CANCELLED"].includes(trip.status) && styles.statutTexteNeutre]}>{statuts[trip.status]}</Text>
         </View>
       </View>
-      <Text style={styles.depart}>{formaterDepart(trip.departureAt)}</Text>
+      <Text style={styles.depart}>{capitaliser(formatDateTime(trip.departureAt))}</Text>
       <View style={styles.troncon}>
         <IconMapPin color={couleurs.texteSecondaire} size={18} />
         <Text style={styles.tronconTexte}>{first} → {last}</Text>

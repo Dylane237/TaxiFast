@@ -1,4 +1,4 @@
-import { IconArrowRight, IconClock, IconCurrentLocation, IconMapPin, IconRoute, IconSearch } from "@tabler/icons-react-native";
+import { IconArrowRight, IconCurrentLocation, IconMapPin, IconRoute, IconSearch } from "@tabler/icons-react-native";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,10 +29,10 @@ function ClientHome({ firstName }: { firstName?: string }) {
           <PressionDouce onPress={() => router.push("/recherche")} style={({ pressed }) => [styles.destinationButton, pressed && styles.pressed]}>
             <View style={styles.searchIcon}><IconSearch color={couleurs.texte} size={22} /></View><View style={styles.destinationCopy}><Text style={styles.destinationTitle}>Choisir ma destination</Text><Text style={styles.destinationHint}>On vous trouve un taxi qui passe par là</Text></View><View style={styles.destinationArrow}><IconArrowRight color={couleurs.surface} size={19} /></View>
           </PressionDouce>
-          <Text style={styles.recentLabel}>VOS DERNIÈRES DESTINATIONS</Text>
+          <Text style={styles.recentLabel}>ARRÊTS SOUVENT DEMANDÉS</Text>
           <View style={styles.recentList}>
-            <QuickPlace icon={<IconMapPin color={couleurs.texte} size={19} />} name="Akwa Palace" detail="Akwa, boulevard de la Liberté" onPress={() => router.push("/recherche")} />
-            <QuickPlace icon={<IconClock color={couleurs.texte} size={19} />} name="Bonabéri Centre" detail="Environ 24 min selon le trafic" onPress={() => router.push("/recherche")} last />
+            <QuickPlace icon={<IconMapPin color={couleurs.texte} size={19} />} name="Akwa Palace" detail="Devant Akwa Palace, côté boulevard de la Liberté" onPress={() => router.push("/recherche")} />
+            <QuickPlace icon={<IconMapPin color={couleurs.texte} size={19} />} name="Bonabéri Centre" detail="Devant la mairie de Douala IV" onPress={() => router.push("/recherche")} last />
           </View>
           <PressionDouce onPress={() => router.push("/mes-demandes")} style={({ pressed }) => [styles.requestsShortcut, pressed && styles.pressed]}><Text style={styles.requestsText}>Voir mes demandes</Text><IconArrowRight color={couleurs.texte} size={18} /></PressionDouce>
         </Apparition>

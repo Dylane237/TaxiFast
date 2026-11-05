@@ -36,6 +36,7 @@ import {
 } from "@/notifications/push-notifications";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { formatTelephone } from "@/features/format";
 
 export default function CompteScreen() {
   const queryClient = useQueryClient();
@@ -148,14 +149,14 @@ export default function CompteScreen() {
           <Carte style={styles.list}>
             <LigneAction
               icon={<IconPhone color={couleurs.texte} size={20} />}
-              title={user.phone}
+              title={formatTelephone(user.phone)}
               description="Le numéro avec lequel vous vous connectez"
               onPress={() => undefined}
             />
             {driver ? (
               <LigneAction
                 icon={<IconCar color={couleurs.texte} size={20} />}
-                title={user.vehicle?.model ?? "Véhicule à compléter"}
+                title={user.vehicle ? (user.vehicle.model ?? "Votre véhicule") : "Véhicule à compléter"}
                 description={
                   user.vehicle
                     ? `${user.vehicle.plate} · ${user.vehicle.seats} places`

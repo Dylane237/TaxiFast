@@ -4,11 +4,11 @@ import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Stop } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce, Rebond } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatDateTime, formatPrice } from "@/features/format";
+import { capitaliser, formatDateTime, formatPlage, formatPrice } from "@/features/format";
 import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { WizardProgress } from "@/features/route-composer/WizardProgress";
@@ -17,7 +17,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
 import { vibrerSucces } from "@/features/animations";
 
-const labels = ["VOTRE ITINÉRAIRE", "ARRÊTS PROPOSÉS", "DISPONIBILITÉ", "PLACES ET TARIFS", "VÉRIFICATION"];
+const labels = ["VOTRE ITINÉRAIRE", "ARRÊTS PROPOSÉS", "DISPONIBILITÉ", "PLACES ET PRIX", "VÉRIFICATION"];
 const startOptions = [30, 60, 120];
 const durationOptions = [60, 120, 180];
 
@@ -26,13 +26,16 @@ export default function JePars() {
   const user = useAuthStore((state) => state.user);
   const corridorsQuery = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const [step, setStep] = useState(0);
+  // La barre du bas est posée en absolu : elle doit laisser elle-même la place à la barre de navigation Android.
+  const marges = useSafeAreaInsets();
   const [from, setFrom] = useState<Stop | null>(null);
   const [to, setTo] = useState<Stop | null>(null);
   const [selectedStopIds, setSelectedStopIds] = useState<string[]>([]);
   const [mode, setMode] = useState<AvailabilityMode>("IMMEDIATE");
   const [startMinutes, setStartMinutes] = useState(30);
   const [durationMinutes, setDurationMinutes] = useState(120);
-  const [capacity, setCapacity] = useState(1);
+  // Par défaut, toutes les places du véhicule : partir sur 1 place faisait perdre des clients sans s'en rendre compte.
+  const [capaciteChoisie, setCapacity] = useState<number | null>(null);
   const [fares, setFares] = useState<FareDraft[]>([]);
   const [fareIndex, setFareIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,7 @@ export default function JePars() {
   const route = useMemo(() => findRouteSelection(corridors, from?.id ?? "", to?.id ?? ""), [corridors, from, to]);
   const selectedStops = useMemo(() => route?.stops.filter((stop) => selectedStopIds.includes(stop.id)) ?? [], [route, selectedStopIds]);
   const maxSeats = user?.vehicle?.seats ?? 0;
+  const capacity = capaciteChoisie ?? maxSeats;
   const availability = useMemo(() => buildAvailability(mode, startMinutes, durationMinutes), [durationMinutes, mode, startMinutes]);
   const currentFare = fares[fareIndex];
   const stopById = useMemo(() => new Map(selectedStops.map((stop) => [stop.id, stop])), [selectedStops]);
@@ -84,6 +88,8 @@ export default function JePars() {
   const next = () => {
     setError(null);
     if (step === 0) {
+      if (!from) return setError("Choisissez d’abord votre point de départ.");
+      if (!to) return setError("Choisissez maintenant votre point d’arrivée.");
       if (!route) return setError("Ces deux points ne sont pas sur le même axe. Choisissez un départ et une arrivée sur la même route.");
       setSelectedStopIds(route.stops.map((stop) => stop.id));
       setStep(1);
@@ -126,7 +132,7 @@ export default function JePars() {
           <Text style={styles.hero}>D’où partez-vous ?</Text>
           <Text style={styles.subtitle}>Tapez un quartier, un carrefour, ou utilisez votre position.</Text>
           <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
-          <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
+          <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} onCurrentLocation={() => void locate()} locating={locating} />
         </View> : null}
 
         {step === 1 && route ? <View style={styles.stage}>
@@ -152,18 +158,18 @@ export default function JePars() {
           </View>
           {mode === "SCHEDULED" ? <OptionGroup label="DÉPART DANS" values={startOptions} value={startMinutes} onChange={setStartMinutes} suffix="min" /> : null}
           <OptionGroup label="DURÉE DE DISPONIBILITÉ" values={durationOptions} value={durationMinutes} onChange={setDurationMinutes} suffix="min" />
-          <Carte style={styles.availabilityCard}><IconClock color={couleurs.texte} size={22} /><View style={styles.flex}><Text style={styles.cardLabel}>Vous passez</Text><Text style={styles.cardValue}>De {formatDateTime(availability.departureAt)} à {new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</Text></View></Carte>
+          <Carte style={styles.availabilityCard}><IconClock color={couleurs.texte} size={22} /><View style={styles.flex}><Text style={styles.cardLabel}>Vous passez</Text><Text style={styles.cardValue}>{capitaliser(formatPlage(availability.departureAt, availability.availableUntil))}</Text></View></Carte>
         </View> : null}
 
         {step === 3 && currentFare ? <View style={styles.stage}>
           <Text style={styles.hero}>Places et prix</Text>
           <Text style={styles.subtitle}>Combien de clients pouvez-vous prendre ? Ensuite, fixez le prix pour chaque portion du trajet.</Text>
           <Carte style={styles.capacityCard}><View style={styles.capacityHeading}><IconUsers color={couleurs.texte} size={22} /><Text style={styles.cardLabel}>Places libres</Text></View><View style={styles.counter}>
-            <PressionDouce disabled={capacity <= 1} onPress={() => setCapacity((value) => Math.max(1, value - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={22} /></PressionDouce>
+            <PressionDouce disabled={capacity <= 1} onPress={() => setCapacity(Math.max(1, capacity - 1))} style={[styles.counterButton, capacity <= 1 && styles.disabled]}><IconMinus color={couleurs.texte} size={22} /></PressionDouce>
             <View style={styles.counterCopy}><Text style={styles.counterValue}>{capacity}</Text><Text style={styles.counterLabel}>sur {maxSeats}</Text></View>
-            <PressionDouce disabled={capacity >= maxSeats} onPress={() => setCapacity((value) => Math.min(maxSeats, value + 1))} style={[styles.counterButton, capacity >= maxSeats && styles.disabled]}><IconPlus color={couleurs.texte} size={22} /></PressionDouce>
+            <PressionDouce disabled={capacity >= maxSeats} onPress={() => setCapacity(Math.min(maxSeats, capacity + 1))} style={[styles.counterButton, capacity >= maxSeats && styles.disabled]}><IconPlus color={couleurs.texte} size={22} /></PressionDouce>
           </View></Carte>
-          <View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.sectionEyebrow}>TARIF {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={24} /></View>
+          <View style={styles.fareHeading}><View style={styles.flex}><Text style={styles.sectionEyebrow}>PRIX {fareIndex + 1} SUR {fares.length}</Text><Text style={styles.fareTitle}>{stopById.get(currentFare.fromStopId)?.name} → {stopById.get(currentFare.toStopId)?.name}</Text></View><IconWallet color={couleurs.texteSecondaire} size={24} /></View>
           <Champ etiquette="Prix en FCFA" value={String(currentFare.price)} keyboardType="number-pad" onChangeText={(value) => setFares((current) => current.map((fare, index) => index === fareIndex ? { ...fare, price: Number(value.replace(/\s/g, "")) || 0 } : fare))} />
           <View style={styles.fareNavigation}><PressionDouce disabled={fareIndex === 0} onPress={() => setFareIndex((value) => value - 1)} style={[styles.navButton, fareIndex === 0 && styles.disabled]}><IconArrowLeft color={couleurs.texte} size={20} /><Text style={styles.navText}>Précédent</Text></PressionDouce><PressionDouce disabled={fareIndex === fares.length - 1} onPress={() => setFareIndex((value) => value + 1)} style={[styles.navButton, fareIndex === fares.length - 1 && styles.disabled]}><Text style={styles.navText}>Suivant</Text><IconArrowRight color={couleurs.texte} size={20} /></PressionDouce></View>
         </View> : null}
@@ -173,10 +179,8 @@ export default function JePars() {
           <Carte style={styles.summaryCard}><Summary label="Itinéraire" value={`${from?.name} → ${to?.name}`} /><Summary label="Arrêts" value={`${selectedStops.length} arrêts`} /><Summary label="Départ" value={`${mode === "IMMEDIATE" ? "Maintenant" : formatDateTime(availability.departureAt)} · ${durationMinutes} min`} /><Summary label="Places" value={`${capacity} place${capacity > 1 ? "s" : ""} libre${capacity > 1 ? "s" : ""}`} /><Summary label="Prix" value={`${formatPrice(Math.min(...fares.map((fare) => fare.price)))} à ${formatPrice(Math.max(...fares.map((fare) => fare.price)))}`} last /></Carte>
         </View> : null}
 
-        {error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}
-        {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
       </ScrollView>
-      <View style={styles.footer}>{step > 0 ? <View style={styles.backButton}><Bouton variante="secondaire" onPress={() => setStep((value) => value - 1)}>Retour</Bouton></View> : null}<View style={styles.nextButton}><Bouton variante={step === 4 ? "sombre" : "primaire"} chargement={mutation.isPending} onPress={next}>{step === 4 ? "Publier le trajet" : "Continuer"}</Bouton></View></View>
+      <View style={[styles.footer, { paddingBottom: espacements.md + marges.bottom }]}>{error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}{mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}<View style={styles.footerBoutons}>{step > 0 ? <View style={styles.backButton}><Bouton variante="secondaire" onPress={() => setStep((value) => value - 1)}>Retour</Bouton></View> : null}<View style={styles.nextButton}><Bouton variante={step === 4 ? "sombre" : "primaire"} chargement={mutation.isPending} onPress={next}>{step === 4 ? "Publier le trajet" : "Continuer"}</Bouton></View></View></View>
     </SafeAreaView>
   );
 }
@@ -200,7 +204,9 @@ function State({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 },
   hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontFamily: polices.titre }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texte },
-  footer: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, backButton: { width: 98 }, nextButton: { flex: 1 },
+  // Les erreurs vivent dans la barre du bas : en bas de la liste, elles tombaient hors de l'écran.
+  footerBoutons: { flexDirection: "row", gap: espacements.sm },
+  footer: { position: "absolute", left: 0, right: 0, bottom: 0, gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, backButton: { width: 98 }, nextButton: { flex: 1 },
   stopRail: { gap: 6 }, stopOption: { minHeight: 54, flexDirection: "row", alignItems: "center", gap: espacements.md, paddingHorizontal: espacements.md, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, stopOptionSelected: { borderColor: couleurs.primairePresse }, stopDot: { width: 28, height: 28, borderRadius: rayons.rond, borderWidth: 1, borderColor: couleurs.bordure, alignItems: "center", justifyContent: "center" }, stopDotSelected: { backgroundColor: couleurs.primaire, borderColor: couleurs.primaire }, stopCopy: { flex: 1, gap: 2 }, stopName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras }, stopDetail: { color: couleurs.texteSecondaire, fontSize: 12, fontFamily: polices.texte },
   modeGrid: { flexDirection: "row", gap: espacements.sm }, choiceCard: { flex: 1, minHeight: 128, padding: espacements.md, gap: 6, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, choiceCardActive: { borderColor: couleurs.primairePresse, backgroundColor: couleurs.primaireClaire }, choiceTitle: { color: couleurs.texte, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texteGras }, choiceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte }, choiceCheck: { position: "absolute", top: espacements.md, right: espacements.md, width: 24, height: 24, borderRadius: rayons.rond, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   optionGroup: { gap: espacements.sm }, sectionEyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 0.8, fontFamily: polices.texteGras }, pills: { flexDirection: "row", gap: espacements.sm }, pill: { flex: 1, minHeight: 46, alignItems: "center", justifyContent: "center", borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire }, pillActive: { backgroundColor: couleurs.primaire }, pillText: { color: couleurs.texte, fontSize: 12, fontFamily: polices.texteGras },

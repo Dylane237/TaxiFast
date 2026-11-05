@@ -3,12 +3,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { api, type AvailabilityMode, type Stop } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatDateTime, formatPrice } from "@/features/format";
+import { capitaliser, formatPlage, formatPrice } from "@/features/format";
 import { CityMapBackdrop } from "@/features/maps/CityMapBackdrop";
 import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
@@ -40,6 +40,8 @@ async function currentPositionWithTimeout() {
 export default function RechercheScreen() {
   const corridorsQuery = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const [step, setStep] = useState(0);
+  // La barre du bas est posée en absolu : elle doit laisser elle-même la place à la barre de navigation Android.
+  const marges = useSafeAreaInsets();
   const [from, setFrom] = useState<Stop | null>(null);
   const [to, setTo] = useState<Stop | null>(null);
   const [mode, setMode] = useState<AvailabilityMode>("IMMEDIATE");
@@ -88,6 +90,8 @@ export default function RechercheScreen() {
   const next = () => {
     setError(null);
     if (step === 0) {
+      if (!from) return setError("Choisissez d’abord où vous montez.");
+      if (!to) return setError("Choisissez maintenant où vous descendez.");
       if (!route) return setError("Aucun taxi ne relie ces deux points d’un coup. Choisissez une montée et une descente sur le même axe.");
       return setStep(1);
     }
@@ -107,15 +111,15 @@ export default function RechercheScreen() {
     <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
       <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
       <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "TRAJET TROUVÉ" : "VOTRE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.mapSheetWrap}>
+      <KeyboardAvoidingView behavior="padding" style={styles.mapSheetWrap}>
         <View style={styles.mapSheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez où vous montez et où vous descendez.</Text></View>
           {error ? <View style={styles.mapFeedback}><MessageEtat type="erreur">{error}</MessageEtat></View> : null}
           <ScrollView contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
+            <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} onCurrentLocation={() => void locate()} locating={locating} />
           </ScrollView>
-          <View style={styles.mapFooter}><Bouton onPress={next}>{route ? "Continuer" : "Choisir le trajet"}</Bouton></View>
+          <View style={[styles.mapFooter, { paddingBottom: espacements.md + marges.bottom }]}><Bouton onPress={next}>{route ? "Continuer" : "Choisir le trajet"}</Bouton></View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -130,7 +134,7 @@ export default function RechercheScreen() {
         <Text style={styles.hero}>D’où à où ?</Text>
         <Text style={styles.subtitle}>Tapez un quartier ou un carrefour, ou partez de votre position.</Text>
         <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
-        <PlaceSearch corridors={corridors} from={from} to={to} onFrom={setFrom} onTo={setTo} onCurrentLocation={() => void locate()} locating={locating} />
+        <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} onCurrentLocation={() => void locate()} locating={locating} />
       </View> : null}
 
       {step === 1 ? <View style={styles.stage}>
@@ -149,13 +153,11 @@ export default function RechercheScreen() {
       {step === 2 && route ? <View style={styles.stage}>
         <Text style={styles.hero}>On envoie ?</Text><Text style={styles.subtitle}>Les chauffeurs qui passent par là verront votre demande.</Text>
         <RouteMiniMap stops={route.stops} />
-        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Quand" value={`Entre ${formatDateTime(availability.departureAt)} et ${new Date(availability.availableUntil).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
+        <Carte style={styles.summary}><Summary label="Montée" value={from!.name} /><Summary label="Descente" value={to!.name} /><Summary label="Quand" value={capitaliser(formatPlage(availability.departureAt, availability.availableUntil))} /><Summary label="Prix proposé" value={formatPrice(parsedPrice)} last /></Carte>
       </View> : null}
 
-      {error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}
-      {mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}
     </ScrollView>
-    <View style={styles.footer}>{step > 0 ? <View style={styles.back}><Bouton variante="secondaire" onPress={() => setStep((value) => value - 1)}>Retour</Bouton></View> : null}<View style={styles.next}><Bouton variante={step === 2 ? "sombre" : "primaire"} chargement={mutation.isPending} onPress={next}>{step === 2 ? "Envoyer ma demande" : "Continuer"}</Bouton></View></View>
+    <View style={[styles.footer, { paddingBottom: espacements.md + marges.bottom }]}>{error ? <MessageEtat type="erreur">{error}</MessageEtat> : null}{mutation.isError ? <MessageEtat type="erreur">{messageErreur(mutation.error)}</MessageEtat> : null}<View style={styles.footerBoutons}>{step > 0 ? <View style={styles.back}><Bouton variante="secondaire" onPress={() => setStep((value) => value - 1)}>Retour</Bouton></View> : null}<View style={styles.next}><Bouton variante={step === 2 ? "sombre" : "primaire"} chargement={mutation.isPending} onPress={next}>{step === 2 ? "Envoyer ma demande" : "Continuer"}</Bouton></View></View></View>
   </SafeAreaView>;
 }
 
@@ -185,7 +187,9 @@ const styles = StyleSheet.create({
   placeScroll: { paddingHorizontal: espacements.lg, paddingBottom: espacements.md },
   mapFooter: { paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: couleurs.bordure, backgroundColor: couleurs.surface },
   page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 }, hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontFamily: polices.titre }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texte },
-  footer: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, back: { width: 98 }, next: { flex: 1 },
+  // Les erreurs vivent dans la barre du bas : en bas de la liste, elles tombaient hors de l'écran.
+  footerBoutons: { flexDirection: "row", gap: espacements.sm },
+  footer: { position: "absolute", left: 0, right: 0, bottom: 0, gap: espacements.sm, paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, backgroundColor: couleurs.surface, borderTopWidth: 1, borderTopColor: couleurs.bordure, ...ombres.feuille }, back: { width: 98 }, next: { flex: 1 },
   modeGrid: { flexDirection: "row", gap: espacements.sm }, choice: { flex: 1, minHeight: 122, padding: espacements.md, gap: 6, borderRadius: rayons.md, backgroundColor: couleurs.surface, borderWidth: 1, borderColor: couleurs.bordure }, choiceActive: { borderColor: couleurs.primairePresse, backgroundColor: couleurs.primaireClaire }, choiceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.texteGras }, choiceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte }, check: { position: "absolute", right: espacements.md, top: espacements.md, width: 23, height: 23, borderRadius: rayons.rond, backgroundColor: couleurs.primaire, alignItems: "center", justifyContent: "center" },
   options: { gap: espacements.sm }, eyebrow: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, letterSpacing: 0.8, fontFamily: polices.texteGras }, pills: { flexDirection: "row", gap: espacements.sm }, pill: { flex: 1, minHeight: 46, borderRadius: rayons.rond, backgroundColor: couleurs.surfaceSecondaire, alignItems: "center", justifyContent: "center" }, pillActive: { backgroundColor: couleurs.primaire }, pillText: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
   priceHeading: { flexDirection: "row", alignItems: "center", gap: espacements.md }, priceTitle: { color: couleurs.texte, fontSize: taillesTexte.normal, fontFamily: polices.titre }, priceDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, maxWidth: 280, fontFamily: polices.texte },

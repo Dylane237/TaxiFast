@@ -6,7 +6,7 @@ import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 export function RouteMiniMap({ stops, compact = false }: { stops: Stop[]; compact?: boolean }) {
   const points = stops.map((_, index) => ({
     x: 48 + (index / Math.max(1, stops.length - 1)) * 264,
-    y: 132 - Math.sin((index / Math.max(1, stops.length - 1)) * Math.PI) * 68,
+    y: 100 - Math.sin((index / Math.max(1, stops.length - 1)) * Math.PI) * 56,
   }));
   const path = points.map((point, index) => `${index ? "L" : "M"}${point.x} ${point.y}`).join(" ");
   return (

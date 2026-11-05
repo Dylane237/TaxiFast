@@ -16,7 +16,7 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
   const [nom, setNom] = useState(profile.name ?? "");
   const [plaque, setPlaque] = useState(profile.vehicle?.plate ?? "");
   const [modele, setModele] = useState(profile.vehicle?.model ?? "");
-  const [places, setPlaces] = useState(profile.vehicle?.seats ? String(profile.vehicle.seats) : "");
+  const [places, setPlaces] = useState(profile.vehicle?.seats ? String(profile.vehicle.seats) : "4");
   const [erreurSaisie, setErreurSaisie] = useState<string | null>(null);
   const chauffeur = profile.role === "DRIVER";
   const mutation = useMutation({
@@ -60,9 +60,9 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
         {chauffeur ? (
           <>
             <Text style={styles.section}>VOTRE VÉHICULE</Text>
-            <Champ etiquette="Plaque d’immatriculation" value={plaque} onChangeText={setPlaque} placeholder="LT 123 AB" autoCapitalize="characters" />
-            <Champ etiquette="Modèle du véhicule" value={modele} onChangeText={setModele} placeholder="Toyota Corolla" />
-            <Champ etiquette="Nombre de places disponibles" value={places} onChangeText={setPlaces} placeholder="4" aide="Sans compter votre siège." keyboardType="number-pad" />
+            <Champ etiquette="Plaque d’immatriculation" value={plaque} onChangeText={setPlaque} placeholder="Ex. LT 123 AB" autoCapitalize="characters" />
+            <Champ etiquette="Modèle du véhicule" value={modele} onChangeText={setModele} placeholder="Ex. Toyota Corolla" />
+            <Champ etiquette="Nombre de places disponibles" value={places} onChangeText={setPlaces} aide="Sans compter votre siège." keyboardType="number-pad" />
           </>
         ) : null}
         {erreurSaisie ? <MessageEtat type="erreur">{erreurSaisie}</MessageEtat> : null}

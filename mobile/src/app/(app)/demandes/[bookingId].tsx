@@ -10,6 +10,7 @@ import { messageErreur } from "@/features/auth/message-erreur";
 import { parseCounterPrice, selectDriverRequests } from "@/features/driver-requests/driver-requests";
 import { couleurs, espacements, polices, taillesTexte } from "@/theme";
 import { vibrerSucces } from "@/features/animations";
+import { capitaliser, formatDateTime } from "@/features/format";
 
 type Action = "accept" | "counter" | "refuse";
 
@@ -103,7 +104,7 @@ export default function DriverRequestDetailScreen() {
           </View>
           <View style={styles.row}>
             <IconClock color={couleurs.texteSecondaire} size={20} />
-            <Text style={styles.rowText}>{new Date(request.trip.departureAt).toLocaleString("fr-FR")}</Text>
+            <Text style={styles.rowText}>{capitaliser(formatDateTime(request.trip.departureAt))}</Text>
           </View>
         </Carte>
 

@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
-import { IconRoute } from "@tabler/icons-react-native";
 import { StatusBar } from "expo-status-bar";
 import {
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -30,7 +28,8 @@ export function AuthPage({
     <SafeAreaView style={styles.page} edges={["top"]}>
       <StatusBar style="light" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        // Android affiche l'app sous le clavier (bord à bord) : il faut aussi y réserver la place.
+        behavior="padding"
         style={styles.flex}
       >
         <ScrollView
@@ -42,7 +41,7 @@ export function AuthPage({
             <RouteBackdrop />
             <View style={styles.marque}>
               <View style={styles.logo}>
-                <IconRoute color={couleurs.encre} size={21} strokeWidth={2.4} />
+                <Text style={styles.logoTexte}>TF</Text>
               </View>
               <View>
                 <Text style={styles.marqueTexte}>Taxi Fast</Text>
@@ -88,6 +87,11 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.primaire,
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoTexte: {
+    color: couleurs.encre,
+    fontSize: taillesTexte.normal,
+    fontFamily: polices.titre,
   },
   marqueTexte: {
     color: couleurs.surface,

@@ -10,6 +10,7 @@ import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, polices } from "@/theme";
+import { formatTelephone } from "@/features/format";
 
 export default function CodeOtp() {
   const otpLength = configApi.modeDemo ? 4 : 6;
@@ -63,7 +64,7 @@ export default function CodeOtp() {
     <AuthPage
       icon={<IconKey color={couleurs.primaire} size={25} strokeWidth={2} />}
       title="Entrez le code reçu par SMS."
-      description={`Envoyé au ${phone || "numéro que vous avez donné"}. Il arrive en général en moins d’une minute.`}
+      description={`Envoyé au ${phone ? formatTelephone(phone) : "numéro que vous avez donné"}. Il arrive en général en moins d’une minute.`}
     >
       <View style={styles.formulaire}>
         <Champ
@@ -72,7 +73,7 @@ export default function CodeOtp() {
           onChangeText={(value) =>
             setCode(value.replace(/\D/g, "").slice(0, otpLength))
           }
-          placeholder={otpLength === 4 ? "1234" : "123456"}
+          placeholder={"•".repeat(otpLength)}
           aide={otpLength === 4 ? "Mode démo : tapez 1234." : "Le code reste valable quelques minutes."}
           keyboardType="number-pad"
           autoComplete="one-time-code"

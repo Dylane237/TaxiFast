@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type TripRequest } from "@/api";
 import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatDateTime, formatPrice } from "@/features/format";
+import { capitaliser, formatPlage, formatPrice } from "@/features/format";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 const labels = {
@@ -61,8 +61,7 @@ function RequestCard({
         <View style={styles.meta}>
           <IconClock color={couleurs.texteSecondaire} size={17} />
           <Text style={styles.metaText}>
-            {formatDateTime(request.windowStart)} –{" "}
-            {formatDateTime(request.windowEnd)}
+            {capitaliser(formatPlage(request.windowStart, request.windowEnd))}
           </Text>
           <IconArrowRight color={couleurs.texteSecondaire} size={19} />
         </View>

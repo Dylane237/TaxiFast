@@ -17,7 +17,7 @@ import {
   MessageEtat,
 } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatDateTime, formatPrice } from "@/features/format";
+import { formatDateTime, formatNote, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 import { vibrerSucces } from "@/features/animations";
@@ -100,7 +100,7 @@ export default function CompatibleTripScreen() {
     return (
       <State>
         <EtatContenu
-          type="vide"
+          type="succes"
           title="Demande envoyée au chauffeur"
           description="Dès qu’il accepte, votre place est réservée."
           action={
@@ -145,7 +145,7 @@ export default function CompatibleTripScreen() {
               size={17}
             />
             <Text style={styles.ratingText}>
-              {trip.driver.rating?.toFixed(1) ?? "Nouveau"}
+              {(trip.driver.rating != null ? formatNote(trip.driver.rating) : "Nouveau")}
             </Text>
           </View>
         </Carte>

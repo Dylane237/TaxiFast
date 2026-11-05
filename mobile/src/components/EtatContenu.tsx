@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { IconAlertCircle, IconInbox } from "@tabler/icons-react-native";
+import { IconAlertCircle, IconCheck, IconInbox } from "@tabler/icons-react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { couleurs, espacements, mouvements, polices, rayons, taillesTexte } from "@/theme";
 
 type EtatContenuProps = {
-  type: "chargement" | "vide" | "erreur";
+  type: "chargement" | "vide" | "erreur" | "succes";
   title: string;
   description: string;
   action?: ReactNode;
@@ -24,11 +24,13 @@ export function EtatContenu({
       style={[styles.root, type === "chargement" && styles.loadingRoot]}
       accessibilityLiveRegion="polite"
     >
-      <View style={[styles.icon, type === "chargement" && styles.loadingIcon, type === "erreur" && styles.iconError]}>
+      <View style={[styles.icon, type === "chargement" && styles.loadingIcon, type === "erreur" && styles.iconError, type === "succes" && styles.iconSucces]}>
         {type === "chargement" ? (
           <ActivityIndicator color={couleurs.texte} />
         ) : type === "erreur" ? (
           <IconAlertCircle color={couleurs.erreur} size={25} />
+        ) : type === "succes" ? (
+          <IconCheck color={couleurs.succes} size={26} />
         ) : (
           <IconInbox color={couleurs.texteSecondaire} size={25} />
         )}
@@ -68,6 +70,7 @@ const styles = StyleSheet.create({
     marginBottom: espacements.xs,
   },
   iconError: { backgroundColor: couleurs.erreurClaire },
+  iconSucces: { backgroundColor: couleurs.succesClaire },
   loadingIcon: { width: 40, height: 40, marginBottom: 0 },
   copy: { alignItems: "center", gap: espacements.xs },
   loadingCopy: { flex: 1, alignItems: "flex-start" },

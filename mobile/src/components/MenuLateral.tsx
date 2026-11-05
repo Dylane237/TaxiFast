@@ -30,6 +30,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 import { PressionDouce } from "./PressionDouce";
+import { formatTelephone } from "@/features/format";
 
 type MenuItem = {
   label: string;
@@ -240,7 +241,7 @@ export function MenuLateral() {
                   {user?.name ?? "Mon compte"}
                 </Text>
                 <Text style={styles.itemDescription}>
-                  {user?.phone ?? "Compte et paramètres"}
+                  {user?.phone ? formatTelephone(user.phone) : "Compte et paramètres"}
                 </Text>
               </View>
               <IconChevronRight color={couleurs.surface} size={19} />

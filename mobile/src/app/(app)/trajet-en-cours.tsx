@@ -7,16 +7,7 @@ import { api, type Trip } from "@/api";
 import { ApparitionListe, Bouton, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
-
-function formatDeparture(value: string): string {
-  return new Date(value).toLocaleString("fr-FR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { capitaliser, formatDateTime } from "@/features/format";
 
 function ActiveTripCard({ trip }: { trip: Trip }) {
   const first = trip.tripStops[0]?.stop.name ?? "Départ";
@@ -32,7 +23,7 @@ function ActiveTripCard({ trip }: { trip: Trip }) {
           <View style={styles.icon}><IconRoute color={couleurs.texte} size={21} /></View>
           <View style={styles.cardHeaderText}>
             <Text style={styles.status}>{trip.status === "FULL" ? "COMPLET" : "EN COURS"}</Text>
-            <Text style={styles.departure}>{formatDeparture(trip.departureAt)}</Text>
+            <Text style={styles.departure}>{capitaliser(formatDateTime(trip.departureAt))}</Text>
           </View>
           <IconArrowRight color={couleurs.texteSecondaire} size={21} />
         </View>

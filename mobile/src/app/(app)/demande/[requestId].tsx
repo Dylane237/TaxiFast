@@ -18,7 +18,7 @@ import {
   MessageEtat,
 } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatDateTime, formatPrice } from "@/features/format";
+import { capitaliser, formatPlage, formatPrice } from "@/features/format";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 export default function WaitingRequestScreen() {
@@ -133,8 +133,7 @@ export default function WaitingRequestScreen() {
           <View style={styles.row}>
             <IconClock color={couleurs.texteSecondaire} size={19} />
             <Text style={styles.meta}>
-              {formatDateTime(request.windowStart)} –{" "}
-              {formatDateTime(request.windowEnd)}
+              {capitaliser(formatPlage(request.windowStart, request.windowEnd))}
             </Text>
           </View>
           <View style={styles.priceRow}>

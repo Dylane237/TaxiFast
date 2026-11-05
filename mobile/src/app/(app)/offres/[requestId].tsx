@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type Booking, type MatchedTrip } from "@/api";
 import { ApparitionListe, Carte, EntetePage, EtatContenu, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import { formatPrice, formatTime } from "@/features/format";
+import { formatDateTime, formatNote, formatPrice } from "@/features/format";
 import { parseRouteId } from "@/features/route-params";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
@@ -98,14 +98,14 @@ function OfferCard({
               size={16}
             />
             <Text style={styles.ratingText}>
-              {item.trip.driver.rating?.toFixed(1) ?? "Nouveau"}
+              {(item.trip.driver.rating != null ? formatNote(item.trip.driver.rating) : "Nouveau")}
             </Text>
           </View>
         </View>
         <View style={styles.meta}>
           <IconClock color={couleurs.texteSecondaire} size={17} />
           <Text style={styles.metaText}>
-            Départ à {formatTime(item.trip.departureAt)}
+            Départ {formatDateTime(item.trip.departureAt)}
           </Text>
           <IconChevronRight color={couleurs.texteSecondaire} size={19} />
         </View>
