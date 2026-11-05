@@ -3,6 +3,7 @@ import type { PrismaClient, Role } from "@prisma/client";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import { lireConfigTwilio, TwilioSmsSender } from "./sms.js";
+import { estCompteTest, lireComptesTest, type ComptesTest } from "./comptes-test.js";
 
 type SignupRole = Extract<Role, "CLIENT" | "DRIVER">;
 
@@ -202,6 +203,13 @@ export class DevelopmentOtpSender implements OtpSender {
   }
 }
 
+/** Production sans fournisseur SMS : aucun code ne peut partir. */
+export class AucunSmsSender implements OtpSender {
+  async send(): Promise<void> {
+    throw new Error("Aucun fournisseur SMS n'est configuré");
+  }
+}
+
 export interface TokenService {
   issue(user: AuthenticatedUser): Promise<string>;
   verify(token: string): Promise<AuthenticatedPrincipal>;
@@ -262,9 +270,16 @@ export class AuthenticationService implements Authentication {
     private readonly tokenService: TokenService,
     private readonly generateCode = () =>
       randomInt(0, 1_000_000).toString().padStart(6, "0"),
+    private readonly comptesTest: ComptesTest | null = null,
   ) {}
 
   async requestOtp({ phone }: { phone: string }): Promise<void> {
+    // Compte de test : le code fixe et secret est enregistré comme un vrai code (même expiration,
+    // mêmes essais limités), mais aucun SMS ne part.
+    if (estCompteTest(this.comptesTest, phone)) {
+      await this.otpStore.issue(phone, this.comptesTest.code);
+      return;
+    }
     const code = this.generateCode();
     await this.otpStore.issue(phone, code);
     try {
@@ -350,17 +365,24 @@ export function createDefaultAuthentication(
   }
 
   const configTwilio = lireConfigTwilio(env);
-  if (!configTwilio && !isDevelopmentEnvironment(env.NODE_ENV)) {
+  const comptesTest = lireComptesTest(env);
+  if (!configTwilio && !comptesTest && !isDevelopmentEnvironment(env.NODE_ENV)) {
     throw new Error(
       "Aucun fournisseur SMS configuré : renseignez TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_FROM",
     );
   }
+  // En production sans SMS, seuls les comptes de test peuvent se connecter : les autres numéros
+  // reçoivent OTP_DELIVERY_FAILED (l'app explique que le SMS n'a pas pu partir).
+  const expediteur: OtpSender = configTwilio
+    ? new TwilioSmsSender(configTwilio)
+    : isDevelopmentEnvironment(env.NODE_ENV) ? new DevelopmentOtpSender() : new AucunSmsSender();
 
   return new AuthenticationService(
     prisma,
     new PrismaOtpStore(prisma),
-    configTwilio ? new TwilioSmsSender(configTwilio) : new DevelopmentOtpSender(),
+    expediteur,
     new JwtTokenService(secret),
     configuredDevelopmentCode ? () => configuredDevelopmentCode : undefined,
+    comptesTest,
   );
 }
