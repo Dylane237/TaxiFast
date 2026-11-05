@@ -28,6 +28,10 @@ function invalidInput(reply: FastifyReply, error: z.ZodError) {
 }
 
 function authenticationError(reply: FastifyReply, error: AuthenticationError) {
+  if (error.code === "OTP_DELIVERY_FAILED") {
+    reply.log.error(error.cause, "Échec d'envoi du SMS de connexion");
+    return reply.status(503).send({ error: error.code });
+  }
   if (error.code === "OTP_RATE_LIMITED") {
     return reply.status(429).send({ error: error.code });
   }

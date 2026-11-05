@@ -78,5 +78,6 @@ Pour utiliser PostgreSQL et l'API réelle :
 `JWT_SECRET` est obligatoire partout : le serveur refuse de démarrer sans lui ou avec une valeur
 d'exemple. En développement, mettez `NODE_ENV=development` ; `DEV_OTP_CODE=123456` fixe alors le
 code OTP. Si `NODE_ENV` est absent ou vaut autre chose, le serveur se comporte comme en production :
-il refuse `DEV_OTP_CODE`, n'affiche aucun code dans les logs, et un fournisseur d'envoi OTP devra
-être configuré.
+il refuse `DEV_OTP_CODE`, n'affiche aucun code dans les logs, et exige Twilio pour envoyer les codes
+par SMS (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, voir `server/.env.example`). Dans la
+console Twilio, autorisez le Cameroun dans les permissions géographiques des SMS.

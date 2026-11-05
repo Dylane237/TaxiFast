@@ -36,13 +36,13 @@ describe("configuration de l'authentification", () => {
   });
 
   it("rejette un jeton signé avec l'ancien secret de repli", async () => {
-    const auth = createDefaultAuthentication(prisma, { JWT_SECRET: vraiSecret });
+    const auth = createDefaultAuthentication(prisma, { JWT_SECRET: vraiSecret, NODE_ENV: "test" });
     const forge = await jetonSigne("development-only-jwt-secret-change-before-production");
     await expect(auth.authenticate(forge)).rejects.toBeInstanceOf(AuthenticationError);
   });
 
   it("accepte un jeton signé avec le bon secret", async () => {
-    const auth = createDefaultAuthentication(prisma, { JWT_SECRET: vraiSecret });
+    const auth = createDefaultAuthentication(prisma, { JWT_SECRET: vraiSecret, NODE_ENV: "test" });
     await expect(auth.authenticate(await jetonSigne(vraiSecret))).resolves.toMatchObject({ role: "DRIVER" });
   });
 

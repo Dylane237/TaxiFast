@@ -2,6 +2,7 @@ import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import type { PrismaClient, Role } from "@prisma/client";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
+import { lireConfigTwilio, TwilioSmsSender } from "./sms.js";
 
 type SignupRole = Extract<Role, "CLIENT" | "DRIVER">;
 
@@ -31,12 +32,16 @@ export type AuthenticationErrorCode =
   | "OTP_INVALID"
   | "OTP_EXPIRED"
   | "OTP_RATE_LIMITED"
+  | "OTP_DELIVERY_FAILED"
   | "ROLE_REQUIRED"
   | "TOKEN_INVALID";
 
 export class AuthenticationError extends Error {
-  constructor(public readonly code: AuthenticationErrorCode) {
-    super(code);
+  constructor(
+    public readonly code: AuthenticationErrorCode,
+    options?: { cause?: unknown },
+  ) {
+    super(code, options);
     this.name = "AuthenticationError";
   }
 }
@@ -265,8 +270,9 @@ export class AuthenticationService implements Authentication {
     try {
       await this.otpSender.send(phone, code);
     } catch (error) {
+      // Sans SMS parti, on efface le code pour que le client puisse en redemander un tout de suite.
       await this.otpStore.revoke(phone);
-      throw error;
+      throw new AuthenticationError("OTP_DELIVERY_FAILED", { cause: error });
     }
   }
 
@@ -335,10 +341,17 @@ export function createDefaultAuthentication(
     throw new Error("DEV_OTP_CODE doit contenir exactement 6 chiffres");
   }
 
+  const configTwilio = lireConfigTwilio(env);
+  if (!configTwilio && !isDevelopmentEnvironment(env.NODE_ENV)) {
+    throw new Error(
+      "Aucun fournisseur SMS configuré : renseignez TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_FROM",
+    );
+  }
+
   return new AuthenticationService(
     prisma,
     new PrismaOtpStore(prisma),
-    new DevelopmentOtpSender(),
+    configTwilio ? new TwilioSmsSender(configTwilio) : new DevelopmentOtpSender(),
     new JwtTokenService(secret),
     configuredDevelopmentCode ? () => configuredDevelopmentCode : undefined,
   );
