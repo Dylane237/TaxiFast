@@ -16,6 +16,10 @@ import { couleurs } from "@/theme";
 import { echelleSoleilPourCouvrir, LOGO_TAILLE, MINUTAGE, SOLEIL } from "./intro-geometrie";
 import { TaxiLogo } from "./TaxiLogo";
 
+// Courbes de la maison : sortie franche, et mouvement à l'écran sans départ ni arrivée brusques.
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);
+
 type IntroTaxiProps = {
   /** L'app a fini de charger ce qu'il faut pour afficher le premier écran. */
   pret: boolean;
@@ -47,21 +51,23 @@ export function IntroTaxi({ pret, onTerminee }: IntroTaxiProps) {
 
   useEffect(() => {
     if (!lancee) return;
-    taxiX.value = withSequence(
-      withTiming(-6, { duration: MINUTAGE.recul, easing: Easing.out(Easing.quad) }),
-      withTiming(width, { duration: MINUTAGE.depart, easing: Easing.in(Easing.quad) }),
-    );
-    anneauOpacite.value = withDelay(MINUTAGE.soleilDebut, withTiming(0, { duration: MINUTAGE.anneauDuree }));
-    soleilEchelle.value = withDelay(
+    // Le taxi du logo regarde vers la gauche : il recule d'un poil (vers la droite), puis part devant lui.
+    // La fin de la courbe, qui ralentit, se joue hors de l'écran : on ne voit que l'accélération.
+    taxiX.set(withSequence(
+      withTiming(6, { duration: MINUTAGE.recul, easing: EASE_OUT }),
+      withTiming(-width, { duration: MINUTAGE.depart, easing: EASE_IN_OUT }),
+    ));
+    anneauOpacite.set(withDelay(MINUTAGE.soleilDebut, withTiming(0, { duration: MINUTAGE.anneauDuree })));
+    soleilEchelle.set(withDelay(
       MINUTAGE.soleilDebut,
       withTiming(
         echelleSoleilPourCouvrir(width, height),
-        { duration: MINUTAGE.soleilDuree, easing: Easing.inOut(Easing.cubic) },
+        { duration: MINUTAGE.soleilDuree, easing: EASE_IN_OUT },
         (fini) => {
           if (fini) scheduleOnRN(setCouvert, true);
         },
       ),
-    );
+    ));
     const vibration = setTimeout(() => {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }, MINUTAGE.recul);
@@ -72,13 +78,13 @@ export function IntroTaxi({ pret, onTerminee }: IntroTaxiProps) {
 
   useEffect(() => {
     if (!couvert || !pret) return;
-    opacite.value = withTiming(
+    opacite.set(withTiming(
       0,
-      { duration: mouvementReduit ? MINUTAGE.sortieReduite : MINUTAGE.sortie, easing: Easing.out(Easing.quad) },
+      { duration: mouvementReduit ? MINUTAGE.sortieReduite : MINUTAGE.sortie, easing: EASE_OUT },
       (fini) => {
         if (fini) scheduleOnRN(onTerminee);
       },
-    );
+    ));
   }, [couvert, pret, mouvementReduit, onTerminee, opacite]);
 
   const styleCalque = useAnimatedStyle(() => ({ opacity: opacite.value }));

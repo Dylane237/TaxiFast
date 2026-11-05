@@ -29,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import { LogoMarque } from "./LogoMarque";
 import { PressionDouce } from "./PressionDouce";
 import { formatTelephone } from "@/features/format";
 
@@ -167,9 +168,7 @@ export function MenuLateral() {
         >
           <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
             <View style={styles.header}>
-              <View style={styles.logo}>
-                <Text style={styles.logoText}>TF</Text>
-              </View>
+              <LogoMarque taille={44} />
               <View style={styles.headerCopy}>
                 <Text style={styles.product}>Taxi Fast</Text>
                 <Text style={styles.role}>
@@ -273,19 +272,6 @@ const styles = StyleSheet.create({
     paddingVertical: espacements.md,
     borderBottomWidth: 1,
     borderBottomColor: couleurs.bordure,
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: rayons.md,
-    backgroundColor: couleurs.encre,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    color: couleurs.primaire,
-    fontSize: taillesTexte.normal,
-    fontFamily: polices.texteExtraGras,
   },
   headerCopy: { flex: 1, gap: 2 },
   product: {

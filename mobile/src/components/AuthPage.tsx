@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LogoMarque } from "./LogoMarque";
 import { RouteBackdrop } from "./RouteBackdrop";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
@@ -40,9 +41,7 @@ export function AuthPage({
           <View style={styles.hero}>
             <RouteBackdrop />
             <View style={styles.marque}>
-              <View style={styles.logo}>
-                <Text style={styles.logoTexte}>TF</Text>
-              </View>
+              <LogoMarque taille={40} />
               <View>
                 <Text style={styles.marqueTexte}>Taxi Fast</Text>
                 <Text style={styles.marqueVille}>DOUALA</Text>
@@ -79,19 +78,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: espacements.sm,
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: rayons.md,
-    backgroundColor: couleurs.primaire,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoTexte: {
-    color: couleurs.encre,
-    fontSize: taillesTexte.normal,
-    fontFamily: polices.titre,
   },
   marqueTexte: {
     color: couleurs.surface,

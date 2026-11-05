@@ -6,6 +6,7 @@ export { EntetePage } from "./EntetePage";
 export { MessageEtat } from "./MessageEtat";
 export { Apparition, ApparitionListe, Rebond } from "./Apparition";
 export { PressionDouce } from "./PressionDouce";
+export { LogoMarque } from "./LogoMarque";
 export { RouteBackdrop } from "./RouteBackdrop";
 export { EtatContenu } from "./EtatContenu";
 export { LigneAction } from "./LigneAction";
