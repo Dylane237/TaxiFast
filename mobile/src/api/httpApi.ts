@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Api } from "./api";
-import { ApiError, type ApiErrorCode } from "./errors";
+import { ApiError, messageLimiteDebit, type ApiErrorCode } from "./errors";
 import { notifySessionExpired } from "./session-events";
 import type {
   AuthResult,
@@ -42,7 +42,9 @@ const errorCodeByServerCode: Record<string, ApiErrorCode> = {
   ROLE_FORBIDDEN: "FORBIDDEN",
   OTP_INVALID: "OTP_INVALID",
   OTP_EXPIRED: "OTP_INVALID",
-  OTP_RATE_LIMITED: "OTP_INVALID",
+  OTP_RATE_LIMITED: "OTP_RATE_LIMITED",
+  TOO_MANY_OPEN_REQUESTS: "TOO_MANY_OPEN_REQUESTS",
+  BOOKING_ALREADY_PENDING: "BOOKING_ALREADY_PENDING",
   CORRIDOR_NOT_FOUND: "NOT_FOUND",
   USER_NOT_FOUND: "NOT_FOUND",
   TRIP_NOT_FOUND: "NOT_FOUND",
@@ -76,7 +78,7 @@ const errorCodeByServerCode: Record<string, ApiErrorCode> = {
   RATING_ALREADY_EXISTS: "RATING_NOT_ALLOWED",
 };
 
-type ErrorPayload = { error?: string };
+type ErrorPayload = { error?: string; retryAfterSeconds?: number };
 
 async function clearExpiredSession(): Promise<void> {
   accessToken = null;
@@ -125,6 +127,10 @@ async function request<T>(
         "SESSION_EXPIRED",
         "Votre session a expiré. Reconnectez-vous.",
       );
+    }
+    if (serverError === "RATE_LIMITED") {
+      const attente = (payload as ErrorPayload | null)?.retryAfterSeconds;
+      throw new ApiError("RATE_LIMITED", messageLimiteDebit(typeof attente === "number" ? attente : undefined));
     }
     const code = serverError ? errorCodeByServerCode[serverError] : undefined;
     throw new ApiError(

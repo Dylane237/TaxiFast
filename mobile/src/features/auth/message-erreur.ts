@@ -14,6 +14,11 @@ const messages: Partial<Record<ApiError["code"], string>> = {
   BOOKING_NOT_CONFIRMABLE: "Cette demande a déjà eu sa réponse.",
   COUNTER_OFFER_ALREADY_USED: "Un autre prix a déjà été proposé une fois. C’est le maximum.",
   TRIP_NOT_OPEN: "Ce taxi ne prend plus de clients sur ce trajet.",
+  OTP_RATE_LIMITED: "Un code vient de partir. Attendez une minute avant d’en redemander un.",
+  TOO_MANY_OPEN_REQUESTS:
+    "Vous avez déjà trois demandes en cours. Annulez-en une ou attendez une réponse avant d’en lancer une autre.",
+  BOOKING_ALREADY_PENDING: "Vous avez déjà une proposition en attente pour ce taxi. Attendez la réponse du chauffeur.",
+  // RATE_LIMITED n'est pas ici : son message, calculé avec le temps d'attente, arrive dans l'erreur elle-même.
 };
 
 export function messageErreur(error: unknown): string {
