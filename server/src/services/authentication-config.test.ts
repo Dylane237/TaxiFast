@@ -41,9 +41,23 @@ describe("configuration de l'authentification", () => {
     await expect(auth.authenticate(forge)).rejects.toBeInstanceOf(AuthenticationError);
   });
 
-  it("accepte un jeton signé avec le bon secret", async () => {
-    const auth = createDefaultAuthentication(prisma, { JWT_SECRET: vraiSecret, NODE_ENV: "test" });
-    await expect(auth.authenticate(await jetonSigne(vraiSecret))).resolves.toMatchObject({ role: "DRIVER" });
+  it("accepte un jeton signé avec le bon secret, avec le rôle actuel du compte", async () => {
+    const avecCompte = {
+      user: { findUnique: async () => ({ id: "utilisateur-invente", phone: "+237600000000", role: "CLIENT" }) },
+    } as unknown as PrismaClient;
+    const auth = createDefaultAuthentication(avecCompte, { JWT_SECRET: vraiSecret, NODE_ENV: "test" });
+    // Le jeton dit DRIVER, la base dit CLIENT : c'est la base qui gagne.
+    await expect(auth.authenticate(await jetonSigne(vraiSecret))).resolves.toEqual({
+      userId: "utilisateur-invente",
+      phone: "+237600000000",
+      role: "CLIENT",
+    });
+  });
+
+  it("rejette le jeton d'un compte supprimé", async () => {
+    const sansCompte = { user: { findUnique: async () => null } } as unknown as PrismaClient;
+    const auth = createDefaultAuthentication(sansCompte, { JWT_SECRET: vraiSecret, NODE_ENV: "test" });
+    await expect(auth.authenticate(await jetonSigne(vraiSecret))).rejects.toEqual(new AuthenticationError("TOKEN_INVALID"));
   });
 
   it("refuse un code OTP fixe hors développement explicite", () => {

@@ -309,8 +309,16 @@ export class AuthenticationService implements Authentication {
     return { token, user };
   }
 
-  authenticate(token: string): Promise<AuthenticatedPrincipal> {
-    return this.tokenService.verify(token);
+  async authenticate(token: string): Promise<AuthenticatedPrincipal> {
+    const claims = await this.tokenService.verify(token);
+    // Le jeton vaut 30 jours : à chaque appel, on vérifie que le compte existe encore
+    // et on prend son rôle actuel en base plutôt que celui figé dans le jeton.
+    const user = await this.prisma.user.findUnique({
+      where: { id: claims.userId },
+      select: { id: true, phone: true, role: true },
+    });
+    if (!user) throw new AuthenticationError("TOKEN_INVALID");
+    return { userId: user.id, phone: user.phone, role: user.role };
   }
 }
 
