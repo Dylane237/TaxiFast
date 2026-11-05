@@ -1,7 +1,6 @@
 import { IconArrowLeft, IconCheck, IconClock, IconRoute, IconWallet } from "@tabler/icons-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Location from "expo-location";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,48 +8,42 @@ import { api, type AvailabilityMode, type Stop } from "@/api";
 import { Bouton, Carte, Champ, EntetePage, EtatContenu, MessageEtat, PressionDouce } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { capitaliser, formatPlage, formatPrice } from "@/features/format";
-import { CityMapBackdrop } from "@/features/maps/CityMapBackdrop";
-import { PlaceSearch } from "@/features/route-composer/PlaceSearch";
+import { CarteOSM, type PointCarte } from "@/features/maps/CarteOSM";
+import { formatDistance } from "@/features/maps/distance";
+import { useDepartProche } from "@/features/maps/useDepartProche";
+import { PlaceSearch, type ActionPosition } from "@/features/route-composer/PlaceSearch";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { WizardProgress } from "@/features/route-composer/WizardProgress";
-import { buildAvailability, findRouteSelection, nearestStop } from "@/features/route-composer/route-composer";
+import { buildAvailability, findRouteSelection } from "@/features/route-composer/route-composer";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
 import { vibrerSucces } from "@/features/animations";
 
 const labels = ["VOTRE TRAJET", "HORAIRE ET PRIX", "VÉRIFICATION"];
-const LOCATION_TIMEOUT_MS = 8_000;
-
-async function currentPositionWithTimeout() {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-      new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(
-          () => reject(new Error("Impossible de vous localiser. Choisissez votre point de montée dans la liste.")),
-          LOCATION_TIMEOUT_MS,
-        );
-      }),
-    ]);
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
-}
 
 export default function RechercheScreen() {
   const corridorsQuery = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const [step, setStep] = useState(0);
   // La barre du bas est posée en absolu : elle doit laisser elle-même la place à la barre de navigation Android.
   const marges = useSafeAreaInsets();
-  const [from, setFrom] = useState<Stop | null>(null);
+  // Venue de l'accueil : l'arrêt proposé là-bas, et le champ à ouvrir (départ ou arrivée).
+  const params = useLocalSearchParams<{ depart?: string; champ?: string }>();
+  // `undefined` : vous n'avez pas encore choisi, on propose l'arrêt le plus proche.
+  const [fromChoisi, setFromChoisi] = useState<Stop | null | undefined>(undefined);
   const [to, setTo] = useState<Stop | null>(null);
   const [mode, setMode] = useState<AvailabilityMode>("IMMEDIATE");
   const [startMinutes, setStartMinutes] = useState(30);
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [price, setPrice] = useState("1500");
   const [error, setError] = useState<string | null>(null);
-  const [locating, setLocating] = useState(false);
+  const [hauteurFeuille, setHauteurFeuille] = useState(320);
   const corridors = useMemo(() => corridorsQuery.data ?? [], [corridorsQuery.data]);
+  const { etat, position, proche, tropLoin, relocaliser } = useDepartProche(corridors, { demander: true });
+  const departAccueil = useMemo(
+    () => corridors.flatMap((corridor) => corridor.stops).find((stop) => stop.id === params.depart) ?? null,
+    [corridors, params.depart],
+  );
+  const from = fromChoisi === undefined ? departAccueil ?? proche?.arret ?? null : fromChoisi;
+  const setFrom = (stop: Stop | null) => setFromChoisi(stop);
   const route = useMemo(() => findRouteSelection(corridors, from?.id ?? "", to?.id ?? ""), [corridors, from, to]);
   const availability = useMemo(() => buildAvailability(mode, startMinutes, durationMinutes), [durationMinutes, mode, startMinutes]);
   const parsedPrice = Number(price.replace(/\s/g, ""));
@@ -69,23 +62,9 @@ export default function RechercheScreen() {
     },
   });
 
-  const locate = async () => {
-    setLocating(true);
-    setError(null);
-    try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted) throw new Error("Autorisez la localisation pour utiliser votre position.");
-      const current = await currentPositionWithTimeout();
-      const closest = nearestStop(corridors, current.coords.latitude, current.coords.longitude);
-      if (!closest) throw new Error("Aucun arrêt géolocalisé n’est disponible.");
-      setFrom(closest);
-      if (to?.corridorId !== closest.corridorId) setTo(null);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "La localisation n’a pas marché.");
-    } finally {
-      setLocating(false);
-    }
-  };
+  const points = useMemo(() => pointsCarte(route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop)), from, to), [from, route, to]);
+  const detailDepart = proche && from?.id === proche.arret.id ? `À ${formatDistance(proche.distance)} de vous, à pied` : null;
+  const maPosition = actionPosition({ statut: etat.statut, proche, tropLoin, dejaChoisi: detailDepart !== null, onUtiliser: (stop) => { setFrom(stop); if (to && to.corridorId !== stop.corridorId) setTo(null); setError(null); }, relocaliser });
 
   const next = () => {
     setError(null);
@@ -107,35 +86,34 @@ export default function RechercheScreen() {
   if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun axe ouvert pour l’instant" description="Revenez un peu plus tard." /></State>;
 
   if (step === 0) return <View style={styles.mapPage}>
-    <CityMapBackdrop route={Boolean(route)} destinationLabel={to?.name} />
-    <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={["top", "bottom"]}>
-      <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
-      <View style={styles.mapStatus}><Text style={styles.mapStatusLabel}>{route ? "TRAJET TROUVÉ" : "VOTRE TRAJET"}</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route ? `${from?.name} → ${to?.name}` : "Douala, Cameroun"}</Text></View>
-      <KeyboardAvoidingView behavior="padding" style={styles.mapSheetWrap}>
-        <View style={styles.mapSheet}>
-          <View style={styles.sheetHandle} />
-          <View style={styles.mapHeading}><Text style={styles.mapTitle}>Votre trajet</Text><Text style={styles.mapSubtitle}>Choisissez où vous montez et où vous descendez.</Text></View>
-          {error ? <View style={styles.mapFeedback}><MessageEtat type="erreur">{error}</MessageEtat></View> : null}
-          <ScrollView contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} onCurrentLocation={() => void locate()} locating={locating} />
-          </ScrollView>
-          <View style={[styles.mapFooter, { paddingBottom: espacements.md + marges.bottom }]}><Bouton onPress={next}>{route ? "Continuer" : "Choisir le trajet"}</Bouton></View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    <CarteOSM utilisateur={position} points={points} relier={Boolean(route)} margeBas={hauteurFeuille} />
+    <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, { top: marges.top + espacements.sm }, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
+    {route ? <View style={[styles.mapStatus, { top: marges.top + espacements.sm }]}><Text style={styles.mapStatusLabel}>UN TAXI PASSE PAR LÀ</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route.corridor.name} · {route.stops.length - 1} arrêt{route.stops.length > 2 ? "s" : ""}</Text></View> : null}
+    <KeyboardAvoidingView behavior="padding" pointerEvents="box-none" style={styles.mapSheetWrap}>
+      <View style={styles.mapSheet} onLayout={(event) => setHauteurFeuille(Math.round(event.nativeEvent.layout.height))}>
+        <View style={styles.sheetHandle} />
+        {error ? <View style={styles.mapFeedback}><MessageEtat type="erreur">{error}</MessageEtat></View> : null}
+        <ScrollView style={styles.placeScrollView} contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <PlaceSearch
+            corridors={corridors}
+            from={from}
+            to={to}
+            onFrom={(stop) => { setFrom(stop); setError(null); }}
+            onTo={(stop) => { setTo(stop); setError(null); }}
+            champInitial={params.champ === "depart" ? "from" : params.champ === "arrivee" ? "to" : null}
+            detailDepart={detailDepart}
+            maPosition={maPosition}
+          />
+        </ScrollView>
+        <View style={[styles.mapFooter, { paddingBottom: espacements.md + marges.bottom }]}><Bouton onPress={next}>{route ? "Continuer" : "Choisir le trajet"}</Bouton></View>
+      </View>
+    </KeyboardAvoidingView>
   </View>;
 
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       <EntetePage title="Où allez-vous ?" description="Trouvez un taxi qui passe par votre chemin." />
       <WizardProgress step={step} total={3} label={labels[step]!} />
-
-      {step === 0 ? <View style={styles.stage}>
-        <Text style={styles.hero}>D’où à où ?</Text>
-        <Text style={styles.subtitle}>Tapez un quartier ou un carrefour, ou partez de votre position.</Text>
-        <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
-        <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} onCurrentLocation={() => void locate()} locating={locating} />
-      </View> : null}
 
       {step === 1 ? <View style={styles.stage}>
         <Text style={styles.hero}>Quand voulez-vous partir ?</Text>
@@ -161,6 +139,34 @@ export default function RechercheScreen() {
   </SafeAreaView>;
 }
 
+function pointsCarte(stops: Stop[], from: Stop | null, to: Stop | null): PointCarte[] {
+  return stops.flatMap((stop) => {
+    if (stop.latitude === null || stop.longitude === null) return [];
+    const type = stop.id === from?.id ? "depart" : stop.id === to?.id ? "arrivee" : "arret";
+    return [{ type, latitude: stop.latitude, longitude: stop.longitude }];
+  });
+}
+
+type EtatPositionCourt = {
+  statut: "attente" | "trouvee" | "refusee" | "indisponible";
+  proche: { arret: Stop; distance: number } | null;
+  tropLoin: boolean;
+  dejaChoisi: boolean;
+  onUtiliser: (stop: Stop) => void;
+  relocaliser: () => Promise<void>;
+};
+
+/** Ce que dit le raccourci « ma position », selon ce que le téléphone sait vraiment. */
+function actionPosition({ statut, proche, tropLoin, dejaChoisi, onUtiliser, relocaliser }: EtatPositionCourt): ActionPosition | null {
+  if (dejaChoisi) return null;
+  if (proche) return { libelle: "Partir de ma position", detail: `${proche.arret.name} · à ${formatDistance(proche.distance)} de vous`, onPress: () => onUtiliser(proche.arret) };
+  if (statut === "attente") return { libelle: "On vous localise…", detail: "Votre arrêt le plus proche arrive" };
+  if (statut === "refusee") return { libelle: "Utiliser ma position", detail: "Autorisez la localisation pour trouver votre arrêt", onPress: () => void relocaliser() };
+  if (statut === "indisponible") return { libelle: "Réessayer de vous localiser", detail: "Votre position est introuvable pour l’instant", onPress: () => void relocaliser() };
+  if (tropLoin) return { libelle: "Aucun arrêt près de vous", detail: "Tapez le nom de votre quartier" };
+  return null;
+}
+
 function Choice({ active, title, detail, icon, onPress }: { active: boolean; title: string; detail: string; icon: React.ReactNode; onPress: () => void }) {
   return <PressionDouce onPress={onPress} style={[styles.choice, active && styles.choiceActive]}>{icon}<Text style={styles.choiceTitle}>{title}</Text><Text style={styles.choiceDetail}>{detail}</Text>{active ? <View style={styles.check}><IconCheck color={couleurs.encre} size={14} /></View> : null}</PressionDouce>;
 }
@@ -176,15 +182,15 @@ function State({ children }: { children: React.ReactNode }) {
 
 const styles = StyleSheet.create({
   mapPage: { flex: 1, backgroundColor: couleurs.fond },
-  mapBack: { position: "absolute", left: espacements.lg, top: 46, width: 48, height: 48, zIndex: 2, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", alignItems: "center", justifyContent: "center", ...ombres.carte },
-  mapStatus: { position: "absolute", left: 76, right: espacements.lg, top: 46, minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: espacements.md, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", ...ombres.carte },
+  mapBack: { position: "absolute", left: espacements.lg, width: 48, height: 48, zIndex: 2, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", alignItems: "center", justifyContent: "center", ...ombres.carte },
+  mapStatus: { position: "absolute", left: 76, right: espacements.lg, minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: espacements.md, borderRadius: rayons.rond, backgroundColor: "rgba(255,255,255,0.96)", ...ombres.carte },
   mapStatusLabel: { color: couleurs.texteSecondaire, fontSize: 9, letterSpacing: 0.8, fontFamily: polices.texteGras }, mapStatusValue: { marginTop: 1, color: couleurs.texte, fontSize: taillesTexte.micro, fontFamily: polices.texteGras },
-  mapSheetWrap: { position: "absolute", left: 0, right: 0, bottom: 0, height: "69%", justifyContent: "flex-end" },
-  mapSheet: { flex: 1, overflow: "hidden", borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: couleurs.surface, ...ombres.feuille },
+  mapSheetWrap: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "flex-end" },
+  mapSheet: { maxHeight: "86%", overflow: "hidden", borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: couleurs.surface, ...ombres.feuille },
   sheetHandle: { width: 42, height: 4, alignSelf: "center", marginTop: espacements.sm, borderRadius: rayons.rond, backgroundColor: couleurs.bordure },
-  mapHeading: { paddingHorizontal: espacements.lg, paddingTop: espacements.md, paddingBottom: espacements.sm }, mapTitle: { color: couleurs.texte, fontSize: 24, lineHeight: 28, letterSpacing: -0.7, fontFamily: polices.titre }, mapSubtitle: { marginTop: 2, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, fontFamily: polices.texte },
   mapFeedback: { paddingHorizontal: espacements.lg, paddingBottom: espacements.sm },
-  placeScroll: { paddingHorizontal: espacements.lg, paddingBottom: espacements.md },
+  placeScrollView: { flexGrow: 0, flexShrink: 1 },
+  placeScroll: { paddingHorizontal: espacements.lg, paddingTop: espacements.md, paddingBottom: espacements.md },
   mapFooter: { paddingHorizontal: espacements.lg, paddingTop: espacements.sm, paddingBottom: espacements.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: couleurs.bordure, backgroundColor: couleurs.surface },
   page: { flex: 1, backgroundColor: couleurs.fond }, content: { padding: espacements.lg, paddingBottom: 108, gap: 18 }, state: { flex: 1, padding: espacements.lg, gap: espacements.lg }, stage: { gap: 14 }, hero: { color: couleurs.texte, fontSize: 24, lineHeight: 29, fontFamily: polices.titre }, subtitle: { marginTop: -6, color: couleurs.texteSecondaire, fontSize: taillesTexte.petit, lineHeight: 18, fontFamily: polices.texte },
   // Les erreurs vivent dans la barre du bas : en bas de la liste, elles tombaient hors de l'écran.

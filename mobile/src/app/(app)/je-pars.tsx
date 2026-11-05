@@ -132,7 +132,7 @@ export default function JePars() {
           <Text style={styles.hero}>D’où partez-vous ?</Text>
           <Text style={styles.subtitle}>Tapez un quartier, un carrefour, ou utilisez votre position.</Text>
           <RouteMiniMap stops={route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop))} compact />
-          <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} onCurrentLocation={() => void locate()} locating={locating} />
+          <PlaceSearch corridors={corridors} from={from} to={to} onFrom={(stop) => { setFrom(stop); setError(null); }} onTo={(stop) => { setTo(stop); setError(null); }} maPosition={{ libelle: locating ? "Localisation en cours…" : "Utiliser ma position", detail: "On prend l’arrêt le plus proche de vous", onPress: locating ? undefined : () => void locate() }} />
         </View> : null}
 
         {step === 1 && route ? <View style={styles.stage}>
