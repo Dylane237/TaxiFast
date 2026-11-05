@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { PrismaClient } from "@prisma/client";
 import { buildApp } from "../src/app.js";
+import { creerPrisma } from "../src/db.js";
 import { seedCorridors } from "../src/seeds/corridors.js";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL est requis");
@@ -9,7 +9,7 @@ process.env.NODE_ENV ??= "development";
 process.env.JWT_SECRET ??= randomBytes(48).toString("base64url");
 process.env.DEV_OTP_CODE = "123456";
 
-const prisma = new PrismaClient();
+const prisma = creerPrisma();
 await seedCorridors(prisma);
 const app = buildApp({ prisma });
 
@@ -105,6 +105,11 @@ try {
   assert.ok(
     manifest.passengers.some((passenger) => passenger.clientId === client.id),
   );
+  // Un trajet ne se clôt qu'après son départ : on simule le départ en reculant l'heure en base.
+  await prisma.trip.update({
+    where: { id: trip.id },
+    data: { departureAt: new Date(Date.now() - 60_000) },
+  });
   const completedTrip = await httpApi.closeTrip(trip.id);
   assert.equal(completedTrip.status, "COMPLETED");
 

@@ -1,5 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import Fastify, { type FastifyPluginAsync } from "fastify";
+import { creerPrisma } from "./db.js";
+import { enregistrerGestionErreurs } from "./http/erreurs.js";
 import { enregistrerLimiteDebit, lireTrustProxy } from "./http/rate-limit.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerAccountRoutes } from "./routes/account.js";
@@ -39,7 +41,7 @@ export function buildApp(options: BuildAppOptions = {}) {
     logger: process.env.NODE_ENV !== "test",
     trustProxy: lireTrustProxy(process.env.TRUST_PROXY),
   });
-  const prisma = options.prisma ?? new PrismaClient();
+  const prisma = options.prisma ?? creerPrisma();
   const authentication =
     options.authentication ?? createDefaultAuthentication(prisma);
   const notifier =
@@ -48,6 +50,7 @@ export function buildApp(options: BuildAppOptions = {}) {
       ? new NoopNotifier()
       : new ExpoPushNotifier(prisma));
 
+  enregistrerGestionErreurs(app);
   enregistrerLimiteDebit(app);
   // Les routes sont déclarées une fois la limite de débit chargée, pour qu'elle s'applique à toutes.
   const declarerRoutes: FastifyPluginAsync = async (routes) => {
