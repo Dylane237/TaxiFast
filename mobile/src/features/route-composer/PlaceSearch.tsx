@@ -1,10 +1,16 @@
-import { IconCurrentLocation, IconMapPin, IconX } from "@tabler/icons-react-native";
+import { IconBuildingCommunity, IconCurrentLocation, IconMapPin, IconX } from "@tabler/icons-react-native";
 import { useMemo, useRef, useState, type RefObject } from "react";
-import { Keyboard, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Keyboard, StyleSheet, Text, TextInput, View } from "react-native";
 import type { Corridor, Stop } from "@/api";
 import { PressionDouce } from "@/components";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
+import type { Lieu } from "@/api/geo";
+import { arretLePlusProche, distanceMetres, formatDistance, type ArretProche, type Coordonnees } from "@/features/maps/distance";
+import { useRechercheLieux } from "@/features/maps/useGeo";
 import { searchStops } from "./route-composer";
+
+/** Au-delà, un lieu n'a pas vraiment d'arrêt Taxi Fast à côté : on le dit plutôt que d'envoyer loin. */
+const ARRET_MAX_M = 2_000;
 
 type Champ = "from" | "to";
 
@@ -22,13 +28,15 @@ type PlaceSearchProps = {
   /** Petite ligne sous le départ, par exemple « À 350 m de vous ». */
   detailDepart?: string | null;
   maPosition?: ActionPosition | null;
+  /** Votre position, pour proposer d'abord les lieux proches. */
+  position?: Coordonnees | null;
 };
 
 /**
  * Deux champs, comme sur un ticket : départ puis arrivée.
  * Aucune liste par défaut : les arrêts n'apparaissent que pendant que vous tapez.
  */
-export function PlaceSearch({ corridors, from, to, onFrom, onTo, champInitial = null, detailDepart, maPosition }: PlaceSearchProps) {
+export function PlaceSearch({ corridors, from, to, onFrom, onTo, champInitial = null, detailDepart, maPosition, position = null }: PlaceSearchProps) {
   const [actif, setActif] = useState<Champ | null>(champInitial);
   const [recherche, setRecherche] = useState("");
   const refDepart = useRef<TextInput>(null);
@@ -40,6 +48,23 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, champInitial = 
     const autre = actif === "from" ? to : from;
     return searchStops(corridors, texte, actif === "to" && from ? from.corridorId : undefined).filter((stop) => stop.id !== autre?.id);
   }, [actif, corridors, from, texte, to]);
+
+  // Les lieux (quartiers, carrefours, marchés…) partout au Cameroun, chacun relié à son arrêt le plus proche.
+  const recherchePlaces = useRechercheLieux(actif ? recherche : "", position);
+  // Les arrêts possibles pour ce champ : l'axe du départ pour l'arrivée, et jamais l'arrêt déjà pris dans l'autre champ.
+  const axesPossibles = useMemo(() => {
+    const autre = actif === "from" ? to : from;
+    const axes = actif === "to" && from ? corridors.filter((corridor) => corridor.id === from.corridorId) : corridors;
+    return axes.map((corridor) => ({ ...corridor, stops: corridor.stops.filter((stop) => stop.id !== autre?.id) }));
+  }, [actif, corridors, from, to]);
+  // D'abord les lieux qu'un taxi dessert, puis les plus proches de vous : un « Marché » à 40 km passe après le vôtre.
+  const lieux = useMemo(() => {
+    const avecArret = recherchePlaces.lieux.map((lieu) => {
+      const proche = arretLePlusProche(axesPossibles, lieu);
+      return { lieu, proche, desservi: proche !== null && proche.distance <= ARRET_MAX_M, eloignement: position ? distanceMetres(position, lieu) : 0 };
+    });
+    return avecArret.sort((a, b) => Number(b.desservi) - Number(a.desservi) || a.eloignement - b.eloignement);
+  }, [axesPossibles, position, recherchePlaces.lieux]);
 
   const terminer = () => {
     setActif(null);
@@ -67,7 +92,7 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, champInitial = 
     setRecherche("");
   };
 
-  const sansResultat = actif !== null && texte.length > 0 && resultats.length === 0;
+  const sansResultat = actif !== null && texte.length > 0 && resultats.length === 0 && lieux.length === 0 && !recherchePlaces.chargement;
   const montrerPosition = actif === "from" && !texte && maPosition;
 
   return (
@@ -132,15 +157,49 @@ export function PlaceSearch({ corridors, from, to, onFrom, onTo, champInitial = 
         </View>
       ) : null}
 
+      {actif && texte.length >= 2 && (lieux.length || recherchePlaces.chargement) ? (
+        <View style={styles.results}>
+          <View style={styles.sectionLieux}>
+            <Text style={styles.sectionTexte}>LIEUX</Text>
+            {recherchePlaces.chargement ? <ActivityIndicator color={couleurs.texteSecondaire} size="small" /> : null}
+          </View>
+          {lieux.map(({ lieu, proche }) => (
+            <LigneLieu key={lieu.id} lieu={lieu} proche={proche} onChoisir={choisir} />
+          ))}
+        </View>
+      ) : null}
+
       {sansResultat ? (
         <View style={styles.vide}>
           <Text style={styles.resultName}>Aucun arrêt ne s’appelle « {texte} »</Text>
           <Text style={styles.resultDetail}>
-            {actif === "to" && from ? `Seuls les arrêts de l’axe de ${from.name} sont proposés.` : "Essayez le nom du quartier ou d’un carrefour voisin."}
+            {recherchePlaces.erreur
+              ? "La recherche de lieux ne répond pas. Vérifiez votre connexion, ou tapez le nom d’un arrêt."
+              : actif === "to" && from ? `Seuls les arrêts de l’axe de ${from.name} sont proposés.` : "Essayez le nom du quartier ou d’un carrefour voisin."}
           </Text>
         </View>
       ) : null}
     </View>
+  );
+}
+
+function LigneLieu({ lieu, proche, onChoisir }: { lieu: Lieu; proche: ArretProche | null; onChoisir: (stop: Stop) => void }) {
+  const desservi = proche !== null && proche.distance <= ARRET_MAX_M;
+  return (
+    <PressionDouce
+      disabled={!desservi}
+      onPress={() => { if (desservi) onChoisir(proche.arret); }}
+      style={({ pressed }) => [styles.result, !desservi && styles.nonDesservi, pressed && styles.pressed]}
+    >
+      <View style={styles.resultIcon}><IconBuildingCommunity color={couleurs.texte} size={18} /></View>
+      <View style={styles.resultCopy}>
+        <Text numberOfLines={1} style={styles.resultName}>{lieu.nom}</Text>
+        <Text numberOfLines={1} style={styles.resultDetail}>{lieu.contexte}</Text>
+        <Text numberOfLines={1} style={desservi ? styles.arretProche : styles.resultDetail}>
+          {desservi ? `Arrêt ${proche.arret.name} · à ${formatDistance(proche.distance)}` : "Pas encore d’arrêt Taxi Fast près d’ici"}
+        </Text>
+      </View>
+    </PressionDouce>
   );
 }
 
@@ -218,6 +277,10 @@ const styles = StyleSheet.create({
   resultCopy: { flex: 1, gap: 2 },
   resultName: { color: couleurs.texte, fontSize: taillesTexte.petit, fontFamily: polices.texteGras },
   resultDetail: { color: couleurs.texteSecondaire, fontSize: 12, lineHeight: 17, fontFamily: polices.texte },
+  sectionLieux: { flexDirection: "row", alignItems: "center", gap: espacements.sm, paddingHorizontal: espacements.xs, paddingTop: espacements.sm },
+  sectionTexte: { color: couleurs.texteSecondaire, fontSize: 10, letterSpacing: 1, fontFamily: polices.texteGras },
+  arretProche: { color: couleurs.texte, fontSize: 12, lineHeight: 17, fontFamily: polices.texteDemiGras },
+  nonDesservi: { opacity: 0.55 },
   vide: { gap: 3, paddingHorizontal: espacements.xs, paddingVertical: espacements.sm },
   pressed: { opacity: 0.72 },
 });

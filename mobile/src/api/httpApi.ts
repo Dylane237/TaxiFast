@@ -35,6 +35,7 @@ let accessToken: string | null = null;
 
 const errorCodeByServerCode: Record<string, ApiErrorCode> = {
   INVALID_INPUT: "INVALID_INPUT",
+  INTERNAL_ERROR: "SERVER_ERROR",
   INVALID_DRIVER_PROFILE: "INVALID_INPUT",
   AUTHENTICATION_REQUIRED: "UNAUTHENTICATED",
   TOKEN_INVALID: "SESSION_EXPIRED",
@@ -136,7 +137,8 @@ async function request<T>(
     }
     const code = serverError ? errorCodeByServerCode[serverError] : undefined;
     throw new ApiError(
-      code ?? (response.status === 403 ? "FORBIDDEN" : "INVALID_INPUT"),
+      // Une panne côté serveur n'est pas une erreur de saisie : on ne demande pas à la personne de se relire.
+      code ?? (response.status === 403 ? "FORBIDDEN" : response.status >= 500 ? "SERVER_ERROR" : "INVALID_INPUT"),
     );
   }
 

@@ -29,16 +29,3 @@ export function estimatedDurationMinutes(distanceKm: number): number {
   if (distanceKm <= 0) return 0;
   return Math.max(1, Math.ceil((distanceKm / ESTIMATED_URBAN_SPEED_KMH) * 60));
 }
-
-export function routeCamera(points: RoutePoint[]) {
-  const latitudes = points.map((point) => point.latitude);
-  const longitudes = points.map((point) => point.longitude);
-  const latitude = (Math.min(...latitudes) + Math.max(...latitudes)) / 2;
-  const longitude = (Math.min(...longitudes) + Math.max(...longitudes)) / 2;
-  const span = Math.max(
-    Math.max(...latitudes) - Math.min(...latitudes),
-    Math.max(...longitudes) - Math.min(...longitudes),
-  );
-  const zoom = span > 0.1 ? 10 : span > 0.05 ? 11 : span > 0.025 ? 12 : 13;
-  return { coordinates: { latitude, longitude }, zoom };
-}

@@ -33,5 +33,17 @@ export function arretLePlusProche(corridors: Corridor[], position: Coordonnees):
   return meilleur;
 }
 
-/** Centre de Douala, quand la position n'est pas encore connue. */
-export const DOUALA: Coordonnees = { latitude: 4.0511, longitude: 9.7679 };
+/** Centre du Cameroun, quand rien n'est encore connu : la carte montre tout le pays. */
+export const CAMEROUN: Coordonnees = { latitude: 5.7, longitude: 12.4 };
+
+/** Un cercle de `rayon` mètres autour d'un point, en [longitude, latitude], fermé (pour un polygone GeoJSON). */
+export function cercle(centre: Coordonnees, rayon: number, segments = 40): [number, number][] {
+  const dLat = rayon / 111_320;
+  const dLon = rayon / (111_320 * Math.cos((centre.latitude * Math.PI) / 180));
+  const points: [number, number][] = [];
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * 2 * Math.PI;
+    points.push([centre.longitude + dLon * Math.cos(angle), centre.latitude + dLat * Math.sin(angle)]);
+  }
+  return points;
+}

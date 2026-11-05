@@ -11,13 +11,15 @@ import { usePosition } from "./usePosition";
 export function useDepartProche(corridors: Corridor[], { demander = false }: { demander?: boolean } = {}) {
   const { etat, relocaliser } = usePosition({ demander });
   const position = etat.statut === "trouvee" ? etat.position : null;
+  const precision = etat.statut === "trouvee" ? etat.precision : null;
+  const ancrage = etat.statut === "trouvee" ? etat.ancrage : null;
   const plusProche: ArretProche | null = useMemo(
     () => (position ? arretLePlusProche(corridors, position) : null),
     [corridors, position],
   );
   // Au-delà de quelques kilomètres, proposer « votre » arrêt n'aurait pas de sens : on laisse choisir.
   const tropLoin = plusProche !== null && plusProche.distance > DISTANCE_MAX_M;
-  return { etat, position, proche: tropLoin ? null : plusProche, tropLoin, relocaliser };
+  return { etat, position, precision, ancrage, proche: tropLoin ? null : plusProche, tropLoin, relocaliser };
 }
 
 const DISTANCE_MAX_M = 3_000;

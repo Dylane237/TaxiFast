@@ -1,4 +1,4 @@
-import { IconArrowRight, IconPhone } from "@tabler/icons-react-native";
+import { IconArrowRight } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -34,7 +34,6 @@ export default function Connexion() {
 
   return (
     <AuthPage
-      icon={<IconPhone color={couleurs.primaire} size={25} strokeWidth={2} />}
       title="Votre taxi, sans attendre au bord de la route."
       description="Entrez votre numéro pour trouver une place ou publier votre trajet."
     >

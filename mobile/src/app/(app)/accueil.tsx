@@ -9,6 +9,8 @@ import { Apparition, AvatarUtilisateur, Bouton, Carte, LogoMarque, PressionDouce
 import { CarteOSM, type PointCarte } from "@/features/maps/CarteOSM";
 import { formatDistance } from "@/features/maps/distance";
 import { useDepartProche } from "@/features/maps/useDepartProche";
+import { usePosition } from "@/features/maps/usePosition";
+import { useVille } from "@/features/maps/useGeo";
 import { useAuthStore } from "@/stores/auth-store";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
 
@@ -26,7 +28,8 @@ function ClientHome({ firstName }: { firstName?: string }) {
   const marges = useSafeAreaInsets();
   const corridorsQuery = useQuery({ queryKey: ["corridors"], queryFn: () => api.listCorridors() });
   const corridors = useMemo(() => corridorsQuery.data ?? [], [corridorsQuery.data]);
-  const { etat, position, proche, tropLoin, relocaliser } = useDepartProche(corridors, { demander: true });
+  const { etat, position, precision, ancrage, proche, tropLoin, relocaliser } = useDepartProche(corridors, { demander: true });
+  const ville = useVille(ancrage);
   const [hauteurBas, setHauteurBas] = useState(260);
 
   const points = useMemo<PointCarte[]>(() => {
@@ -49,10 +52,10 @@ function ClientHome({ firstName }: { firstName?: string }) {
 
   return (
     <View style={styles.clientPage}>
-      <CarteOSM utilisateur={position} points={points} margeBas={hauteurBas} />
+      <CarteOSM utilisateur={position} precision={precision} ancrage={ancrage} points={points} margeBas={hauteurBas} margeHaut={marges.top + 90} />
 
       <Apparition style={[styles.mapTopbar, { top: marges.top + espacements.sm }]}>
-        <View style={styles.clientBrand}><LogoMarque taille={38} /><View><Text style={styles.clientBrandName}>Taxi Fast</Text><Text style={styles.online}>Douala · En service</Text></View></View>
+        <View style={styles.clientBrand}><LogoMarque taille={38} /><View><Text style={styles.clientBrandName}>Taxi Fast</Text><Text numberOfLines={1} style={styles.online}>{ville ? `${ville} · En service` : "En service"}</Text></View></View>
         <AvatarUtilisateur compact />
       </Apparition>
 
@@ -60,7 +63,7 @@ function ClientHome({ firstName }: { firstName?: string }) {
         <PressionDouce
           accessibilityLabel="Me localiser"
           hitSlop={6}
-          onPress={() => void relocaliser()}
+          onPress={relocaliser}
           style={({ pressed }) => [styles.recentrer, pressed && styles.pressed]}
         >
           <IconCurrentLocation color={etat.statut === "trouvee" ? "#2563EB" : couleurs.texte} size={22} />
@@ -92,8 +95,10 @@ function ClientHome({ firstName }: { firstName?: string }) {
 }
 
 function DriverHome({ firstName }: { firstName?: string }) {
+  const { etat } = usePosition({ suivre: false });
+  const ville = useVille(etat.statut === "trouvee" ? etat.ancrage : null);
   return <SafeAreaView style={styles.page} edges={["top", "bottom"]}><ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-    <View style={styles.topbar}><View style={styles.brand}><LogoMarque taille={44} /><View><Text style={styles.brandName}>Taxi Fast</Text><Text style={styles.location}>Douala, Cameroun</Text></View></View><AvatarUtilisateur /></View>
+    <View style={styles.topbar}><View style={styles.brand}><LogoMarque taille={44} /><View><Text style={styles.brandName}>Taxi Fast</Text><Text style={styles.location}>{ville ? `${ville}, Cameroun` : "Cameroun"}</Text></View></View><AvatarUtilisateur /></View>
     <View style={styles.welcome}><Text style={styles.eyebrow}>ESPACE CHAUFFEUR</Text><Text style={styles.greeting}>Bonjour{firstName ? `, ${firstName}` : ""}</Text><Text style={styles.welcomeDescription}>Dites où vous allez, on vous envoie les clients qui sont sur votre route.</Text></View>
     <View style={styles.hero}><View style={styles.heroTop}><View style={styles.heroIcon}><IconRoute color={couleurs.texte} size={26} /></View><Text style={styles.heroKicker}>NOUVEAU DÉPART</Text></View><Text style={styles.heroTitle}>Vous prenez la route ?</Text><Text style={styles.heroDescription}>Itinéraire, arrêts, heure et prix, et les clients vous voient.</Text><Bouton variante="sombre" icone={<IconArrowRight color={couleurs.surface} size={19} />} onPress={() => router.push("/je-pars")}>Publier un trajet</Bouton></View>
     <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>À SUIVRE</Text><Text style={styles.sectionHint}>Le reste se trouve dans le menu</Text></View>

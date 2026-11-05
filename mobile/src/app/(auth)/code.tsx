@@ -1,4 +1,4 @@
-import { IconArrowLeft, IconKey } from "@tabler/icons-react-native";
+import { IconArrowLeft } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -62,7 +62,6 @@ export default function CodeOtp() {
     mutation.error.code === "ROLE_REQUIRED";
   return (
     <AuthPage
-      icon={<IconKey color={couleurs.primaire} size={25} strokeWidth={2} />}
       title="Entrez le code reçu par SMS."
       description={`Envoyé au ${phone ? formatTelephone(phone) : "numéro que vous avez donné"}. Il arrive en général en moins d’une minute.`}
     >

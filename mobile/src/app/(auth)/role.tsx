@@ -33,7 +33,6 @@ export default function ChoixDuRole() {
   if (!phone || !code) {
     return (
       <AuthPage
-        icon={<IconUser color={couleurs.primaire} size={25} strokeWidth={2} />}
         title="On reprend depuis le début"
         description="La vérification de votre numéro a expiré."
       >
@@ -45,7 +44,6 @@ export default function ChoixDuRole() {
 
   return (
     <AuthPage
-      icon={<IconUser color={couleurs.primaire} size={25} strokeWidth={2} />}
       title="Vous êtes client ou chauffeur ?"
       description="Choisissez bien : ce choix se fait une seule fois, à la création du compte."
     >

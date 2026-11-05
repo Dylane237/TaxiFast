@@ -9,18 +9,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LogoMarque } from "./LogoMarque";
-import { RouteBackdrop } from "./RouteBackdrop";
 import { couleurs, espacements, polices, rayons, taillesTexte } from "@/theme";
 
 type AuthPageProps = {
-  icon: ReactNode;
   title: string;
   description: string;
   children: ReactNode;
 };
 
 export function AuthPage({
-  icon,
   title,
   description,
   children,
@@ -39,17 +36,11 @@ export function AuthPage({
           bounces={false}
         >
           <View style={styles.hero}>
-            <RouteBackdrop />
             <View style={styles.marque}>
-              <LogoMarque taille={40} />
-              <View>
-                <Text style={styles.marqueTexte}>Taxi Fast</Text>
-                <Text style={styles.marqueVille}>DOUALA</Text>
-              </View>
+              <LogoMarque taille={36} />
+              <Text style={styles.marqueTexte}>Taxi Fast</Text>
             </View>
             <View style={styles.entete}>
-              <View style={styles.icone}>{icon}</View>
-              <Text style={styles.surtitre}>TAXI PARTAGÉ</Text>
               <Text style={styles.titre}>{title}</Text>
               <Text style={styles.description}>{description}</Text>
             </View>
@@ -65,49 +56,22 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.encre },
   flex: { flex: 1 },
   contenu: { flexGrow: 1, backgroundColor: couleurs.encre },
+  // En-tête sobre : la marque en haut, le titre en bas. Pas de décor, rien qui alourdisse l'écran.
   hero: {
-    minHeight: 286,
-    padding: espacements.lg,
-    justifyContent: "flex-end",
-    overflow: "hidden",
+    minHeight: 236,
+    paddingHorizontal: espacements.lg,
+    paddingTop: espacements.lg,
+    paddingBottom: espacements.xl,
+    justifyContent: "space-between",
   },
-  marque: {
-    position: "absolute",
-    top: espacements.lg,
-    left: espacements.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: espacements.sm,
-  },
+  marque: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
   marqueTexte: {
     color: couleurs.surface,
-    fontSize: taillesTexte.petit,
-    letterSpacing: -0.2,
+    fontSize: taillesTexte.normal,
+    letterSpacing: -0.3,
     fontFamily: polices.texteExtraGras,
   },
-  marqueVille: {
-    color: couleurs.texteInverseSecondaire,
-    fontSize: 9,
-    letterSpacing: 1.8,
-    fontFamily: polices.texteGras,
-  },
-  icone: {
-    width: 48,
-    height: 48,
-    borderRadius: rayons.rond,
-    backgroundColor: couleurs.encreDouce,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: espacements.md,
-  },
-  entete: { alignItems: "flex-start" },
-  surtitre: {
-    color: couleurs.primaire,
-    fontSize: taillesTexte.micro,
-    letterSpacing: 1.6,
-    marginBottom: espacements.xs,
-    fontFamily: polices.texteGras,
-  },
+  entete: { gap: espacements.sm },
   titre: {
     color: couleurs.surface,
     fontSize: taillesTexte.hero,
@@ -119,7 +83,6 @@ const styles = StyleSheet.create({
     color: couleurs.texteInverseSecondaire,
     fontSize: taillesTexte.petit,
     lineHeight: 20,
-    marginTop: espacements.sm,
     maxWidth: 330,
     fontFamily: polices.texte,
   },

@@ -2,70 +2,93 @@ import * as Location from "expo-location";
 import { useCallback, useEffect, useState } from "react";
 import type { Coordonnees } from "./distance";
 
-const DELAI_MS = 12_000;
+/** Sans aucune position après ce délai, on le dit (le suivi continue et corrige si le GPS répond plus tard). */
+const DELAI_MS = 15_000;
 
 export type EtatPosition =
   | { statut: "attente" }
-  | { statut: "trouvee"; position: Coordonnees }
+  | {
+      statut: "trouvee";
+      position: Coordonnees;
+      /** Marge d'erreur en mètres, quand le téléphone la donne. */
+      precision: number | null;
+      /** Première position de cette localisation : la carte se cadre dessus et ne suit pas chaque petit mouvement. */
+      ancrage: Coordonnees;
+    }
   | { statut: "refusee" }
   | { statut: "indisponible" };
 
-async function lirePosition(): Promise<Coordonnees> {
-  // Une position récente suffit pour proposer un arrêt : elle s'affiche tout de suite, sans attendre le GPS.
-  const recente = await Location.getLastKnownPositionAsync({ maxAge: 2 * 60_000 });
-  if (recente) return recente.coords;
-  let minuteur: ReturnType<typeof setTimeout> | undefined;
-  try {
-    // Le réseau (Wi-Fi, antennes) répond vite en ville mais peut manquer : sans Wi-Fi, sans services Google.
-    // Le GPS marche partout mais met plus de temps. On interroge les deux et on garde le premier qui répond.
-    const actuelle = await new Promise<Location.LocationObject>((resoudre, rejeter) => {
-      let echecs = 0;
-      const echouer = () => {
-        echecs += 1;
-        if (echecs === 2) rejeter(new Error("introuvable"));
-      };
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then(resoudre, echouer);
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }).then(resoudre, echouer);
-      minuteur = setTimeout(() => rejeter(new Error("délai")), DELAI_MS);
-    });
-    return actuelle.coords;
-  } finally {
-    if (minuteur) clearTimeout(minuteur);
-  }
-}
-
-async function obtenirEtat(avecDemande: boolean): Promise<EtatPosition> {
-  try {
-    const permission = avecDemande
-      ? await Location.requestForegroundPermissionsAsync()
-      : await Location.getForegroundPermissionsAsync();
-    if (!permission.granted) return { statut: "refusee" };
-    return { statut: "trouvee", position: await lirePosition() };
-  } catch {
-    return { statut: "indisponible" };
-  }
+function versEtat(lieu: Location.LocationObject, precedent: EtatPosition): EtatPosition {
+  const position = { latitude: lieu.coords.latitude, longitude: lieu.coords.longitude };
+  return {
+    statut: "trouvee",
+    position,
+    precision: lieu.coords.accuracy ?? null,
+    ancrage: precedent.statut === "trouvee" ? precedent.ancrage : position,
+  };
 }
 
 /**
- * Position réelle de l'appareil. `demander` affiche la demande d'autorisation ;
- * sans elle, on ne lit la position que si l'autorisation est déjà donnée.
+ * Position réelle de l'appareil, suivie tant que l'écran est ouvert.
+ * La dernière position connue s'affiche tout de suite, puis le GPS (haute précision) l'affine.
+ * `demander` affiche la demande d'autorisation ; sans elle, on ne lit la position que si elle est déjà accordée.
+ * `suivre: false` lit la position une seule fois (pour afficher la ville, sans garder le GPS allumé).
  */
-export function usePosition({ demander = false }: { demander?: boolean } = {}) {
+export function usePosition({ demander = false, suivre = true }: { demander?: boolean; suivre?: boolean } = {}) {
   const [etat, setEtat] = useState<EtatPosition>({ statut: "attente" });
+  const [essai, setEssai] = useState(0);
 
   useEffect(() => {
     let actif = true;
-    void obtenirEtat(demander).then((suivant) => {
-      if (actif) setEtat(suivant);
+    let abonnement: Location.LocationSubscription | null = null;
+    let minuteur: ReturnType<typeof setTimeout> | undefined;
+
+    const demarrer = async () => {
+      const autorisation = demander || essai > 0
+        ? await Location.requestForegroundPermissionsAsync()
+        : await Location.getForegroundPermissionsAsync();
+      if (!actif) return;
+      if (!autorisation.granted) return setEtat({ statut: "refusee" });
+
+      minuteur = setTimeout(() => {
+        if (actif) setEtat((courant) => (courant.statut === "attente" ? { statut: "indisponible" } : courant));
+      }, DELAI_MS);
+
+      const recente = await Location.getLastKnownPositionAsync({ maxAge: 2 * 60_000, requiredAccuracy: 300 });
+      if (actif && recente) setEtat((courant) => versEtat(recente, courant));
+
+      if (!suivre) {
+        if (recente) return;
+        const unique = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        if (actif) setEtat((courant) => versEtat(unique, courant));
+        return;
+      }
+
+      const suivi = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, timeInterval: 3_000, distanceInterval: 5 },
+        (lieu) => {
+          if (actif) setEtat((courant) => versEtat(lieu, courant));
+        },
+      );
+      if (actif) abonnement = suivi;
+      else suivi.remove();
+    };
+
+    demarrer().catch(() => {
+      if (actif) setEtat({ statut: "indisponible" });
     });
+
     return () => {
       actif = false;
+      abonnement?.remove();
+      if (minuteur) clearTimeout(minuteur);
     };
-  }, [demander]);
+  }, [demander, essai, suivre]);
 
-  const relocaliser = useCallback(async () => {
+  /** Recommence la localisation et recadre la carte sur la nouvelle position. */
+  const relocaliser = useCallback(() => {
     setEtat({ statut: "attente" });
-    setEtat(await obtenirEtat(true));
+    setEssai((valeur) => valeur + 1);
   }, []);
 
   return { etat, relocaliser };

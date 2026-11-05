@@ -11,6 +11,7 @@ import { capitaliser, formatPlage, formatPrice } from "@/features/format";
 import { CarteOSM, type PointCarte } from "@/features/maps/CarteOSM";
 import { formatDistance } from "@/features/maps/distance";
 import { useDepartProche } from "@/features/maps/useDepartProche";
+import { useItineraire } from "@/features/maps/useGeo";
 import { PlaceSearch, type ActionPosition } from "@/features/route-composer/PlaceSearch";
 import { RouteMiniMap } from "@/features/route-composer/RouteMiniMap";
 import { WizardProgress } from "@/features/route-composer/WizardProgress";
@@ -37,7 +38,7 @@ export default function RechercheScreen() {
   const [error, setError] = useState<string | null>(null);
   const [hauteurFeuille, setHauteurFeuille] = useState(320);
   const corridors = useMemo(() => corridorsQuery.data ?? [], [corridorsQuery.data]);
-  const { etat, position, proche, tropLoin, relocaliser } = useDepartProche(corridors, { demander: true });
+  const { etat, position, precision, ancrage, proche, tropLoin, relocaliser } = useDepartProche(corridors, { demander: true });
   const departAccueil = useMemo(
     () => corridors.flatMap((corridor) => corridor.stops).find((stop) => stop.id === params.depart) ?? null,
     [corridors, params.depart],
@@ -63,6 +64,9 @@ export default function RechercheScreen() {
   });
 
   const points = useMemo(() => pointsCarte(route?.stops ?? [from, to].filter((stop): stop is Stop => Boolean(stop)), from, to), [from, route, to]);
+  // Le tracé suit les vraies routes, en passant par chaque arrêt de l'axe.
+  const etapes = useMemo(() => (route ? points : []), [points, route]);
+  const itineraire = useItineraire(etapes);
   const detailDepart = proche && from?.id === proche.arret.id ? `À ${formatDistance(proche.distance)} de vous, à pied` : null;
   const maPosition = actionPosition({ statut: etat.statut, proche, tropLoin, dejaChoisi: detailDepart !== null, onUtiliser: (stop) => { setFrom(stop); if (to && to.corridorId !== stop.corridorId) setTo(null); setError(null); }, relocaliser });
 
@@ -86,7 +90,7 @@ export default function RechercheScreen() {
   if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun axe ouvert pour l’instant" description="Revenez un peu plus tard." /></State>;
 
   if (step === 0) return <View style={styles.mapPage}>
-    <CarteOSM utilisateur={position} points={points} relier={Boolean(route)} margeBas={hauteurFeuille} />
+    <CarteOSM utilisateur={position} precision={precision} ancrage={route ? null : ancrage} points={points} itineraire={itineraire?.trace} relier={Boolean(route)} margeBas={hauteurFeuille} margeHaut={marges.top + 80} />
     <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, { top: marges.top + espacements.sm }, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
     {route ? <View style={[styles.mapStatus, { top: marges.top + espacements.sm }]}><Text style={styles.mapStatusLabel}>UN TAXI PASSE PAR LÀ</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route.corridor.name} · {route.stops.length - 1} arrêt{route.stops.length > 2 ? "s" : ""}</Text></View> : null}
     <KeyboardAvoidingView behavior="padding" pointerEvents="box-none" style={styles.mapSheetWrap}>
@@ -96,6 +100,7 @@ export default function RechercheScreen() {
         <ScrollView style={styles.placeScrollView} contentContainerStyle={styles.placeScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <PlaceSearch
             corridors={corridors}
+            position={position}
             from={from}
             to={to}
             onFrom={(stop) => { setFrom(stop); setError(null); }}
@@ -153,7 +158,7 @@ type EtatPositionCourt = {
   tropLoin: boolean;
   dejaChoisi: boolean;
   onUtiliser: (stop: Stop) => void;
-  relocaliser: () => Promise<void>;
+  relocaliser: () => void;
 };
 
 /** Ce que dit le raccourci « ma position », selon ce que le téléphone sait vraiment. */

@@ -6,6 +6,7 @@ const messages: Partial<Record<ApiError["code"], string>> = {
   OTP_INVALID: "Ce n’est pas le bon code. Vérifiez le SMS.",
   UNAUTHENTICATED: "Vous avez été déconnecté. Reconnectez-vous pour continuer.",
   SESSION_EXPIRED: "Ça fait un moment ! Reconnectez-vous pour reprendre.",
+  SERVER_ERROR: "Un souci de notre côté. Rien n’est perdu : réessayez dans un instant.",
   NETWORK_ERROR: "Pas de connexion pour l’instant. Vérifiez vos données mobiles ou le Wi-Fi.",
   INVALID_RESPONSE: "Le serveur a renvoyé une réponse bizarre. Patientez un peu puis recommencez.",
   NOT_IMPLEMENTED: "Cette fonction arrive bientôt.",

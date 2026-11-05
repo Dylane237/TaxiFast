@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   distanceBetweenKm,
   estimatedDurationMinutes,
-  routeCamera,
   routeDistanceKm,
 } from "./route-metrics";
 
@@ -17,9 +16,8 @@ describe("mesures locales d'un itinéraire", () => {
     expect(routeDistanceKm([bonaberi, deido, akwa])).toBeGreaterThan(5);
   });
 
-  it("produit une durée indicative et une caméra centrée", () => {
+  it("produit une durée indicative", () => {
     expect(estimatedDurationMinutes(11)).toBe(30);
     expect(estimatedDurationMinutes(0)).toBe(0);
-    expect(routeCamera([bonaberi, akwa])).toMatchObject({ zoom: 12 });
   });
 });

@@ -23,7 +23,8 @@ export type ApiErrorCode =
   | "TOO_MANY_OPEN_REQUESTS"
   | "BOOKING_ALREADY_PENDING"
   | "OTP_DELIVERY_FAILED"
-  | "TRIP_NOT_STARTED";
+  | "TRIP_NOT_STARTED"
+  | "SERVER_ERROR";
 
 export class ApiError extends Error {
   constructor(

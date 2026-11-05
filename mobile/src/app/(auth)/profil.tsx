@@ -1,4 +1,3 @@
-import { IconId } from "@tabler/icons-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -50,7 +49,6 @@ function FormulaireProfil({ profile }: { profile: UserProfile }) {
 
   return (
     <AuthPage
-      icon={<IconId color={couleurs.primaire} size={25} />}
       title="Faisons connaissance."
       description={chauffeur ? "Votre nom et votre taxi : c’est ce que les clients verront avant de monter." : "Le nom que le chauffeur verra quand vous réservez."}
     >
@@ -79,14 +77,14 @@ export default function Profil() {
 
   if (profileQuery.isPending) {
     return (
-      <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Chargement de vos informations…">
+      <AuthPage title="Votre profil" description="Chargement de vos informations…">
         <ActivityIndicator color={couleurs.texte} size="large" />
       </AuthPage>
     );
   }
   if (profileQuery.isError) {
     return (
-      <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Impossible de charger vos informations.">
+      <AuthPage title="Votre profil" description="Impossible de charger vos informations.">
         <MessageEtat type="erreur">{messageErreur(profileQuery.error)}</MessageEtat>
         <Bouton onPress={() => profileQuery.refetch()}>Réessayer</Bouton>
       </AuthPage>
@@ -94,7 +92,7 @@ export default function Profil() {
   }
   if (!profileQuery.data) {
     return (
-      <AuthPage icon={<IconId color={couleurs.primaire} size={25} />} title="Votre profil" description="Aucune session active.">
+      <AuthPage title="Votre profil" description="Aucune session active.">
         <MessageEtat>Votre session s’est fermée. Reconnectez-vous pour finir votre profil.</MessageEtat>
         <Bouton onPress={() => router.replace("/connexion")}>Se connecter</Bouton>
       </AuthPage>

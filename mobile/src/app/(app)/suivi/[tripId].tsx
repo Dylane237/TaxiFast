@@ -8,22 +8,17 @@ import {
   IconRoute,
 } from "@tabler/icons-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import Constants from "expo-constants";
 import * as Location from "expo-location";
-import { GoogleMaps } from "expo-maps";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, type TripLocation } from "@/api";
 import { Bouton, Carte, EntetePage, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
-import {
-  estimatedDurationMinutes,
-  routeCamera,
-  routeDistanceKm,
-} from "@/features/tracking/route-metrics";
-import { DemoRouteMap } from "@/features/tracking/DemoRouteMap";
+import { CarteOSM, type PointCarte } from "@/features/maps/CarteOSM";
+import { useItineraire } from "@/features/maps/useGeo";
+import { estimatedDurationMinutes, routeDistanceKm } from "@/features/tracking/route-metrics";
 import { couleurs, espacements, ombres, polices, rayons, taillesTexte } from "@/theme";
 
 export default function TripTrackingScreen() {
@@ -33,6 +28,7 @@ export default function TripTrackingScreen() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const subscription = useRef<Location.LocationSubscription | null>(null);
   const snapPoints = useMemo(() => ["28%", "57%", "90%"], []);
+  const { height } = useWindowDimensions();
   const user = useQuery({ queryKey: ["current-user"], queryFn: () => api.getCurrentUser() });
   const isDriver = user.data?.role === "DRIVER";
   const route = useQuery({
@@ -66,10 +62,10 @@ export default function TripTrackingScreen() {
     setLocationError(null);
     const permission = await Location.requestForegroundPermissionsAsync();
     if (!permission.granted) throw new Error("La permission de localisation est nécessaire.");
-    const first = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const first = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
     publish.mutate(first);
     subscription.current = await Location.watchPositionAsync(
-      { accuracy: Location.Accuracy.Balanced, timeInterval: 10_000, distanceInterval: 25 },
+      { accuracy: Location.Accuracy.High, timeInterval: 10_000, distanceInterval: 20 },
       (location) => publish.mutate(location),
     );
     setSharing(true);
@@ -77,18 +73,19 @@ export default function TripTrackingScreen() {
 
   useEffect(() => () => subscription.current?.remove(), []);
 
-  if (Platform.OS !== "android") {
-    return <State><MessageEtat type="erreur">Pour l’instant, le suivi sur carte marche uniquement sur Android.</MessageEtat></State>;
-  }
-
   const location = isDriver ? localLocation : remote.data;
   const stops = route.data?.tripStops
     .map((tripStop) => tripStop.stop)
     .filter((stop) => stop.latitude !== null && stop.longitude !== null) ?? [];
-  const points = stops.map((stop) => ({ latitude: stop.latitude!, longitude: stop.longitude! }));
-  const mapsConfigured = Constants.expoConfig?.extra?.googleMapsConfigured === true;
-  const distance = routeDistanceKm(points);
-  const duration = estimatedDurationMinutes(distance);
+  const points: PointCarte[] = stops.map((stop, index) => ({
+    type: index === 0 ? "depart" : index === stops.length - 1 ? "arrivee" : "arret",
+    latitude: stop.latitude!,
+    longitude: stop.longitude!,
+  }));
+  const itineraire = useItineraire(points);
+  // Distance et durée par les vraies routes quand l'itinéraire est là, sinon à vol d'oiseau.
+  const distance = itineraire ? itineraire.distanceMetres / 1000 : routeDistanceKm(points);
+  const duration = itineraire ? Math.max(1, Math.round(itineraire.dureeSecondes / 60)) : estimatedDurationMinutes(distance);
   const loading = user.isPending || route.isPending || (!isDriver && remote.isPending);
   const queryError = user.error ?? route.error ?? remote.error;
 
@@ -114,42 +111,13 @@ export default function TripTrackingScreen() {
 
   return (
     <View style={styles.page}>
-      {mapsConfigured ? (
-        <GoogleMaps.View
-          style={StyleSheet.absoluteFill}
-          cameraPosition={routeCamera(points)}
-          markers={[
-            ...stops.map((stop, index) => ({
-              id: stop.id,
-              coordinates: { latitude: stop.latitude!, longitude: stop.longitude! },
-              title: `${index + 1}. ${stop.name}`,
-              snippet: stop.meetingInstructions ?? "Point de rencontre",
-              showCallout: true,
-              zIndex: index === 0 || index === stops.length - 1 ? 3 : 1,
-            })),
-            ...(location ? [{
-              id: "driver",
-              coordinates: { latitude: location.latitude, longitude: location.longitude },
-              title: "Chauffeur",
-              snippet: "Position actuelle",
-              showCallout: true,
-              zIndex: 10,
-            }] : []),
-          ]}
-          polylines={[
-            { id: "route-shadow", coordinates: points, color: couleurs.surface, width: 9 },
-            { id: "route", coordinates: points, color: couleurs.encre, width: 5 },
-          ]}
-          uiSettings={{
-            compassEnabled: true,
-            myLocationButtonEnabled: false,
-            mapToolbarEnabled: false,
-            zoomControlsEnabled: false,
-          }}
-        />
-      ) : (
-        <DemoRouteMap stopCount={stops.length} />
-      )}
+      <CarteOSM
+        points={points}
+        itineraire={itineraire?.trace}
+        relier
+        chauffeur={location ? { latitude: location.latitude, longitude: location.longitude } : null}
+        margeBas={Math.round(height * 0.57)}
+      />
 
       <SafeAreaView pointerEvents="box-none" style={styles.topLayer} edges={["top"]}>
         <View style={styles.topBar}>

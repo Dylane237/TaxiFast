@@ -50,6 +50,18 @@ describe("httpApi", () => {
     });
   });
 
+  it("traduit une panne du serveur en SERVER_ERROR, pas en erreur de saisie", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ error: "INTERNAL_ERROR" }, 500)),
+    );
+
+    await expect(httpApi.listCorridors()).rejects.toMatchObject({
+      name: "ApiError",
+      code: "SERVER_ERROR",
+    });
+  });
+
   it("refuse une réponse serveur qui ne respecte pas le contrat", async () => {
     vi.stubGlobal(
       "fetch",

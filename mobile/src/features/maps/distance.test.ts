@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { Corridor, Stop } from "@/api";
-import { arretLePlusProche, distanceMetres, formatDistance } from "./distance";
+import { arretLePlusProche, cercle, distanceMetres, formatDistance } from "./distance";
+
+describe("cercle de précision", () => {
+  it("place chaque point à la bonne distance du centre et se referme", () => {
+    const centre = { latitude: 4.05, longitude: 9.7 };
+    const points = cercle(centre, 50, 12);
+    expect(points).toHaveLength(13);
+    expect(points[0]).toEqual(points[12]);
+    for (const [longitude, latitude] of points) {
+      expect(distanceMetres(centre, { latitude, longitude })).toBeCloseTo(50, -1);
+    }
+  });
+});
 
 function arret(id: string, latitude: number | null, longitude: number | null): Stop {
   return { id, name: id, corridorId: "axe", position: 0, latitude, longitude, meetingInstructions: null } as Stop;
