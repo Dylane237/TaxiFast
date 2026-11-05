@@ -281,3 +281,15 @@ model TripLocation {
 
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 }
+
+// Code de connexion en cours de validité, un par numéro. Seule l'empreinte SHA-256 du code
+// est gardée. Stocké en base pour survivre aux redémarrages et être partagé entre instances.
+model OtpChallenge {
+  phone             String   @id
+  codeDigest        Bytes
+  expiresAt         DateTime
+  attemptsRemaining Int
+  sentAt            DateTime
+
+  @@index([expiresAt])
+}
