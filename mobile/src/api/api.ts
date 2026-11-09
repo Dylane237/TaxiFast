@@ -23,6 +23,7 @@ import type {
   PushDeviceInput,
   UserProfile,
   Wallet,
+  GoogleSignInInput,
 } from "./types";
 
 export interface Api {
@@ -32,6 +33,7 @@ export interface Api {
     code: string,
     role?: Extract<Role, "CLIENT" | "DRIVER">,
   ): Promise<AuthResult>;
+  signInWithGoogle(input: GoogleSignInInput): Promise<AuthResult>;
   restoreSession(token: string, user: UserProfile): Promise<void>;
   signOut(): Promise<void>;
   getCurrentUser(): Promise<UserProfile | null>;

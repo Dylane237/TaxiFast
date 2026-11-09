@@ -1,15 +1,14 @@
-import { IconCar, IconCheck, IconUser } from "@tabler/icons-react-native";
+import { IconCar, IconUser } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
-import type { ReactNode } from "react";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { api, type Role } from "@/api";
-import { AuthPage, Bouton, MessageEtat, PressionDouce } from "@/components";
+import { AuthPage, Bouton, CarteRole, MessageEtat } from "@/components";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { couleurs, espacements, polices } from "@/theme";
+import { couleurs, espacements } from "@/theme";
 
 type ChoixRole = Extract<Role, "CLIENT" | "DRIVER">;
 
@@ -49,14 +48,14 @@ export default function ChoixDuRole() {
     >
       <View style={styles.formulaire}>
         <View style={styles.choix}>
-          <RoleCard
+          <CarteRole
             selected={role === "CLIENT"}
             icon={<IconUser color={couleurs.texte} size={24} />}
             title="Client"
             description="Je cherche une place dans un taxi qui passe par mon chemin."
             onPress={() => setRole("CLIENT")}
           />
-          <RoleCard
+          <CarteRole
             selected={role === "DRIVER"}
             icon={<IconCar color={couleurs.texte} size={24} />}
             title="Chauffeur"
@@ -72,59 +71,7 @@ export default function ChoixDuRole() {
   );
 }
 
-function RoleCard({
-  selected,
-  icon,
-  title,
-  description,
-  onPress,
-}: {
-  selected: boolean;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  onPress: () => void;
-}) {
-  return (
-    <PressionDouce
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
-      style={({ pressed }) => [styles.roleCard, selected && styles.roleCardSelected, pressed && styles.roleCardPressed]}
-      onPress={onPress}
-    >
-      <View style={[styles.roleIcon, selected && styles.roleIconSelected]}>{icon}</View>
-      <View style={styles.roleCopy}>
-        <Text style={styles.roleTitle}>{title}</Text>
-        <Text style={styles.roleDescription}>{description}</Text>
-      </View>
-      <View style={[styles.check, selected && styles.checkSelected]}>
-        {selected ? <IconCheck color={couleurs.encre} size={15} strokeWidth={3} /> : null}
-      </View>
-    </PressionDouce>
-  );
-}
-
 const styles = StyleSheet.create({
   formulaire: { gap: espacements.md },
   choix: { gap: espacements.sm },
-  roleCard: {
-    minHeight: 92,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: espacements.md,
-    padding: espacements.md,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: couleurs.bordure,
-    backgroundColor: couleurs.fond,
-  },
-  roleCardSelected: { borderColor: couleurs.encre, backgroundColor: couleurs.primaireClaire },
-  roleCardPressed: { opacity: 0.82 },
-  roleIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: couleurs.surface, alignItems: "center", justifyContent: "center" },
-  roleIconSelected: { backgroundColor: couleurs.primaire },
-  roleCopy: { flex: 1, gap: 3 },
-  roleTitle: { color: couleurs.texte, fontSize: 16, fontFamily: polices.texteExtraGras },
-  roleDescription: { color: couleurs.texteSecondaire, fontSize: 13, lineHeight: 18, fontFamily: polices.texte },
-  check: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: couleurs.bordure, alignItems: "center", justifyContent: "center" },
-  checkSelected: { backgroundColor: couleurs.primaire, borderColor: couleurs.primairePresse },
 });

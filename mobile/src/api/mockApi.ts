@@ -5,6 +5,7 @@ import { ApiError } from "./errors";
 import { createMockData, mockIds, type MockData } from "./mockData";
 import type {
   AuthResult,
+  GoogleSignInInput,
   Booking,
   BookingDetails,
   BookingStatus,
@@ -111,6 +112,8 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
 export class MockApi implements Api {
   private readonly data: MockData = createMockData();
   private readonly requestedPhones = new Set<string>();
+  /** Mode démo : compte Google (jeton fictif) → identifiant de l'utilisateur. */
+  private readonly comptesGoogle = new Map<string, string>();
   private readonly pushTokens = new Set<string>();
   private readonly locations = new Map<string, TripLocation>();
   private activeUserId: string | null;
@@ -258,6 +261,24 @@ export class MockApi implements Api {
     }
 
     this.requestedPhones.delete(validPhone);
+    this.activeUserId = user.id;
+    const { vehicle: _vehicle, ...publicUser } = user;
+    return clone({ token: `mock-token-${user.id}`, user: publicUser });
+  }
+
+  async signInWithGoogle(input: GoogleSignInInput): Promise<AuthResult> {
+    await this.wait();
+    if (!input.idToken) throw new ApiError("GOOGLE_TOKEN_INVALID");
+    const connu = this.comptesGoogle.get(input.idToken);
+    let user = connu ? this.data.users.find((candidate) => candidate.id === connu) : undefined;
+    if (!user) {
+      if (!input.role || !input.phone) throw new ApiError("SIGNUP_REQUIRED");
+      const validPhone = parse(phoneSchema, input.phone);
+      if (this.data.users.some((candidate) => candidate.phone === validPhone)) throw new ApiError("PHONE_ALREADY_USED");
+      user = { id: this.nextId("user"), phone: validPhone, name: input.name ?? null, role: parse(roleSchema, input.role), vehicle: null };
+      this.data.users.push(user);
+      this.comptesGoogle.set(input.idToken, user.id);
+    }
     this.activeUserId = user.id;
     const { vehicle: _vehicle, ...publicUser } = user;
     return clone({ token: `mock-token-${user.id}`, user: publicUser });

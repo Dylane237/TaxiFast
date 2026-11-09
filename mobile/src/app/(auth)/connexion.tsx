@@ -1,14 +1,16 @@
-import { IconArrowRight } from "@tabler/icons-react-native";
+import { IconArrowRight, IconBrandGoogleFilled } from "@tabler/icons-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { api } from "@/api";
+import { StyleSheet, Text, View } from "react-native";
+import { api, ApiError } from "@/api";
 import { AuthPage, Bouton, Champ, MessageEtat } from "@/components";
 import { normaliserTelephone } from "@/features/auth/auth-validation";
+import { connexionGoogle, googleDisponible } from "@/features/auth/google";
+import { useFinConnexion } from "@/features/auth/useFinConnexion";
 import { messageErreur } from "@/features/auth/message-erreur";
 import { useAuthFlowStore } from "@/stores/auth-flow-store";
-import { couleurs, espacements } from "@/theme";
+import { couleurs, espacements, polices, taillesTexte } from "@/theme";
 
 export default function Connexion() {
   const [telephone, setTelephone] = useState("");
@@ -19,6 +21,28 @@ export default function Connexion() {
     onSuccess: (_, phone) => {
       setPhone(phone);
       router.push("/code");
+    },
+  });
+
+  const setGoogle = useAuthFlowStore((state) => state.setGoogle);
+  const finConnexion = useFinConnexion();
+  const google = useMutation({
+    mutationFn: async () => {
+      const jeton = await connexionGoogle();
+      if (!jeton) return null; // la personne a fermé le choix du compte
+      try {
+        return { session: await api.signInWithGoogle({ idToken: jeton.idToken }), jeton };
+      } catch (error) {
+        // Première fois : on garde le jeton et on demande le rôle et le numéro.
+        if (error instanceof ApiError && error.code === "SIGNUP_REQUIRED") return { session: null, jeton };
+        throw error;
+      }
+    },
+    onSuccess: async (resultat) => {
+      if (!resultat) return;
+      if (resultat.session) return finConnexion(resultat.session);
+      setGoogle(resultat.jeton.idToken, resultat.jeton.prenom);
+      router.push("/google");
     },
   });
 
@@ -60,9 +84,32 @@ export default function Connexion() {
         >
           Continuer
         </Bouton>
+        {googleDisponible ? (
+          <>
+            <View style={styles.separateur}>
+              <View style={styles.trait} />
+              <Text style={styles.ou}>ou</Text>
+              <View style={styles.trait} />
+            </View>
+            {google.isError ? <MessageEtat type="erreur">{messageErreur(google.error)}</MessageEtat> : null}
+            <Bouton
+              variante="secondaire"
+              icone={<IconBrandGoogleFilled color={couleurs.texte} size={18} />}
+              chargement={google.isPending}
+              onPress={() => google.mutate()}
+            >
+              Continuer avec Google
+            </Bouton>
+          </>
+        ) : null}
       </View>
     </AuthPage>
   );
 }
 
-const styles = StyleSheet.create({ formulaire: { gap: espacements.md } });
+const styles = StyleSheet.create({
+  formulaire: { gap: espacements.md },
+  separateur: { flexDirection: "row", alignItems: "center", gap: espacements.sm },
+  trait: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: couleurs.bordure },
+  ou: { color: couleurs.texteSecondaire, fontSize: taillesTexte.micro, fontFamily: polices.texteDemiGras },
+});

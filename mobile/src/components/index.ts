@@ -12,3 +12,4 @@ export { LigneAction } from "./LigneAction";
 export { PuceChoix } from "./PuceChoix";
 export { AvatarUtilisateur } from "./AvatarUtilisateur";
 export { MenuLateral } from "./MenuLateral";
+export { CarteRole } from "./CarteRole";

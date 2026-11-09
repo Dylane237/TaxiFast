@@ -7,6 +7,24 @@ const instantApi = (initialUserId?: string | null) =>
   createMockApi({ minDelayMs: 0, maxDelayMs: 0, initialUserId });
 
 describe("MockApi", () => {
+  it("connexion Google : inscription au premier passage, connexion directe ensuite", async () => {
+    const api = instantApi(null);
+    await expect(api.signInWithGoogle({ idToken: "jeton-demo" })).rejects.toMatchObject({ code: "SIGNUP_REQUIRED" });
+    const inscription = await api.signInWithGoogle({ idToken: "jeton-demo", role: "CLIENT", phone: "+237677000001", name: "Awa" });
+    expect(inscription.user).toMatchObject({ phone: "+237677000001", role: "CLIENT", name: "Awa" });
+    const retour = await api.signInWithGoogle({ idToken: "jeton-demo" });
+    expect(retour.user.id).toBe(inscription.user.id);
+  });
+
+  it("connexion Google : refuse un numéro déjà pris par un autre compte", async () => {
+    const api = instantApi(null);
+    await api.requestOtp("+237677000002");
+    await api.verifyOtp("+237677000002", "1234", "CLIENT");
+    await expect(
+      api.signInWithGoogle({ idToken: "autre-jeton", role: "CLIENT", phone: "+237677000002" }),
+    ).rejects.toMatchObject({ code: "PHONE_ALREADY_USED" });
+  });
+
   it("accepte le code OTP fictif 1234", async () => {
     const api = instantApi(null);
     await api.requestOtp("+237699000001");

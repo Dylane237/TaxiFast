@@ -45,6 +45,10 @@ const errorCodeByServerCode: Record<string, ApiErrorCode> = {
   OTP_EXPIRED: "OTP_INVALID",
   OTP_RATE_LIMITED: "OTP_RATE_LIMITED",
   OTP_DELIVERY_FAILED: "OTP_DELIVERY_FAILED",
+  SIGNUP_REQUIRED: "SIGNUP_REQUIRED",
+  PHONE_ALREADY_USED: "PHONE_ALREADY_USED",
+  GOOGLE_NOT_CONFIGURED: "GOOGLE_NOT_CONFIGURED",
+  GOOGLE_TOKEN_INVALID: "GOOGLE_TOKEN_INVALID",
   TRIP_NOT_STARTED: "TRIP_NOT_STARTED",
   TOO_MANY_OPEN_REQUESTS: "TOO_MANY_OPEN_REQUESTS",
   BOOKING_ALREADY_PENDING: "BOOKING_ALREADY_PENDING",
@@ -335,6 +339,15 @@ export const httpApi: Api = {
     const result = await request(
       "/auth/otp/verify",
       { method: "POST", body: json({ phone, code, role }) },
+      z.object({ token: z.string(), user: userSchema }),
+    );
+    accessToken = result.token;
+    return result;
+  },
+  async signInWithGoogle(input): Promise<AuthResult> {
+    const result = await request(
+      "/auth/google",
+      { method: "POST", body: json(input) },
       z.object({ token: z.string(), user: userSchema }),
     );
     accessToken = result.token;

@@ -24,7 +24,11 @@ export type ApiErrorCode =
   | "BOOKING_ALREADY_PENDING"
   | "OTP_DELIVERY_FAILED"
   | "TRIP_NOT_STARTED"
-  | "SERVER_ERROR";
+  | "SERVER_ERROR"
+  | "SIGNUP_REQUIRED"
+  | "PHONE_ALREADY_USED"
+  | "GOOGLE_NOT_CONFIGURED"
+  | "GOOGLE_TOKEN_INVALID";
 
 export class ApiError extends Error {
   constructor(

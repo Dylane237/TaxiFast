@@ -17,6 +17,10 @@ const messages: Partial<Record<ApiError["code"], string>> = {
   TRIP_NOT_OPEN: "Ce taxi ne prend plus de clients sur ce trajet.",
   OTP_RATE_LIMITED: "Un code vient de partir. Attendez une minute avant d’en redemander un.",
   TRIP_NOT_STARTED: "Le trajet n’a pas encore commencé. Vous pourrez le terminer après l’heure de départ.",
+  SIGNUP_REQUIRED: "Encore une étape : dites-nous qui vous êtes et votre numéro.",
+  PHONE_ALREADY_USED: "Ce numéro est déjà lié à un autre compte Taxi Fast. Connectez-vous avec ce numéro, ou utilisez-en un autre.",
+  GOOGLE_NOT_CONFIGURED: "La connexion avec Google n’est pas encore ouverte. Utilisez votre numéro pour l’instant.",
+  GOOGLE_TOKEN_INVALID: "Google n’a pas pu confirmer votre compte. Réessayez.",
   OTP_DELIVERY_FAILED: "Le SMS n’a pas pu partir. Vérifiez votre numéro, puis réessayez dans un instant.",
   TOO_MANY_OPEN_REQUESTS:
     "Vous avez déjà trois demandes en cours. Annulez-en une ou attendez une réponse avant d’en lancer une autre.",

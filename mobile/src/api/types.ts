@@ -177,6 +177,14 @@ export type BookingDetails = {
 };
 
 export type AuthResult = { token: string; user: User };
+
+/** Connexion avec Google. Première fois : le rôle et le numéro sont nécessaires (sinon SIGNUP_REQUIRED). */
+export type GoogleSignInInput = {
+  idToken: string;
+  role?: Extract<Role, "CLIENT" | "DRIVER">;
+  phone?: string;
+  name?: string;
+};
 export type OtpRequestResult = { status: "OTP_SENT" };
 
 export type CreateTripInput = {

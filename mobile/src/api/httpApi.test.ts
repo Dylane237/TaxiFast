@@ -41,6 +41,18 @@ describe("httpApi", () => {
     );
   });
 
+  it("connexion Google : envoie le jeton et traduit l'inscription à compléter", async () => {
+    const appel = vi.fn().mockResolvedValue(jsonResponse({ error: "SIGNUP_REQUIRED" }, 409));
+    vi.stubGlobal("fetch", appel);
+
+    await expect(httpApi.signInWithGoogle({ idToken: "jeton-google" })).rejects.toMatchObject({
+      name: "ApiError",
+      code: "SIGNUP_REQUIRED",
+    });
+    expect(String(appel.mock.calls[0]![0])).toMatch(/\/auth\/google$/);
+    expect(JSON.parse(appel.mock.calls[0]![1].body)).toEqual({ idToken: "jeton-google" });
+  });
+
   it("convertit une panne fetch en erreur réseau explicite", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
 
