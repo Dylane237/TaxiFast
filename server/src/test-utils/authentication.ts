@@ -9,6 +9,9 @@ export function authenticationAs(userId: string, role: Role): Authentication {
     async verifyOtp() {
       throw new Error("Non utilisé dans ce test");
     },
+    async signInWithGoogle() {
+      throw new Error("Non utilisé dans ce test");
+    },
     async authenticate() {
       return { userId, role, phone: "+237690000000" };
     },

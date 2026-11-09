@@ -69,11 +69,16 @@ enum DevicePlatform {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique
-  name      String?
-  role      Role
-  createdAt DateTime @default(now())
+  id               String   @id @default(cuid())
+  phone            String   @unique
+  name             String?
+  role             Role
+  createdAt        DateTime @default(now())
+  // Connexion avec Google (gratuite, sans SMS). Le numéro reste obligatoire pour que chauffeur
+  // et client puissent s'appeler ; saisi sans SMS, il n'est pas prouvé : telephoneVerifie = false.
+  googleId         String?  @unique
+  email            String?
+  telephoneVerifie Boolean  @default(true)
 
   vehicle         Vehicle?
   trips           Trip[]              @relation("DriverTrips")

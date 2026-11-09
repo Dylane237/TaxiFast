@@ -20,6 +20,13 @@ const verifyOtpSchema = z.object({
   role: z.enum(["CLIENT", "DRIVER"]).optional(),
 });
 
+const googleSchema = z.object({
+  idToken: z.string().min(20).max(4096),
+  role: z.enum(["CLIENT", "DRIVER"]).optional(),
+  phone: phoneSchema.optional(),
+  name: z.string().trim().min(1).max(60).optional(),
+});
+
 function invalidInput(reply: FastifyReply, error: z.ZodError) {
   return reply.status(400).send({
     error: "INVALID_INPUT",
@@ -37,6 +44,12 @@ function authenticationError(reply: FastifyReply, error: AuthenticationError) {
   }
   if (error.code === "ROLE_REQUIRED") {
     return reply.status(400).send({ error: error.code });
+  }
+  if (error.code === "GOOGLE_NOT_CONFIGURED") {
+    return reply.status(503).send({ error: error.code });
+  }
+  if (error.code === "SIGNUP_REQUIRED" || error.code === "PHONE_ALREADY_USED") {
+    return reply.status(409).send({ error: error.code });
   }
   return reply.status(401).send({ error: error.code });
 }
@@ -61,6 +74,18 @@ export function registerAuthRoutes(app: FastifyInstance, authentication: Authent
 
     try {
       return reply.send(await authentication.verifyOtp(parsed.data));
+    } catch (error) {
+      if (error instanceof AuthenticationError) return authenticationError(reply, error);
+      throw error;
+    }
+  });
+
+  app.post("/auth/google", limiteRoute(LIMITES.verificationOtp), async (request, reply) => {
+    const parsed = googleSchema.safeParse(request.body);
+    if (!parsed.success) return invalidInput(reply, parsed.error);
+
+    try {
+      return reply.send(await authentication.signInWithGoogle(parsed.data));
     } catch (error) {
       if (error instanceof AuthenticationError) return authenticationError(reply, error);
       throw error;

@@ -4,6 +4,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import { lireConfigTwilio, TwilioSmsSender } from "./sms.js";
 import { estCompteTest, lireComptesTest, type ComptesTest } from "./comptes-test.js";
+import { lireVerificateurGoogle, type VerificateurGoogle } from "./google.js";
 
 type SignupRole = Extract<Role, "CLIENT" | "DRIVER">;
 
@@ -35,7 +36,11 @@ export type AuthenticationErrorCode =
   | "OTP_RATE_LIMITED"
   | "OTP_DELIVERY_FAILED"
   | "ROLE_REQUIRED"
-  | "TOKEN_INVALID";
+  | "TOKEN_INVALID"
+  | "GOOGLE_NOT_CONFIGURED"
+  | "GOOGLE_TOKEN_INVALID"
+  | "SIGNUP_REQUIRED"
+  | "PHONE_ALREADY_USED";
 
 export class AuthenticationError extends Error {
   constructor(
@@ -259,6 +264,16 @@ export interface Authentication {
     code: string;
     role?: SignupRole;
   }): Promise<{ token: string; user: AuthenticatedUser }>;
+  /**
+   * Connexion avec Google. Compte connu : connecté. Nouveau compte : il faut le rôle et le numéro
+   * (sinon SIGNUP_REQUIRED, et l'app les demande avant de rappeler avec le même jeton).
+   */
+  signInWithGoogle(input: {
+    idToken: string;
+    role?: SignupRole;
+    phone?: string;
+    name?: string;
+  }): Promise<{ token: string; user: AuthenticatedUser }>;
   authenticate(token: string): Promise<AuthenticatedPrincipal>;
 }
 
@@ -271,7 +286,57 @@ export class AuthenticationService implements Authentication {
     private readonly generateCode = () =>
       randomInt(0, 1_000_000).toString().padStart(6, "0"),
     private readonly comptesTest: ComptesTest | null = null,
+    private readonly google: VerificateurGoogle | null = null,
   ) {}
+
+  async signInWithGoogle({
+    idToken,
+    role,
+    phone,
+    name,
+  }: {
+    idToken: string;
+    role?: SignupRole;
+    phone?: string;
+    name?: string;
+  }): Promise<{ token: string; user: AuthenticatedUser }> {
+    if (!this.google) throw new AuthenticationError("GOOGLE_NOT_CONFIGURED");
+    let identite;
+    try {
+      identite = await this.google.verifier(idToken);
+    } catch (error) {
+      throw new AuthenticationError("GOOGLE_TOKEN_INVALID", { cause: error });
+    }
+
+    const selection = { id: true, phone: true, name: true, role: true } as const;
+    const connu = await this.prisma.user.findUnique({ where: { googleId: identite.googleId }, select: selection });
+    if (connu) return { token: await this.tokenService.issue(connu), user: connu };
+
+    if (!role || !phone) throw new AuthenticationError("SIGNUP_REQUIRED");
+    // Un numéro déjà lié à un compte (créé par SMS) n'est jamais rattaché sans preuve :
+    // sinon n'importe qui pourrait prendre le compte d'un autre en tapant son numéro.
+    const numeroPris = await this.prisma.user.findUnique({ where: { phone }, select: { id: true } });
+    if (numeroPris) throw new AuthenticationError("PHONE_ALREADY_USED");
+
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          phone,
+          role,
+          name: name ?? identite.nom,
+          googleId: identite.googleId,
+          email: identite.email,
+          telephoneVerifie: false,
+        },
+        select: selection,
+      });
+      return { token: await this.tokenService.issue(user), user };
+    } catch (error) {
+      // Deux inscriptions simultanées avec le même numéro ou le même compte Google.
+      if ((error as { code?: string }).code === "P2002") throw new AuthenticationError("PHONE_ALREADY_USED", { cause: error });
+      throw error;
+    }
+  }
 
   async requestOtp({ phone }: { phone: string }): Promise<void> {
     // Compte de test : le code fixe et secret est enregistré comme un vrai code (même expiration,
@@ -366,7 +431,9 @@ export function createDefaultAuthentication(
 
   const configTwilio = lireConfigTwilio(env);
   const comptesTest = lireComptesTest(env);
-  if (!configTwilio && !comptesTest && !isDevelopmentEnvironment(env.NODE_ENV)) {
+  const google = lireVerificateurGoogle(env);
+  // Sans SMS, la production reste possible si l'on peut se connecter autrement (Google, comptes de test).
+  if (!configTwilio && !comptesTest && !google && !isDevelopmentEnvironment(env.NODE_ENV)) {
     throw new Error(
       "Aucun fournisseur SMS configuré : renseignez TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_FROM",
     );
@@ -384,5 +451,6 @@ export function createDefaultAuthentication(
     new JwtTokenService(secret),
     configuredDevelopmentCode ? () => configuredDevelopmentCode : undefined,
     comptesTest,
+    google,
   );
 }
