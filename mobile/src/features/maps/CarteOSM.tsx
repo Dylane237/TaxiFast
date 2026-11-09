@@ -1,9 +1,9 @@
 import { Camera, GeoJSONSource, Layer, Map, ViewAnnotation } from "@maplibre/maplibre-react-native";
 import { IconCar } from "@tabler/icons-react-native";
 import { memo, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
-import { couleurs } from "@/theme";
-import { CAMEROUN, cercle, type Coordonnees } from "./distance";
+import { StyleSheet, Text, View } from "react-native";
+import { couleurs, polices } from "@/theme";
+import { CAMEROUN, cercle, distanceMetres, type Coordonnees } from "./distance";
 
 /**
  * Fond OpenStreetMap servi par OpenFreeMap : gratuit, sans clé ni compte.
@@ -12,7 +12,13 @@ import { CAMEROUN, cercle, type Coordonnees } from "./distance";
 const STYLE_CARTE = "https://tiles.openfreemap.org/styles/positron";
 const BLEU_POSITION = "#2563EB";
 
-export type PointCarte = Coordonnees & { type: "depart" | "arrivee" | "arret" };
+export type PointCarte = Coordonnees & {
+  type: "depart" | "arrivee" | "arret";
+  /** Bulle au-dessus du repère, comme sur Yango : le nom de l'arrêt… */
+  titre?: string;
+  /** … et une précision courte (« à 460 m à pied », « ≈ 12 min »). */
+  detail?: string;
+};
 
 type CarteOSMProps = {
   /** Position réelle de l'utilisateur : point bleu, avec sa marge d'erreur en mètres. */
@@ -31,6 +37,8 @@ type CarteOSMProps = {
   margeHaut?: number;
   /** Petite carte d'aperçu dans une page : pas de déplacement au doigt, pour ne pas gêner le défilement. */
   interactive?: boolean;
+  /** Trace en pointillés le chemin à pied entre votre position et l'arrêt de départ. */
+  marche?: boolean;
 };
 
 function cadrer(points: Coordonnees[]) {
@@ -50,6 +58,7 @@ export const CarteOSM = memo(function CarteOSM({
   margeBas = 0,
   margeHaut = 110,
   interactive = true,
+  marche = false,
 }: CarteOSMProps) {
   // On cadre sur tout ce qui compte, y compris la route elle-même (elle peut sortir du rectangle des arrêts).
   const cadrage = useMemo(
@@ -71,6 +80,23 @@ export const CarteOSM = memo(function CarteOSM({
   }, [itineraire, points, relier]);
   const lignePrecise = Boolean(itineraire && itineraire.length > 1);
 
+  // Le bout à pied jusqu'à l'arrêt : seulement s'il y a un vrai bout de chemin (de 25 m à 2 km).
+  const depart = points.find((point) => point.type === "depart");
+  const aPied = useMemo(() => {
+    if (!marche || !utilisateur || !depart) return null;
+    const metres = distanceMetres(utilisateur, depart);
+    if (metres < 25 || metres > 2_000) return null;
+    return {
+      type: "Feature" as const,
+      properties: {},
+      geometry: {
+        type: "LineString" as const,
+        coordinates: [[utilisateur.longitude, utilisateur.latitude], [depart.longitude, depart.latitude]],
+      },
+    };
+  }, [depart, marche, utilisateur]);
+  const avecBulles = points.some((point) => point.titre);
+
   // Le halo ne s'affiche que si l'erreur est assez grande pour se voir, et pas absurde.
   const halo = useMemo(() => {
     if (!utilisateur || !precision || precision < 12 || precision > 2_000) return null;
@@ -79,7 +105,11 @@ export const CarteOSM = memo(function CarteOSM({
 
   const centre = cadrage[0] ?? utilisateur ?? CAMEROUN;
   const marge = interactive ? 56 : 28;
-  const padding = { top: interactive ? margeHaut : marge, right: marge, bottom: margeBas + marge, left: marge };
+  // Les bulles dépassent au-dessus des repères : on leur garde de la place en haut.
+  // Les marges sont en points d'écran (un téléphone fait ~360 à 410 points de large) :
+  // juste assez pour qu'une bulle centrée sur un repère au bord ne sorte pas de l'écran.
+  const cote = marge + (avecBulles ? 36 : 0);
+  const padding = { top: (interactive ? margeHaut : marge) + (avecBulles ? 56 : 0), right: cote, bottom: margeBas + marge, left: cote };
 
   return (
     <Map
@@ -117,12 +147,30 @@ export const CarteOSM = memo(function CarteOSM({
         </GeoJSONSource>
       ) : null}
 
+      {aPied ? (
+        <GeoJSONSource id="a-pied" data={aPied}>
+          <Layer
+            id="a-pied-points"
+            type="line"
+            paint={{ "line-color": BLEU_POSITION, "line-width": 4, "line-opacity": 0.75, "line-dasharray": [0, 2] }}
+            layout={{ "line-cap": "round" }}
+          />
+        </GeoJSONSource>
+      ) : null}
+
       {ligne ? (
         <GeoJSONSource id="trajet" data={ligne}>
+          {/* Une ombre douce, une bordure blanche, puis le trait : le trajet se détache nettement du fond. */}
+          <Layer
+            id="trajet-ombre"
+            type="line"
+            paint={{ "line-color": "#000000", "line-opacity": 0.14, "line-width": 14, "line-blur": 6 }}
+            layout={{ "line-cap": "round", "line-join": "round" }}
+          />
           <Layer
             id="trajet-contour"
             type="line"
-            paint={{ "line-color": couleurs.surface, "line-width": 9 }}
+            paint={{ "line-color": couleurs.surface, "line-width": 10 }}
             layout={{ "line-cap": "round", "line-join": "round" }}
           />
           {/* Deux couches distinctes : MapLibre ne retire pas un pointillé quand la propriété disparaît. */}
@@ -131,7 +179,7 @@ export const CarteOSM = memo(function CarteOSM({
               key="trajet-route"
               id="trajet-route"
               type="line"
-              paint={{ "line-color": couleurs.encre, "line-width": 5 }}
+              paint={{ "line-color": couleurs.encre, "line-width": 6 }}
               layout={{ "line-cap": "round", "line-join": "round" }}
             />
           ) : (
@@ -147,12 +195,14 @@ export const CarteOSM = memo(function CarteOSM({
       ) : null}
 
       {points.map((point, index) => (
-        <ViewAnnotation key={`${point.type}-${index}`} lngLat={[point.longitude, point.latitude]}>
-          {point.type === "arrivee" ? (
-            <View style={styles.arrivee}><View style={styles.arriveeCoeur} /></View>
-          ) : (
-            <View style={point.type === "depart" ? styles.depart : styles.arret} />
-          )}
+        <ViewAnnotation
+          // La carte fige le contenu d'une annotation à sa création : une clé qui suit le texte la recrée quand il change.
+          key={`${point.type}-${index}-${point.titre ?? ""}-${point.detail ?? ""}`}
+          lngLat={[point.longitude, point.latitude]}
+          // Avec une bulle, le repère est posé par sa base : la pointe de l'épingle tombe sur l'arrêt.
+          anchor={point.titre ? "bottom" : "center"}
+        >
+          {point.titre ? <Epingle point={point} /> : <Repere type={point.type} />}
         </ViewAnnotation>
       ))}
 
@@ -171,7 +221,52 @@ export const CarteOSM = memo(function CarteOSM({
   );
 });
 
+function Repere({ type }: { type: PointCarte["type"] }) {
+  if (type === "arrivee") return <View style={styles.arrivee}><View style={styles.arriveeCoeur} /></View>;
+  return <View style={type === "depart" ? styles.depart : styles.arret} />;
+}
+
+/** Bulle + petite tige + repère : le départ en blanc, l'arrivée en noir, comme les grandes applis de VTC. */
+function Epingle({ point }: { point: PointCarte }) {
+  const arrivee = point.type === "arrivee";
+  return (
+    <View style={styles.epingle}>
+      <View style={[styles.bulle, arrivee && styles.bulleArrivee]}>
+        <Text numberOfLines={1} style={[styles.bulleTitre, arrivee && styles.bulleTitreArrivee]}>{point.titre}</Text>
+        {point.detail ? (
+          <Text numberOfLines={2} style={[styles.bulleDetail, arrivee && styles.bulleDetailArrivee]}>{point.detail}</Text>
+        ) : null}
+      </View>
+      <View style={[styles.tige, arrivee && styles.tigeArrivee]} />
+      <Repere type={point.type} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  epingle: { alignItems: "center" },
+  // Largeur minimale : la carte mesure la bulle avant que tout le texte soit posé, sans elle il se coupait.
+  bulle: {
+    minWidth: 132,
+    maxWidth: 190,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: couleurs.surface,
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  bulleArrivee: { backgroundColor: couleurs.encre },
+  bulleTitre: { color: couleurs.texte, fontSize: 13, fontFamily: polices.texteExtraGras },
+  bulleTitreArrivee: { color: couleurs.surface },
+  bulleDetail: { marginTop: 1, color: couleurs.texteSecondaire, fontSize: 11, textAlign: "center", fontFamily: polices.texteDemiGras },
+  bulleDetailArrivee: { color: couleurs.primaire },
+  tige: { width: 2, height: 8, backgroundColor: couleurs.surface },
+  tigeArrivee: { backgroundColor: couleurs.encre },
   depart: { width: 20, height: 20, borderRadius: 10, backgroundColor: couleurs.surface, borderWidth: 6, borderColor: couleurs.encre },
   arrivee: { width: 24, height: 24, borderRadius: 7, backgroundColor: couleurs.encre, alignItems: "center", justifyContent: "center" },
   arriveeCoeur: { width: 10, height: 10, borderRadius: 2, backgroundColor: couleurs.primaire },

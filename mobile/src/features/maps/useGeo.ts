@@ -17,7 +17,8 @@ export function useItineraire(points: Coordonnees[]) {
     enabled: points.length >= 2,
     staleTime: UNE_HEURE,
     gcTime: UNE_HEURE,
-    retry: 1,
+    retry: 2,
+    retryDelay: (essai) => 1_500 * (essai + 1),
   });
   return requete.data ?? null;
 }

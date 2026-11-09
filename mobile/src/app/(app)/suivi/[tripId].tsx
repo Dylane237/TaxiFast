@@ -77,11 +77,16 @@ export default function TripTrackingScreen() {
   const stops = route.data?.tripStops
     .map((tripStop) => tripStop.stop)
     .filter((stop) => stop.latitude !== null && stop.longitude !== null) ?? [];
-  const points: PointCarte[] = stops.map((stop, index) => ({
-    type: index === 0 ? "depart" : index === stops.length - 1 ? "arrivee" : "arret",
-    latitude: stop.latitude!,
-    longitude: stop.longitude!,
-  }));
+  const points: PointCarte[] = stops.map((stop, index) => {
+    const extremite = index === 0 || index === stops.length - 1;
+    return {
+      type: index === 0 ? "depart" : index === stops.length - 1 ? "arrivee" : "arret",
+      latitude: stop.latitude!,
+      longitude: stop.longitude!,
+      // Bulles seulement aux deux bouts : au milieu, les arrêts restent de simples points.
+      ...(extremite ? { titre: stop.name } : {}),
+    };
+  });
   const itineraire = useItineraire(points);
   // Distance et durée par les vraies routes quand l'itinéraire est là, sinon à vol d'oiseau.
   const distance = itineraire ? itineraire.distanceMetres / 1000 : routeDistanceKm(points);

@@ -68,6 +68,17 @@ export default function RechercheScreen() {
   const etapes = useMemo(() => (route ? points : []), [points, route]);
   const itineraire = useItineraire(etapes);
   const detailDepart = proche && from?.id === proche.arret.id ? `À ${formatDistance(proche.distance)} de vous, à pied` : null;
+  // Sur la carte, des bulles comme sur Yango : où vous montez, où vous descendez et combien de temps ça prend.
+  const pointsAffiches = useMemo<PointCarte[]>(() => points.map((point) => {
+    // Trajet tracé : une seule bulle, sur l'arrivée, avec la durée (comme Yango). Sinon, la bulle du départ.
+    if (point.type === "depart" && from && !route) {
+      return { ...point, titre: from.name, detail: proche && from.id === proche.arret.id ? `À ${formatDistance(proche.distance)} à pied` : "Départ" };
+    }
+    if (point.type === "arrivee" && to) {
+      return { ...point, titre: to.name, detail: itineraire ? `≈ ${Math.max(1, Math.round(itineraire.dureeSecondes / 60))} min en taxi` : "Calcul du trajet…" };
+    }
+    return point;
+  }), [from, itineraire, points, proche, route, to]);
   const maPosition = actionPosition({ statut: etat.statut, proche, tropLoin, dejaChoisi: detailDepart !== null, onUtiliser: (stop) => { setFrom(stop); if (to && to.corridorId !== stop.corridorId) setTo(null); setError(null); }, relocaliser });
 
   const next = () => {
@@ -90,7 +101,7 @@ export default function RechercheScreen() {
   if (!corridors.length) return <State><EtatContenu type="vide" title="Aucun axe ouvert pour l’instant" description="Revenez un peu plus tard." /></State>;
 
   if (step === 0) return <View style={styles.mapPage}>
-    <CarteOSM utilisateur={position} precision={precision} ancrage={route ? null : ancrage} points={points} itineraire={itineraire?.trace} relier={Boolean(route)} margeBas={hauteurFeuille} margeHaut={marges.top + 80} />
+    <CarteOSM utilisateur={position} precision={precision} ancrage={route ? null : ancrage} points={pointsAffiches} itineraire={itineraire?.trace} relier={Boolean(route)} marche margeBas={hauteurFeuille} margeHaut={marges.top + 80} />
     <PressionDouce accessibilityLabel="Retour" onPress={() => router.back()} style={({ pressed }) => [styles.mapBack, { top: marges.top + espacements.sm }, pressed && styles.pressed]}><IconArrowLeft color={couleurs.texte} size={24} /></PressionDouce>
     {route ? <View style={[styles.mapStatus, { top: marges.top + espacements.sm }]}><Text style={styles.mapStatusLabel}>UN TAXI PASSE PAR LÀ</Text><Text numberOfLines={1} style={styles.mapStatusValue}>{route.corridor.name} · {route.stops.length - 1} arrêt{route.stops.length > 2 ? "s" : ""}</Text></View> : null}
     <KeyboardAvoidingView behavior="padding" pointerEvents="box-none" style={styles.mapSheetWrap}>

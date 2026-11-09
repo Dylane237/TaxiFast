@@ -9,7 +9,8 @@ import { z } from "zod";
  */
 const PHOTON = "https://photon.komoot.io";
 const OSRM = "https://router.project-osrm.org";
-const DELAI_MS = 8_000;
+// Réseaux mobiles lents au Cameroun : on laisse du temps avant d'abandonner.
+const DELAI_MS = 15_000;
 
 /** Le Cameroun, en [ouest, sud, est, nord] : les recherches restent dans le pays. */
 export const CAMEROUN_BBOX = [8.4, 1.6, 16.2, 13.1] as const;

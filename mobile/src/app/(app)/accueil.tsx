@@ -35,7 +35,13 @@ function ClientHome({ firstName }: { firstName?: string }) {
   const points = useMemo<PointCarte[]>(() => {
     const arret = proche?.arret;
     if (arret?.latitude == null || arret.longitude == null) return [];
-    return [{ type: "depart", latitude: arret.latitude, longitude: arret.longitude }];
+    return [{
+      type: "depart",
+      latitude: arret.latitude,
+      longitude: arret.longitude,
+      titre: arret.name,
+      detail: `À ${formatDistance(proche!.distance)} à pied`,
+    }];
   }, [proche]);
 
   const depart = (() => {
@@ -52,7 +58,7 @@ function ClientHome({ firstName }: { firstName?: string }) {
 
   return (
     <View style={styles.clientPage}>
-      <CarteOSM utilisateur={position} precision={precision} ancrage={ancrage} points={points} margeBas={hauteurBas} margeHaut={marges.top + 90} />
+      <CarteOSM utilisateur={position} precision={precision} ancrage={ancrage} points={points} marche margeBas={hauteurBas} margeHaut={marges.top + 90} />
 
       <Apparition style={[styles.mapTopbar, { top: marges.top + espacements.sm }]}>
         <View style={styles.clientBrand}><LogoMarque taille={38} /><View><Text style={styles.clientBrandName}>Taxi Fast</Text><Text numberOfLines={1} style={styles.online}>{ville ? `${ville} · En service` : "En service"}</Text></View></View>
